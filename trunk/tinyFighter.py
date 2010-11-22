@@ -27,7 +27,7 @@ class TinyFighterScript(AIScript):
 	"""a script for tiny fighters."""
 	swarmRadius = 280
 	retreatRadius = 300
-	acceptableError = 3
+	acceptableError = 8
 	shootingRange = 280
 	interceptSpeed = 200
 	def update(self, ship):

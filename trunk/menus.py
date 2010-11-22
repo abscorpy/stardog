@@ -215,11 +215,11 @@ class PartTile(Selectable):
 		self.panels[-1].rect.width = self.rect.width
 		string = part.shortStats()
 		i = string.find('\n')
-		rect = rect.copy()
+		rect = Rect(rect)
 		rect.y += 16; rect.x += 2
 		self.addPanel(Label(rect, string[:i], color = (200,0,0)))
 		self.panels[-1].rect.width = self.rect.width
-		rect = rect.copy()
+		rect = Rect(rect)
 		rect.y += 60
 		self.addPanel(TextBlock(rect, string[i:], color = (0, 150, 0)))
 
