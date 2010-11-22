@@ -10,6 +10,7 @@ from adjectives import *
 class Strafebat(Ship):
 	strafeRadius = 100
 	planet = None
+	level = 3
 	def __init__(self, game, x, y, color = (200,100,0)):
 		roll = rand()
 		self.target = game.player

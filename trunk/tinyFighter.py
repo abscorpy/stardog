@@ -13,13 +13,14 @@ class TinyFighter(Ship):
 	strafeRadius = 100
 	planet = None
 	stage = 0
+	level = .5
 	def __init__(self, game, x, y, dx = 0, dy = 0, color = (70, 180,0)):
 		self.target = game.player
 		self.circling = False
 		Ship.__init__(self, game, x, y, dx, dy, script = TinyFighterScript(game), color = color)
 		self.addPart(Drone(game))
 		self.energy = self.maxEnergy
-		self.inventory.append(Shield(game))
+		self.inventory.append(randItem(self.game, self.level))
 
 
 class TinyFighterScript(AIScript):

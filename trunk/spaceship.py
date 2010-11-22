@@ -8,9 +8,13 @@ import stardog
 from adjectives import addAdjective
 
 def starterShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255)):
+				color = (255, 255, 255), player = False):
 	"""starterShip(x,y) -> default starting ship at x,y."""
-	ship = Ship(game, x, y, dx = dx, dy = dy, dir = dir, \
+	if player:
+		ship = Player(game, x, y, dx = dx, dy = dy, dir = dir, \
+				script = script, color = color)
+	else:
+		ship = Ship(game, x, y, dx = dx, dy = dy, dir = dir, \
 				script = script, color = color)
 	gyro = Gyro(game)
 	generator = Generator(game)
@@ -35,13 +39,13 @@ def starterShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	battery.addPart(generator, 0)
 	generator.addPart(engine2, 0)
 	ship.energy = ship.maxEnergy * .8
-	ship.partAdded()
+	ship.reset()
 	return ship
 
 def playerShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255)):
 	"""starterShip(x,y) -> default starting ship at x,y."""
-	ship = starterShip(game, x, y, dx, dy, dir, script, color)
+	ship = starterShip(game, x, y, dx, dy, dir, script, color, player=True)
 	script.bind(K_DOWN % 322, ship.reverse)
 	script.bind(K_UP % 322, ship.forward)
 	script.bind(K_RIGHT % 322, ship.turnRight)
@@ -80,11 +84,15 @@ class Ship(Floater):
 	gyros = []
 	number = 0
 	name = 'Ship'
+	level = 1
+	partEffects = []
+	skillEffects = []
+	timedEffects = []
+	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255)):
 		Floater.__init__(self, game, x, y, dx, dy, dir, 1)
 		self.inventory = []
-		self.reload = 0
 		self.energy = 0
 		self.maxEnergy = 0
 		self.color = color
@@ -109,9 +117,9 @@ class Ship(Floater):
 		part.image = colorShift(part.baseImage, self.color).convert()
 		part.image.set_colorkey((255,255,255))
 		self.basePart = part
-		self.partAdded()
+		self.reset()
 
-	def partAdded(self):
+	def reset(self):
 		self.parts = []
 		self.forwardEngines = []
 		self.forwardThrust = 0
@@ -139,6 +147,7 @@ class Ship(Floater):
 		#recenter:
 		xCorrection = (maxX + minX) / 2
 		yCorrection = (maxY + minY) / 2
+		self.partEffects = []
 		self.mass = 1
 		self.moment = 1
 		self.maxEnergy = 1
@@ -233,6 +242,19 @@ class Ship(Floater):
 		#parts updating:
 		if self.basePart:
 			self.basePart.update()
+		
+		#active effects:
+		#prune expired:
+		self.timedEffects = [e for e in self.timedEffects if e.duration > 0]
+		for effect in self.timedEffects:
+			effect.duration -= 1./self.game.fps
+			effect(self)
+		for effect in self.skillEffects:
+			effect(self)
+		for effect in self.partEffects:
+			effect(self)
+			
+			
 
 	def draw(self, surface, offset = None, pos = (0, 0)):
 		"""ship.draw(surface, offset) -> Blits this ship onto the surface. 
@@ -289,3 +311,26 @@ class Ship(Floater):
 		Floater.kill(self)
 		for part in self.inventory:
 			part.scatter(self)
+
+class Player(Ship):
+	xp = 0
+	developmentPoints = 0
+	def xpQuest(self, xp):
+		self.xp += xp
+	def xpKill(self, ship):
+		self.xp += ship.level / self.level * 10
+	def update(self):
+		if self.xp >= self.next():
+			self.level += 1
+			self.developmentPoints += 1
+			self.xp = 0
+		Ship.update(self)
+	
+	def next(self):
+		return 1.1 ** self.level * 100
+	
+	
+	
+	
+	
+	

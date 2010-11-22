@@ -164,8 +164,7 @@ class Game:
 				self.clock.tick(FPS)#aim for FPS but adjust vars for self.fps.
 				self.fps = max(1, int(self.clock.get_fps()))
 			#end of round maintainance:
-			self.player = playerShip(self, randint(0, self.width),\
-				randint(0, self.height), \
+			self.player = playerShip(self, 0, 0, \
 				script = self.playerScript, color = self.playerColor)
 			self.curSystem = SolarA1(self, self.player)
 	
