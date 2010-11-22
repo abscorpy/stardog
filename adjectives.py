@@ -1,6 +1,13 @@
 #adjectives.py
 from parts import *
-
+PARTS = [LeftGun, RightGun, Engine, Gyro, Generator, Battery, Shield]
+def randItem(game, level = 1):
+	roll = randint(0, len(PARTS) -1)
+	if roll == rand() * level / 2 < .8:
+		return None
+	part = PARTS[roll](game)
+	return addAdjective(part, level)
+	
 def addAdjective(part, level = 1):
 	choice = adjectives[randint(0,len(adjectives) - 1)]
 	if choice.level <= level:
@@ -45,6 +52,7 @@ class Solid(Adjective):
 		
 class Fragile(Adjective):
 	"""HP * .4"""
+	level = 0
 	def effect(self, part):
 		part.maxhp *= .4
 		part.hp *= .4
@@ -226,12 +234,40 @@ class Miserly(Adjective):
 		part.energyCost *= .4
 		
 class Leaky(Adjective):
-	"""Cost *= 2"""
+	"""-.5 energy per second"""
+	level = 0
+	types = ENERGY_USING
+	def effect(self, part):
+		from effects import leak
+		part.shipEffects.append(leak)
+		
+class Inefficient(Adjective):
+	"""Cost *= 2.5"""
+	level = 0
+	types = ENERGY_USING
+	def effect(self, part):
+		part.energyCost *= 2.5
+		
+class Obsolete(Adjective):
+	"""Cost *= 2, Mass *= 2"""
+	level = 0
 	types = ENERGY_USING
 	def effect(self, part):
 		part.energyCost *= 2
+		part.mass *= 2
 		
-
+class Heavy(Adjective):
+	"""Mass *= 2.5"""
+	level = 0
+	types = ENERGY_USING
+	def effect(self, part):
+		part.mass *= 2.5
+		
+class Damaged(Adjective):
+	"""Starting HP / 2"""
+	level = 0
+	def effect(self, part):
+		part.hp = part.hp / 2
 	
 
 adjectives = Sturdy, Durable, Solid, Fragile, \
@@ -242,4 +278,5 @@ adjectives = Sturdy, Durable, Solid, Fragile, \
  Quantum_Accelerated, Hydrogen_Fusion, Dilithium,\
  Antimatter, Advanced_Chemical, Magnetic, \
  Kinetic, Alpha_Decay, Nuclear, Stored_Antimatter,\
- Delicate, Efficient, Miserly
+ Delicate, Efficient, Miserly, Leaky, Inefficient, \
+ Obsolete, Damaged, Heavy

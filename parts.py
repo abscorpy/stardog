@@ -42,6 +42,10 @@ class Part(Floater):
 	buffer = pygame.Surface((30,30), flags = hardwareFlag | SRCALPHA).convert_alpha()
 	buffer.set_colorkey((0,0,0))
 	acted = False
+	#a list of functions that are called on the ship during ship.update:
+	shipEffects = []
+	#a list of functions that are called on this part at attach time: 
+	attachEffects = []
 
 	def __init__(self, game, parent = None):
 		self.functions = []
@@ -103,7 +107,7 @@ class Part(Floater):
 						-part.dir), part.color).convert()
 			part.image.set_colorkey((255,255,255))
 			#allow the ship to re-adjust:
-			self.ship.partAdded()
+			self.ship.reset()
 			
 	def attach(self):
 		"""attaches this part to a ship. This includes increases ship mass
@@ -115,6 +119,10 @@ class Part(Floater):
 		self.ship.mass += self.mass
 		self.ship.moment += self.mass \
 					* sqrt(self.offset[0] ** 2 + self.offset[1] ** 2)
+		#These two can be modified by adjectives:
+		self.ship.partEffects.extend(self.shipEffects)
+		for effect in self.attachEffects:
+			effect(self)
 
 	def detach(self):
 		"""removes this part from its parent and ship,
@@ -146,7 +154,7 @@ class Part(Floater):
 				if port.part == self:
 					port.part = None
 		self.ship.parts.remove(self)
-		self.ship.partAdded()
+		self.ship.reset()
 		if self.ship == self.game.player:
 			self.game.menu.parts.portPanel.reset()
 		self.ship = None

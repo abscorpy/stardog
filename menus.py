@@ -92,7 +92,7 @@ class PartsPanel(Panel):
 		"""removes the selected part from the ship and updates menus"""
 		if self.portPanel.selected:
 			self.portPanel.unequip(self.portPanel.selected.port)
-			self.thisShip.partAdded()
+			self.thisShip.reset()
 			self.portPanel.reset()
 			self.inventoryPanel.reset()
 
@@ -103,7 +103,7 @@ class PartsPanel(Panel):
 			self.remove()
 			self.portPanel.selected.port.addPart(\
 						self.inventoryPanel.selected.part)
-			self.thisShip.partAdded()
+			self.thisShip.reset()
 			self.portPanel.reset()
 			self.inventoryPanel.reset()
 			self.inventoryPanel.selected = None

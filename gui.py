@@ -32,15 +32,25 @@ class HUD:
 		self.drawRadar(surface, thisShip, self.game.keys[K_TAB])
 					
 		# energy:
-		pygame.draw.rect(self.image, (20, 25, 130), (self.game.width - 25, \
-			self.game.height - 20 - self.game.height / 6, \
+		x = self.game.width - 25
+		y = self.game.height - 20 - self.game.height / 6
+		h = self.game.height / 6
+		pygame.draw.rect(self.image, (20, 25, 130), (x, y, \
+			5, h), 1) # empty bar
+
+		pygame.draw.rect(self.image, (0, 50, 230), (x, y \
+			+ h - h * thisShip.energy / thisShip.maxEnergy, 5, h \
+			* thisShip.energy / thisShip.maxEnergy)) # full bar
+			
+		#XP:
+		x += 15
+		pygame.draw.rect(self.image, (0, 180, 80), (x, y, \
 			5, self.game.height / 6), 1) # empty bar
 
-		pygame.draw.rect(self.image, (0, 50, 230), (self.game.width - 25, \
-			self.game.height - 20 - self.game.height / 6 \
-			* thisShip.energy / thisShip.maxEnergy, 5, self.game.height / 6 \
-			* thisShip.energy / thisShip.maxEnergy)) # full bar
-
+		pygame.draw.rect(self.image, (0, 180, 80), (x, y \
+			+ h - h * thisShip.xp / thisShip.next(), 5, h \
+			* thisShip.xp / thisShip.next())) # full bar
+		
 		#FPS
 		if(fontModule):
 			self.image.blit(FONT.render(str(self.game.fps), \
