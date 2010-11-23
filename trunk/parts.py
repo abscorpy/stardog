@@ -23,7 +23,8 @@ class Port:
 
 class Part(Floater):
 	"""A part of a ship."""
-	baseImage = None
+	baseImage = pygame.image.load("res/default.gif")
+	baseImage.set_colorkey((0,0,0))
 	image = None
 	height, width = 9, 3
 	parent = None
@@ -39,39 +40,31 @@ class Part(Floater):
 	animatedImage = None
 	number = -1
 	name = 'part'
+	level = 1
 	buffer = pygame.Surface((30,30), flags = hardwareFlag | SRCALPHA).convert_alpha()
 	buffer.set_colorkey((0,0,0))
 	acted = False
 	#a list of functions that are called on the ship during ship.update:
 	shipEffects = []
-	#a list of functions that are called on this part at attach time: 
+	#a list of functions that are called on this part at attach time:
 	attachEffects = []
 
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		self.functions = []
 		self.functionDescriptions = []
 		self.adjectives = []
 		self.maxhp = 10
 		self.hp = 10
-		if parent:
-			Floater.__init__(self, game, parent.x, parent.y, \
-						dir = parent.dir, radius = 10)
-		else:
-			Floater.__init__(self, game, 0, 0, dir = 270, radius = 10)
-		self.parent = parent
-		if not self.baseImage:
-			self.baseImage = pygame.image.load("res/default.gif")
-			self.baseImage.set_colorkey((0,0,0))
-		self.image = colorShift(self.baseImage, self.color).convert()
-		self.image.set_colorkey((255,255,255))
-		self.width = self.baseImage.get_width()
-		self.height = self.baseImage.get_height()
+		Floater.__init__(self, game, 0, 0, dir = 270, radius = 10)
+		self.image = self.baseImage
+		self.width = self.image.get_width()
+		self.height = self.image.get_height()
 		#the length of this list is the number of connections.
 		 #each element is the part there, (x,y,dir) position of the connection.
 		 #the example is at the bottom of the part, pointed down.
 		self.ports = [Port((-self.width / 2 + 2, 0), 0, self)]
 	
-	def __str__(self):
+	def stats(self):
 		stats = (self.hp, self.maxhp, self.mass)
 		statString = """HP: %s/%s \nMass: %s """
 		return statString % stats
@@ -233,21 +226,30 @@ class Part(Floater):
 			surface.blit(self.buffer, pos)
 			self.buffer.fill((0,0,0,0))
 
-	def takeDamage(self, damage):
+	def takeDamage(self, damage, other):
+		hitByPlayer = False
+		if isinstance(other, Bullet) and other.ship == self.game.player:
+			hitByPlayer = True
+			self.game.player.xpDamage(self, damage)
 		if self.parent \
 		and self.parent != self.ship \
 		and rand() <  1. * damage / (self.hp + 1):
 			self.detach()
 		self.hp -= damage
 		if self.hp <= 0:
-			#if dead, make an explosion here.
+			if hitByPlayer:
+				self.game.player.xpDestroy(self)
+				if self.ship:
+					self.game.player.xpKill(self.ship)
 			if self.parent:
 				self.detach()
 			self.kill()
+			#if dead, make an explosion here.
 			self.game.curSystem.add(Explosion(self.game, self.x, self.y, \
 						self.dx, self.dy, radius = self.radius * 4,\
 						time = self.maxhp * 4))
 
+						
 class Gun(Part):
 	image = None
 	bulletImage = None
@@ -262,7 +264,7 @@ class Gun(Part):
 	reload = 0
 	energyCost = 3
 	
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		#TODO:use this structure for all parts:
 		if self.baseImage == None: 
 			if Gun.image == None:
@@ -271,17 +273,17 @@ class Gun(Part):
 			self.baseImage = Gun.image
 		if self.bulletImage == None:
 			self.bulletImage = BULLET_IMAGE.copy()
-		Part.__init__(self, game, parent)
+		Part.__init__(self, game)
 		self.functions.append(self.shoot)
 		self.functionDescriptions.append("shoot")
 		self.ports = []
 		
-	def __str__(self):
+	def stats(self):
 		stats = (self.bulletDamage, 60. / self.reloadTime, self.energyCost, \
 				self.bulletSpeed, self.bulletRange, self.shootDir)
 		statString = """\nDamage: %s \nRate: %s/minute \nCost: %s \
-energy/bullet \nBullet Speed: %s \nRange: %s seconds \nFiring angle: %s"""
-		return Part.__str__(self) + statString % stats
+energy/bullet \nBullet Speed: %s \nRange: %s seconds \nFiring angle: %s CW from attach"""
+		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.bulletDamage, 60. / self.reloadTime)
@@ -307,41 +309,55 @@ energy/bullet \nBullet Speed: %s \nRange: %s seconds \nFiring angle: %s"""
 			self.ship.energy -= self.energyCost
 			if soundModule:
 				setVolume(shootSound.play(), self, self.game.player)
-			self.game.curSystem.floaters.add(Bullet(self.game, self,\
-					self.bulletSpeed, self.bulletRadius, self.bulletDamage, \
-					self.bulletRange, image = self.bulletImage))
-					
+			self.game.curSystem.floaters.add( \
+					Bullet(self.game, self, image = self.bulletImage))
+
+	
+	
 class LeftGun(Gun):
 	shootPoint = 0, - 30
 	shootDir = 270
 	name = "Left Gun"
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		if LeftGun.image == None:
 			LeftGun.image = pygame.image.load("res/parts/leftgun" + ext).convert()
 		self.baseImage = LeftGun.image
 		self.baseImage.set_colorkey((0,0,0))
-		Gun.__init__(self, game, parent)
-		
+		Gun.__init__(self, game)
 
 class RightGun(Gun):
 	shootPoint = 0, 30
 	shootDir = 90
 	name = "Right Gun"
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		if RightGun.image == None:
 			RightGun.image = pygame.image.load("res/parts/rightgun" + ext).convert()
 		self.baseImage = RightGun.image
 		self.baseImage.set_colorkey((0,0,0))
-		Gun.__init__(self, game, parent)
+		Gun.__init__(self, game)
 		
-					
+class StrafebatGun(Gun):
+	shootDir = 180
+	shootPoint = -20, 0
+	bulletDamage = .5
+	energyCost = 1
+	name = "fore gun dam=.5"
+	image = None
+	def __init__(self,  game):
+		if StrafebatGun.image == None:
+			StrafebatGun.image = pygame.image.load("res/parts/strafebatgun" \
+												+ ext).convert()
+			StrafebatGun.image.set_colorkey((0,0,0))
+		self.baseImage = StrafebatGun.image
+		Gun.__init__(self,  game)
+		
 class Engine(Part):
 	image = None
 	name = "Engine"
 	force = 24000
 	thrusting = False
 	energyCost = 1.
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		if Engine.image == None:
 			Engine.image = pygame.image.load("res/parts/engine" + ext).convert()
 			Engine.animatedImage = pygame.image.load(\
@@ -351,16 +367,16 @@ class Engine(Part):
 		self.baseAnimatedImage = Engine.animatedImage
 		self.baseAnimatedImage.set_colorkey((0,0,0))
 		self.animated = True
-		Part.__init__(self, game, parent)
+		Part.__init__(self, game)
 		self.width -= 6	#move the engines in 6 pixels.
 		self.ports = []
 		self.functions.append(self.thrust)
 		self.functionDescriptions.append('thrust')
 		
-	def __str__(self):
+	def stats(self):
 		stats = (self.force, self.energyCost)
 		statString = """\nThrust: %s N\nCost: %s /second thrusting"""
-		return Part.__str__(self) + statString % stats
+		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.force,)
@@ -390,13 +406,13 @@ class Engine(Part):
 class Cockpit(Part):
 	image = None
 	name = "Cockpit"
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		if Cockpit.image == None:
 			Cockpit.image =\
 					pygame.image.load("res/parts/cockpit" + ext).convert()
 		self.baseImage = Cockpit.image
 		self.baseImage.set_colorkey((0,0,0))
-		Part.__init__(self, game, parent)
+		Part.__init__(self, game)
 		self.ports = [Port((self.width / 2 - 2, 0), 180, self), \
 					Port((0, self.height / 2 - 2), 270, self), \
 					Port((-self.width / 2 + 2, 0), 0, self), \
@@ -407,12 +423,12 @@ class Gyro(Part):
 	name = "Gyro"
 	torque = 180000 #N m degrees== m m kg degrees /s /s
 	energyCost = .8
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		if Gyro.image == None:
 			Gyro.image = pygame.image.load("res/parts/gyro" + ext).convert()
 		self.baseImage = Gyro.image
 		self.baseImage.set_colorkey((0,0,0))
-		Part.__init__(self, game, parent)
+		Part.__init__(self, game)
 		self.ports = [Port((0, self.height / 2 - 2), 270, self), \
 				Port((-self.width / 2 + 2, 0), 0, self), \
 				Port((0, -self.height / 2 + 2), 90, self)]
@@ -420,11 +436,11 @@ class Gyro(Part):
 		self.functionDescriptions.extend(\
 				[self.turnLeft.__doc__,self.turnRight.__doc__])
 				
-	def __str__(self):
+	def stats(self):
 		stats = (self.torque, self.energyCost)
 		statString = """\nTorque: %s N*m\nCost: %s \
 energy/second of turning"""
-		return Part.__str__(self) + statString % stats
+		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.torque,)
@@ -452,18 +468,18 @@ class Generator(Part):
 	name = "Generator"
 	rate = 6.
 	
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		if Generator.image == None:
 			Generator.image = \
 					pygame.image.load("res/parts/generator" + ext).convert()
 		self.baseImage = Generator.image
 		self.baseImage.set_colorkey((0,0,0))
-		Part.__init__(self, game, parent)
+		Part.__init__(self, game)
 	
-	def __str__(self):
+	def stats(self):
 		stats = (self.rate,)
 		statString = """\nEnergy Produced: %s/second"""
-		return Part.__str__(self) + statString % stats
+		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.rate,)
@@ -480,18 +496,18 @@ class Battery(Part):
 	image = None
 	name = "Battery"
 	capacity = 100
-	def __init__(self, game, parent = None):
+	def __init__(self, game):
 		if Battery.image == None:
 			Battery.image = \
 					pygame.image.load("res/parts/battery" + ext).convert()
 		self.baseImage = Battery.image
 		self.baseImage.set_colorkey((0,0,0))
-		Part.__init__(self, game, parent)
+		Part.__init__(self, game)
 	
-	def __str__(self):
+	def stats(self):
 		stats = (self.capacity,)
 		statString = """\nCapacity: %s energy"""
-		return Part.__str__(self) + statString % stats
+		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.capacity,)
@@ -508,20 +524,20 @@ class Shield(Part):
 	shieldhp = 10
 	shieldRegen = .30
 	energyCost = 1.5
-	def __init__(self, game, parent = None): 
+	def __init__(self, game): 
 		if Shield.image == None:
 			Shield.image = \
 					pygame.image.load("res/parts/shield" + ext).convert()
 		self.baseImage = Shield.image
 		self.baseImage.set_colorkey((0,0,0))
-		Part.__init__(self, game, parent)
+		Part.__init__(self, game)
 		self.ports = []
 	
-	def __str__(self):
+	def stats(self):
 		stats = (self.shieldhp, self.shieldRegen, self.energyCost)
 		statString = """\nMax Shield: %s \nRegeneration Rate: %s/second \
 		\nCost: %senergy/second of regeneration"""
-		return Part.__str__(self) + statString % stats
+		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.shieldhp, self.shieldRegen)
@@ -542,12 +558,120 @@ class Shield(Part):
 								self.ship.hp + self.shieldRegen / self.game.fps)
 				self.ship.energy -= self.energyCost / self.game.fps
 		Part.update(self)
-								
 
 
-
-
-
+class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
+	mass = 10
+	name = "Tiny Fighter Chassis"
+	image = None
+	energyCost = 1 #this is used as a coefficient everywhere.
+	#gun:
+	shootDir = 0
+	shootPoint = 20, 0
+	bulletDamage = .2
+	reloadTime = .1
+	burstSize = 3
+	reloadBurstTime = 2
+	shotCost = .3
+	shot = False
+	#engine:
+	force = 20000
+	thrustCost = .1
+	thrusted = False
+	#gyro:
+	torque = 600
+	turnCost = .1
+	turned = False
+	#generator:
+	rate = 30
+	#battery:
+	capacity = 40
+	
+	def __init__(self,  game):
+		if Drone.image == None:
+			Drone.image = pygame.image.load("res/ship" \
+												+ ext).convert()
+			Drone.image.set_colorkey((0,0,0))
+			Drone.animatedImage = pygame.image.load(\
+					"res/shipThrusting" + ext).convert_alpha()
+		self.baseImage = Drone.image
+		self.baseAnimatedImage = Drone.animatedImage
+		self.baseAnimatedImage.set_colorkey((0,0,0))
+		self.animated = True
+		Part.__init__(self, game)
+		self.reload = 0
+		self.reloadBurst = 0
+		self.burst = self.burstSize
+		self.functions = [self.shoot, self.turnLeft, self.turnRight, \
+		self.thrust]
+		self.functionDescriptions = ['shoot', 'turn left', 'turn right', 'thrust']
+	
+	def update(self):
+		self.animated = self.thrusted
+		self.shot = False
+		self.thrusted = False
+		self.turned = False
+		self.reload -= 1. / self.game.fps
+		self.reloadBurst -= 1. / self.game.fps
+		if self.reloadBurst <= 0 :
+			self.burst = self.burstSize
+			self.reloadBurst = self.reloadBurstTime
+		#generator:
+		if self.ship and self.ship.energy < self.ship.maxEnergy:
+			self.ship.energy = min(self.ship.maxEnergy, \
+								self.ship.energy + self.rate / self.game.fps)
+		Part.update(self)
+		
+	def attach(self):
+		#battery:
+		self.ship.maxEnergy += self.capacity
+		Part.attach(self)
+		
+	
+	def shoot(self):
+		"""fires a bullet."""
+		if self.shot: return
+		self.shot = True
+		if self.reload <= 0 and self.ship.energy > self.shotCost * self.energyCost\
+		and self.burst > 0:
+			self.reload = self.reloadTime
+			self.burst -= 1
+			self.ship.energy -= self.shotCost * self.energyCost
+			if soundModule:
+				setVolume(shootSound.play(), self, self.game.player)
+			self.game.curSystem.floaters.add(Bullet(self.game, self,\
+							image = self.bulletImage))
+			if self.burst <= 0:
+				self.reloadBurst = self.reloadBurstTime
+				
+	def thrust(self):
+		"""thrust: pushes the ship from the direction this engine points."""
+		if self.thrusted: return
+		self.thrusted = True
+		if self.ship and self.ship.energy >= self.thrustCost * self.energyCost:
+			dir = self.ship.dir
+			self.ship.dx += cos(dir) * self.force / self.ship.mass / self.game.fps
+			self.ship.dy += sin(dir) * self.force / self.ship.mass / self.game.fps
+			self.ship.energy -= self.energyCost / self.game.fps * self.energyCost
+			self.thrusting = True
+			
+	def turnLeft(self):
+		"""rotates the ship counter-clockwise."""
+		if self.turned: return
+		self.turned = True
+		if self.ship and self.ship.energy >= self.turnCost * self.energyCost:
+			self.ship.dir = angleNorm(self.ship.dir - \
+						self.torque / self.ship.moment / self.ship.game.fps)
+			self.ship.energy -= self.turnCost / self.game.fps * self.energyCost
+		
+	def turnRight(self):
+		"""rotates the ship clockwise."""
+		if self.turned: return
+		self.turned = True
+		if self.ship and self.ship.energy >= self.turnCost * self.energyCost:
+			self.ship.dir = angleNorm(self.ship.dir + \
+						self.torque / self.ship.moment / self.ship.game.fps)
+			self.ship.energy -= self.turnCost / self.game.fps * self.energyCost
 
 
 

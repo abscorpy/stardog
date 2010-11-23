@@ -1,12 +1,13 @@
-window_sizes 1074 945 450 1350 720 82
+window_sizes 1445 945 450 1350 720 82
 diagrams
-  active  classdiagram_ref 128057 // stardog overview
+  classdiagram_ref 128057 // SolarSystem
     770 629 100 4 0 0
+  active  sequencediagram_ref 134841 // game loop
+    898 631 100 4 0 0
 end
 show_stereotypes
-selected classrelation_ref 129337 // parts (<composition>)
+selected sequencediagram_ref 134841 // game loop
 open
-  class_ref 128313 // Floater
   class_ref 128441 // Ship
   class_ref 128569 // Part
 end

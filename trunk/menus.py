@@ -155,7 +155,7 @@ class PartDescriptionPanel(Panel):
 		bigImage = pygame.transform.scale2x(self.part.image)
 		bigImage.set_colorkey((255,255,255)) # idk why this one's white.
 		self.image.blit(bigImage, (self.rect.width - 80, 60 - bigImage.get_height() / 2))
-		string = str(part)
+		string = part.stats()
 		string += '\nFunctions: '
 		for function in part.functions:
 			string += function.__name__+' '
