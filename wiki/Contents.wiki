@@ -2,6 +2,8 @@
 
 = Contents =
 
-[races]
-[missions]
-[parts]
+  * [races]
+
+  * [missions]
+
+  * [parts]
