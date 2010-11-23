@@ -94,20 +94,7 @@ class StrafebatScript(AIScript):
 					target = ship2
 		return target, distance2
 		
-class StrafebatGun(Gun):
-	shootDir = 180
-	shootPoint = -20, 0
-	bulletDamage = .5
-	energyCost = 1
-	name = "fore gun dam=.5"
-	image = None
-	def __init__(self,  game, parent = None):
-		if StrafebatGun.image == None:
-			StrafebatGun.image = pygame.image.load("res/parts/strafebatgun" \
-												+ ext).convert()
-			StrafebatGun.image.set_colorkey((0,0,0))
-		self.baseImage = StrafebatGun.image
-		Gun.__init__(self,  game, parent = None)
+
 	
 	
 class StrafebatCockpit(Cockpit):

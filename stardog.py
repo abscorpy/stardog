@@ -140,6 +140,12 @@ class Game:
 					stardog.debug = True #print debug information
 					self.keys[K_BACKSPACE % 322] = False
 					print "Debug:"
+				#ctrl+q or alt+F4 quit:
+				if self.keys[K_LALT % 322] and self.keys[K_F4 % 322] \
+				or self.keys[K_RALT % 322] and self.keys[K_F4 % 322] \
+				or self.keys[K_LCTRL % 322] and self.keys[K_q % 322] \
+				or self.keys[K_RCTRL % 322] and self.keys[K_q % 322]:
+					self.running = False
 					
 					
 				#unpaused:

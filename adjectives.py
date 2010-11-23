@@ -29,8 +29,6 @@ class Adjective:
 	types = [Gun, Engine, Gyro, Battery, Generator, Cockpit, Shield]
 	def effect(self, part):
 		pass
-	def shipEffect(self, ship):
-		pass
 		
 class Sturdy(Adjective):
 	"""HP * 1.6"""

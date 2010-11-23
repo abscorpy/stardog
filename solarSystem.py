@@ -213,7 +213,7 @@ def planet_ship_collision(planet, ship):
 		for part in ship.parts:
 			if collisionTest(planet, part):
 				temp = part.hp
-				part.takeDamage(damage)
+				part.takeDamage(damage, planet)
 				damage -= temp
 				if damage <= 0:
 					r = ship.radius + planet.radius
@@ -247,7 +247,6 @@ def crash(a, b):
 		setVolume(hitSound.play(), a, b)
 	hpA = a.hp
 	hpB = b.hp
-	a.takeDamage(hpB)
-	b.takeDamage(hpA)
-	if stardog.debug:
-		print a,(a.x,a.y),b,(b.x,b.y)
+	a.takeDamage(hpB, b)
+	b.takeDamage(hpA, a)
+	

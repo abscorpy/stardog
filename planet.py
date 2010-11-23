@@ -46,5 +46,5 @@ class Planet(Floater):
 				  int(self.y - offset[1])
 			pygame.draw.circle(surface, self.color, pos, int(self.radius))
 		
-	def takeDamage(self, damage):
+	def takeDamage(self, damage, other):
 		pass

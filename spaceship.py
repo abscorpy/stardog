@@ -300,9 +300,10 @@ class Ship(Floater):
 		pos[0] += - imageOffset[0] - self.radius
 		pos[1] += - imageOffset[1] - self.radius
 		surface.blit(buffer, pos) 
-	def takeDamage(self, damage):
+	def takeDamage(self, damage, other):
 		self.hp = max(self.hp - damage, 0)
-
+		if isinstance(other, Bullet) and other.ship == self.game.player:
+			self.game.player.xpDamage(self, damage)
 
 	def kill(self):
 		"""play explosion effect than call Floater.kill(self)"""
@@ -318,8 +319,15 @@ class Player(Ship):
 	def xpQuest(self, xp):
 		self.xp += xp
 	def xpKill(self, ship):
-		self.xp += ship.level / self.level * 10
+		self.xp +=  10. * ship.level / self.level
+	def xpDamage(self, target, damage):
+		if isinstance(target, Part) and target.parent:
+			target = target.parent #count the ship, not the part.
+		self.xp += 1. * target.level / self.level * damage
+	def xpDestroy(self, target):
+		self.xp += 2. * target.level / self.level
 	def update(self):
+		if stardog.debug: print 'xp:',self.xp
 		if self.xp >= self.next():
 			self.level += 1
 			self.developmentPoints += 1
