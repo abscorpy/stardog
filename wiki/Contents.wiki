@@ -1,0 +1,7 @@
+#summary Table of contents for the wiki.
+
+= Contents =
+
+[races]
+[missions]
+[parts]
