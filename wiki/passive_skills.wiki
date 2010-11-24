@@ -1,6 +1,6 @@
 #summary Details of the passive skill tree.
 
-back to [contents]
+back to [Contents]
 
 The player will start with several passive skills which unlock their class. 
 
