@@ -1,6 +1,8 @@
 #summary ideas about parts in the game.
 back to [Contents]
+
 GUNS
+
 LASER:
 - instant travel time
 - damage near = energy used
