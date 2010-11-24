@@ -1,0 +1,13 @@
+#summary Base page for skills
+
+= Introduction =
+
+There will be several skill trees in the game:
+
+  * [passive skills]
+
+  * [active skills]
+
+  * [class skills]
+
+  * [communication skills]
