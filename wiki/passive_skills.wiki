@@ -1,0 +1,7 @@
+#summary Details of the passive skill tree.
+
+back to [contents]
+
+The player will start with several passive skills which unlock their class. 
+
+Skills:
