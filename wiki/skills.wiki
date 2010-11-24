@@ -4,10 +4,10 @@
 
 There will be several skill trees in the game:
 
-  * [passive skills]
+  * [passive_skills]
 
-  * [active skills]
+  * [active_skills]
 
-  * [class skills]
+  * [class_skills]
 
-  * [communication skills]
+  * [communication_skills]
