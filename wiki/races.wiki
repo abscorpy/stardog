@@ -1,4 +1,5 @@
 #summary Summary of the races in the game.
+back to [contents]
 =Races=
     Most of the names are place holders.
 ==The Alliance==
