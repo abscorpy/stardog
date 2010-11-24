@@ -68,10 +68,12 @@ Protos are a race of simple, apparently single-celled organisms that are giganti
 You used to be one of these.  Humans were almost killed in the war with the xenosite zombie things.  That was before you drifted in space for a hundred years.  Now they are different.  The humans have claimed more systems than any other race (though less than the combined Alliance).  A lot of human colonies had to be destroyed or abandoned during their war with the Xenosites.  Now the Humans are expanding the other way- into Proto space, so they are increasingly fighting wars with the Protos, who aren’t really cohesive enough to mount organized resistance, but putting up a (defensive) fight anyways.  Humans have contact with the Alliance (primarily the Archivists), but do not seem too interested in joining it (although there are political factions who want to)- mostly they are too far away to become very integrated.  Humans seem to have a drive for expansion that is equaled only by the Benefactors (and the now deceased Xenosites).
 
 *Main quest: help the humans expand into Proto space, conquering all the Protos.  Don’t worry, a few will be kept in a zoo. (conflicts with Protos)
+
 ===Children of the Stars===
-A race that has always been taken by the beauty of the stars.  They raced to get into space, missing a lot of tech a lot of tech along the way.  Now they are widely spread out.  They have little tech that is useful, but some that is exploration-centric.  They are especially interested in the birth and death of stars, planets, and life.  They are very curious, express everything in terms of beauty.  Might do ‘evil’ things just to see what happens.
+A race that has always been taken by the beauty of the stars.  They raced to get into space, missing a lot of tech a lot of tech along the way.  Now they are widely spread out.  They have very little offensive tech, but have the best deflectors in the sector.  Their planets feature extremely powerful deflectors that make any potential enemies give up on attacking them.  They are especially interested in the birth and death of stars, planets, and life.  They are very curious, express everything in terms of beauty.  Might do ‘evil’ things just to see what happens, and they are unlikely to take it personally if you kill a few of their ships for deflectors. 
 
 *Main quest: help the Children build a warp gate to h7, and to colonize h7.  (this conflicts with the tree quest).
+
 ===Xenosites===
 The zombie race that you killed off, and became the last of.  I think there should be a way to spawn more somewhere from yourself (by infecting innocents), but then you fail to control them, and they try to kill you for being a rogue aberration.
 
