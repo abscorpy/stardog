@@ -1,5 +1,7 @@
 #summary Summary of the races in the game.
 back to [Contents]
+<wiki:toc max_depth="3" />
+<img src = http://i.imgur.com/IQjp7.png>
 =Races=
     Most of the names are place holders.
 ==The Alliance==
