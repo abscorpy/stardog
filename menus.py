@@ -91,6 +91,8 @@ class PartsPanel(Panel):
 	def remove(self):
 		"""removes the selected part from the ship and updates menus"""
 		if self.portPanel.selected:
+			self.descriptionInventory.setPart(self.portPanel.selected.port.part)
+			self.descriptionShip.setPart(None)
 			self.portPanel.unequip(self.portPanel.selected.port)
 			self.thisShip.reset()
 			self.portPanel.reset()
@@ -100,9 +102,11 @@ class PartsPanel(Panel):
 		"""adds the selected part to the ship and updates menus"""
 		if self.portPanel.selected and self.inventoryPanel.selected:
 			self.thisShip.inventory.remove(self.inventoryPanel.selected.part)
+			self.descriptionInventory.setPart(self.portPanel.selected.port.part)
 			self.remove()
 			self.portPanel.selected.port.addPart(\
 						self.inventoryPanel.selected.part)
+			self.descriptionShip.setPart(self.inventoryPanel.selected.part)
 			self.thisShip.reset()
 			self.portPanel.reset()
 			self.inventoryPanel.reset()
@@ -145,10 +149,12 @@ class PartDescriptionPanel(Panel):
 		
 	def setPart(self, part):
 		self.part = part
-		if not part:
-			return
 		self.removePanel(self.text)
 		self.removePanel(self.name)
+		if not part:
+			if self.image:
+				self.image.fill((0,0,0,0))
+			return
 		self.image = pygame.Surface((self.rect.width, self.rect.height), \
 					hardwareFlag).convert()
 		self.image.set_colorkey((0,0,0))
@@ -436,10 +442,22 @@ class Skills(Panel):
 		Panel.__init__(self, rect)
 		self.addPanel(Label(Rect(self.rect.width / 2 - 60, 2, 0, 0),\
 			"Skills", BIG_FONT))
-class SkillTile(Selectable):
+		rect = Rect(100,100,100,100)
+		self.addPanel(Button(Rect(100,100,100,100), \
+					lambda:self.skill('modularity'), None, SMALL_FONT))
+		rect = Rect(rect)
+		rect.x, rect.y = rect.x + 2, rect.y + 2
+		self.panels[-1].addPanel(TextBlock(rect,'Modularity:\nincrease the \nnumber of \nparts your \nship can have \nbefore losing \nefficiency.', SMALL_FONT, (100,200,0), 100))
+		
+	
+	def skill(self, skillName):
+		pass
+
+class SkillTreeTab(Selectable):
 	pass
-class SkillTree(Selecter):
+class SkillTreeSelector(Selecter):
 	pass
+	
 class Store(Panel):
 	def __init__(self, rect):
 		Panel.__init__(self, rect)

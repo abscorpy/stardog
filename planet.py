@@ -8,7 +8,7 @@ import stardog
 
 class Planet(Floater):
 	maxRadius = 1000000 # no gravity felt past this (approximation).
-	PLANET_DAMAGE = .001
+	PLANET_DAMAGE = .0004
 	LANDING_SPEED = 200 #pixels per second. Under this, no damage.
 	g = 5000 # the gravitational constant.
 	

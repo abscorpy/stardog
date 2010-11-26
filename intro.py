@@ -1,6 +1,9 @@
 #intro.py
 from menuElements import *
 
+squareWidth = 80
+squareSpacing = squareWidth + 10
+
 class IntroMenu(TopLevelPanel):
 	color = (100, 100, 255, 250)
 	def __init__(self, game, rect):
@@ -10,10 +13,11 @@ class IntroMenu(TopLevelPanel):
 				"Choose a color:", color = (250,250,250),\
 				font = BIG_FONT))
 		self.running = True
-		for x in range((self.rect.width - 100) / 60):
-			for y in range((self.rect.height - 120) / 60):
+		for x in range((self.rect.width - 100) / (squareSpacing)):
+			for y in range((self.rect.height - 120) / (squareSpacing)):
 				self.addPanel(ColorButton(self, \
-						Rect(x * 60 + 50, y * 60 + 70, 50, 50),\
+						Rect(x * squareSpacing + 50, y * squareSpacing + 70,\
+						squareWidth, squareWidth),\
 						(randint(0,255),randint(0,255),randint(0,255))))
 			
 	def chooseColor(self, color):

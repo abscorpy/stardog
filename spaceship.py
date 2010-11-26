@@ -89,6 +89,40 @@ class Ship(Floater):
 	skillEffects = []
 	timedEffects = []
 	
+	partLimit = 10
+	penalty = .1
+	efficiency = 1.
+	#bonuses:
+	thrustBonus = 1.
+	torqueBonus = 1.
+	shieldRegenBonus = 1.
+	shieldMaxBonus = 1.
+	generatorBonus = 1.
+	batteryBonus = 1.
+	regeneration = 0
+	energyUseBonus = 1.
+	massBonus = 1.
+	sensorBonus = 1.
+	hiddenBonus = 1.
+	
+	fireRateBonus = 1.
+	damageBonus = 1.
+	cannonBonus = 1.
+	laserBonus = 1.
+	missileBonus = 1.
+	cannonRateBonus = 1.
+	laserRateBonus = 1.
+	missileRateBonus = 1.
+	cannonRangeBonus = 1.
+	laserRangeBonus = 1.
+	missileRangeBonus = 1.
+	cannonDefenseBonus = 1.
+	laserDefenseBonus = 1.
+	missileDefenseBonus = 1.
+	cannonSpeedBonus = 1.
+	missileSpeedBonus = 1.
+
+	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255)):
 		Floater.__init__(self, game, x, y, dx, dy, dir, 1)
@@ -98,7 +132,7 @@ class Ship(Floater):
 		self.color = color
 		self.part = None
 		if script: self.script = script
-		else: self.script = Script(None, None)
+		else: self.script = Script(game)
 		self.baseImage = pygame.Surface((200, 200), hardwareFlag | SRCALPHA).convert_alpha()
 		self.baseImage.set_colorkey((0,0,0))
 		self.functions = [self.forward, self.reverse, self.left, self.right, \
@@ -115,7 +149,7 @@ class Ship(Floater):
 		part.offset = (0, 0)
 		part.ship = self
 		part.image = colorShift(part.baseImage, self.color).convert()
-		part.image.set_colorkey((255,255,255))
+		part.image.set_colorkey((0,0,0))
 		self.basePart = part
 		self.reset()
 
@@ -253,8 +287,6 @@ class Ship(Floater):
 			effect(self)
 		for effect in self.partEffects:
 			effect(self)
-			
-			
 
 	def draw(self, surface, offset = None, pos = (0, 0)):
 		"""ship.draw(surface, offset) -> Blits this ship onto the surface. 

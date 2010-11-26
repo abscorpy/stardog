@@ -50,7 +50,10 @@ class HUD:
 		pygame.draw.rect(self.image, (0, 180, 80), (x, y \
 			+ h - h * thisShip.xp / thisShip.next(), 5, h \
 			* thisShip.xp / thisShip.next())) # full bar
-		
+		if(fontModule):# and thisShip.developmentPoints:
+			self.image.blit(FONT.render(str(thisShip.developmentPoints), \
+						False, (0, 180, 80)), (x, y - 20))
+						
 		#FPS
 		if(fontModule):
 			self.image.blit(FONT.render(str(self.game.fps), \
