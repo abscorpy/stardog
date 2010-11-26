@@ -82,7 +82,7 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 		surface.blit(self.image, pos)
 
 class Bullet(Floater):
-	def __init__(self, game, gun, image = None):
+	def __init__(self, game, gun, damage, speed, range, image = None):
 		dir = gun.dir + gun.ship.dir
 		cost = cos(dir) #cost is short for cos(theta)
 		sint = sin(dir)
@@ -91,7 +91,7 @@ class Bullet(Floater):
 		y = gun.y + gun.shootPoint[0] * sint\
 						+ gun.shootPoint[1] * cost + gun.ship.dy / game.fps
 		dir += gun.shootDir # not needed for the offset, but needed for the dir.
-		self.speed = gun.bulletSpeed
+		self.speed = speed
 		dx = self.speed * cos(dir) + gun.ship.dx
 		dy = self.speed * sin(dir) + gun.ship.dy
 		if image == None:
@@ -100,8 +100,8 @@ class Bullet(Floater):
 							dir = dir, radius = gun.bulletRadius, \
 							image = image)
 		self.image.set_colorkey((255,255,255))
-		self.range = gun.bulletRange
-		self.hp = gun.bulletDamage
+		self.range = range
+		self.hp = damage
 		self.life = 0.
 		self.ship = gun.ship
 		if 'target' in gun.ship.__dict__:

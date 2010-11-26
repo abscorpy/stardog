@@ -23,8 +23,7 @@ class Port:
 
 class Part(Floater):
 	"""A part of a ship."""
-	baseImage = pygame.image.load("res/default.gif")
-	baseImage.set_colorkey((0,0,0))
+	baseImage = pygame.image.load("res/default.gif").convert()
 	image = None
 	height, width = 9, 3
 	parent = None
@@ -56,7 +55,9 @@ class Part(Floater):
 		self.maxhp = 10
 		self.hp = 10
 		Floater.__init__(self, game, 0, 0, dir = 270, radius = 10)
+		self.baseImage.set_colorkey((255,255,255))
 		self.image = self.baseImage
+		self.image.set_colorkey((255,255,255))
 		self.width = self.image.get_width()
 		self.height = self.image.get_height()
 		#the length of this list is the number of connections.
@@ -98,7 +99,7 @@ class Part(Floater):
 			#rotate takes a ccw angle.
 			part.image = colorShift(pygame.transform.rotate(part.baseImage, \
 						-part.dir), part.color).convert()
-			part.image.set_colorkey((255,255,255))
+			part.image.set_colorkey((0,0,0))
 			#allow the ship to re-adjust:
 			self.ship.reset()
 			
@@ -251,6 +252,7 @@ class Part(Floater):
 
 						
 class Gun(Part):
+	baseImage = pygame.image.load("res/default" + ext).convert()
 	image = None
 	bulletImage = None
 	bulletSpeed = 300
@@ -266,11 +268,6 @@ class Gun(Part):
 	
 	def __init__(self, game):
 		#TODO:use this structure for all parts:
-		if self.baseImage == None: 
-			if Gun.image == None:
-				Gun.image = pygame.image.load("res/default" + ext).convert()
-				Gun.image.set_colorkey((0,0,0))
-			self.baseImage = Gun.image
 		if self.bulletImage == None:
 			self.bulletImage = BULLET_IMAGE.copy()
 		Part.__init__(self, game)
@@ -304,66 +301,52 @@ energy/bullet \nBullet Speed: %s \nRange: %s seconds \nFiring angle: %s CW from 
 		"""fires a bullet."""
 		if self.acted: return
 		self.acted = True
+		s = self.ship
 		if self.reload <= 0 and self.ship.energy > self.energyCost:
-			self.reload = self.reloadTime
+			self.reload = self.reloadTime * s.efficiency * s.cannonRateBonus
 			self.ship.energy -= self.energyCost
 			if soundModule:
 				setVolume(shootSound.play(), self, self.game.player)
 			self.game.curSystem.floaters.add( \
-					Bullet(self.game, self, image = self.bulletImage))
+					Bullet(self.game, self, \
+					self.bulletDamage * s.efficiency * s.damageBonus * s.cannonBonus, \
+					self.bulletSpeed * s.cannonSpeedBonus,\
+					self.bulletRange * s.cannonRangeBonus, image = self.bulletImage))
 
 	
 	
-class LeftGun(Gun):
+class LeftGun(Gun):#move to config
+	baseImage = pygame.image.load("res/parts/leftgun" + ext).convert()
 	shootPoint = 0, - 30
 	shootDir = 270
 	name = "Left Gun"
-	def __init__(self, game):
-		if LeftGun.image == None:
-			LeftGun.image = pygame.image.load("res/parts/leftgun" + ext).convert()
-		self.baseImage = LeftGun.image
-		self.baseImage.set_colorkey((0,0,0))
-		Gun.__init__(self, game)
 
-class RightGun(Gun):
+class RightGun(Gun):#move to config
+	baseImage = pygame.image.load("res/parts/rightgun" + ext).convert()
 	shootPoint = 0, 30
 	shootDir = 90
 	name = "Right Gun"
-	def __init__(self, game):
-		if RightGun.image == None:
-			RightGun.image = pygame.image.load("res/parts/rightgun" + ext).convert()
-		self.baseImage = RightGun.image
-		self.baseImage.set_colorkey((0,0,0))
-		Gun.__init__(self, game)
 		
-class StrafebatGun(Gun):
+class StrafebatGun(Gun):#move to config
+	baseImage = pygame.image.load("res/parts/strafebatgun" + ext).convert()
 	shootDir = 180
 	shootPoint = -20, 0
 	bulletDamage = .5
 	energyCost = 1
 	name = "fore gun dam=.5"
 	image = None
-	def __init__(self,  game):
-		if StrafebatGun.image == None:
-			StrafebatGun.image = pygame.image.load("res/parts/strafebatgun" \
-												+ ext).convert()
-			StrafebatGun.image.set_colorkey((0,0,0))
-		self.baseImage = StrafebatGun.image
-		Gun.__init__(self,  game)
 		
 class Engine(Part):
+	baseImage = pygame.image.load("res/parts/engine" + ext).convert()
 	image = None
 	name = "Engine"
 	force = 24000
 	thrusting = False
 	energyCost = 1.
 	def __init__(self, game):
-		if Engine.image == None:
-			Engine.image = pygame.image.load("res/parts/engine" + ext).convert()
+		if Engine.animatedImage == None:
 			Engine.animatedImage = pygame.image.load(\
 					"res/parts/engine thrusting" + ext).convert_alpha()
-		self.baseImage = Engine.image
-		self.baseImage.set_colorkey((0,0,0))
 		self.baseAnimatedImage = Engine.animatedImage
 		self.baseAnimatedImage.set_colorkey((0,0,0))
 		self.animated = True
@@ -404,14 +387,10 @@ class Engine(Part):
 			self.thrusting = True
 
 class Cockpit(Part):
+	baseImage = pygame.image.load("res/parts/cockpit" + ext).convert()
 	image = None
 	name = "Cockpit"
 	def __init__(self, game):
-		if Cockpit.image == None:
-			Cockpit.image =\
-					pygame.image.load("res/parts/cockpit" + ext).convert()
-		self.baseImage = Cockpit.image
-		self.baseImage.set_colorkey((0,0,0))
 		Part.__init__(self, game)
 		self.ports = [Port((self.width / 2 - 2, 0), 180, self), \
 					Port((0, self.height / 2 - 2), 270, self), \
@@ -419,15 +398,12 @@ class Cockpit(Part):
 					Port((0, -self.height / 2 + 2), 90, self)]
 
 class Gyro(Part):
+	baseImage = pygame.image.load("res/parts/gyro" + ext).convert()
 	image = None
 	name = "Gyro"
 	torque = 180000 #N m degrees== m m kg degrees /s /s
 	energyCost = .8
 	def __init__(self, game):
-		if Gyro.image == None:
-			Gyro.image = pygame.image.load("res/parts/gyro" + ext).convert()
-		self.baseImage = Gyro.image
-		self.baseImage.set_colorkey((0,0,0))
 		Part.__init__(self, game)
 		self.ports = [Port((0, self.height / 2 - 2), 270, self), \
 				Port((-self.width / 2 + 2, 0), 0, self), \
@@ -464,18 +440,11 @@ energy/second of turning"""
 			self.ship.energy -= self.energyCost / self.game.fps
 	
 class Generator(Part):
+	baseImage = pygame.image.load("res/parts/generator" + ext).convert()
 	image = None
 	name = "Generator"
 	rate = 6.
-	
-	def __init__(self, game):
-		if Generator.image == None:
-			Generator.image = \
-					pygame.image.load("res/parts/generator" + ext).convert()
-		self.baseImage = Generator.image
-		self.baseImage.set_colorkey((0,0,0))
-		Part.__init__(self, game)
-	
+		
 	def stats(self):
 		stats = (self.rate,)
 		statString = """\nEnergy Produced: %s/second"""
@@ -493,16 +462,10 @@ class Generator(Part):
 		Part.update(self)
 	
 class Battery(Part):
+	baseImage = pygame.image.load("res/parts/battery" + ext).convert()
 	image = None
 	name = "Battery"
 	capacity = 100
-	def __init__(self, game):
-		if Battery.image == None:
-			Battery.image = \
-					pygame.image.load("res/parts/battery" + ext).convert()
-		self.baseImage = Battery.image
-		self.baseImage.set_colorkey((0,0,0))
-		Part.__init__(self, game)
 	
 	def stats(self):
 		stats = (self.capacity,)
@@ -519,17 +482,13 @@ class Battery(Part):
 		Part.attach(self)
 
 class Shield(Part):
+	baseImage = pygame.image.load("res/parts/shield" + ext).convert()
 	image = None
 	name = "Shield"
 	shieldhp = 10
 	shieldRegen = .30
 	energyCost = 1.5
 	def __init__(self, game): 
-		if Shield.image == None:
-			Shield.image = \
-					pygame.image.load("res/parts/shield" + ext).convert()
-		self.baseImage = Shield.image
-		self.baseImage.set_colorkey((0,0,0))
 		Part.__init__(self, game)
 		self.ports = []
 	
@@ -561,6 +520,7 @@ class Shield(Part):
 
 
 class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
+	baseImage = pygame.image.load("res/ship" + ext).convert()
 	mass = 10
 	name = "Tiny Fighter Chassis"
 	image = None
@@ -588,13 +548,8 @@ class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
 	capacity = 40
 	
 	def __init__(self,  game):
-		if Drone.image == None:
-			Drone.image = pygame.image.load("res/ship" \
-												+ ext).convert()
-			Drone.image.set_colorkey((0,0,0))
-			Drone.animatedImage = pygame.image.load(\
-					"res/shipThrusting" + ext).convert_alpha()
-		self.baseImage = Drone.image
+		if Drone.animatedImage == None:
+			Drone.animatedImage = pygame.image.load("res/shipThrusting" + ext).convert_alpha()
 		self.baseAnimatedImage = Drone.animatedImage
 		self.baseAnimatedImage.set_colorkey((0,0,0))
 		self.animated = True
@@ -636,11 +591,14 @@ class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
 		and self.burst > 0:
 			self.reload = self.reloadTime
 			self.burst -= 1
-			self.ship.energy -= self.shotCost * self.energyCost
+			s = self.ship
+			s.energy -= self.shotCost * self.energyCost
 			if soundModule:
-				setVolume(shootSound.play(), self, self.game.player)
-			self.game.curSystem.floaters.add(Bullet(self.game, self,\
-							image = self.bulletImage))
+				self.game.curSystem.floaters.add( \
+					Bullet(self.game, self, \
+					self.bulletDamage * s.efficiency * s.damageBonus * s.cannonBonus, \
+					self.bulletSpeed * s.cannonSpeedBonus,\
+					self.bulletRange * s.cannonRangeBonus, image = self.bulletImage))
 			if self.burst <= 0:
 				self.reloadBurst = self.reloadBurstTime
 				
