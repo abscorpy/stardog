@@ -2,6 +2,7 @@
 from utils import *
 from menuElements import *
 import stardog
+from parts import Dummy
 
 class Menu(TopLevelPanel):
 	"""The top level menu object. Menu(mouse, rect) -> new Menu"""
@@ -137,12 +138,13 @@ class ShipPanel(Selecter):
 		self.scale = 2,2
 		s = self.thisShip
 		text = "Parts: %s/%s     Efficiency: %s\nMass: %s KG     Forward Thrust: %s N\nMoment: %s KG m      Torque: %s N m\nMax DPS: %s\nEnergy: %s/%s\nShields: %s/%s"\
-				%(len(s.parts), s.partLimit, s.efficiency, s.mass, \
+				%(s.numParts, s.partLimit, s.efficiency, s.mass, \
 				s.forwardThrust, int(s.moment), s.torque, \
 				s.dps, s.energy, s.maxEnergy, s.hp, s.maxhp)
 		self.removePanel(self.text)
 		self.text = TextBlock(Rect(0,0,400,100), text, color = (100,200,0))
 		self.addPanel(self.text)
+		Panel.reset(self)
 		
 	def draw(self, surface, rect):
 		double = pygame.transform.scale2x(self.thisShip.baseImage)
@@ -161,7 +163,7 @@ class PartDescriptionPanel(Panel):
 		self.part = part
 		self.removePanel(self.text)
 		self.removePanel(self.name)
-		if not part:
+		if not part or isinstance(part, Dummy):
 			if self.image:
 				self.image.fill((0,0,0,0))
 			return
@@ -187,11 +189,12 @@ class PartDescriptionPanel(Panel):
 	
 	def reset(self):
 		self.setPart(self.part)
+		Panel.reset(self)
 	
 class PortPanel(ShipPanel):
 	def unequip(self, port):
 		"""a recursive helper method for remove."""
-		if port.part:
+		if port.part and not isinstance(port.part,Dummy):
 			part = port.part
 			part.ship.inventory.append(part)
 			for recursivePort in part.ports:
@@ -204,6 +207,8 @@ class PortPanel(ShipPanel):
 	def reset(self):
 		"""remakes this panel to reflect ship changes."""
 		ShipPanel.reset(self)
+		self.dummify(self.thisShip.basePart)
+		self.thisShip.reset()
 		self.image.fill((0,0,0,0))
 		self.panels = []
 		self.selectables = []
@@ -212,6 +217,14 @@ class PortPanel(ShipPanel):
 				self.addSelectable(PortButton(port, part, self.thisShip, self))
 				self.selectables[-1].resize(self.scale)
 		self.addPanel(self.text)
+		Panel.reset(self)
+		
+	def dummify(self, part):
+		for port in part.ports:
+			if port.part == None:
+				port.addPart(Dummy(self.thisShip.game))
+			else:
+				self.dummify(port.part)
 
 class PartTile(Selectable):
 	width = 150
@@ -377,29 +390,30 @@ class PartFunctionsPanel(ShipPanel):
 			self.labels.append(Label(Rect(pos,(20,20)), str(part.number), \
 					font = BIG_FONT))
 			self.addPanel(self.labels[-1])
+		Panel.reset(self)
 		
 class FunctionSelecter(Selecter):
-		def __init__(self, rect, ship):
-			Selecter.__init__(self, rect)
-			self.partsList = ship.parts
-			self.thisShip = ship
-			self.reset()
-		
-		def reset(self):
-			self.selectables = []
-			self.addSelectable(PresetSelectable("ship-wide presets", \
+	def __init__(self, rect, ship):
+		Selecter.__init__(self, rect)
+		self.partsList = ship.parts
+		self.thisShip = ship
+		self.reset()
+	
+	def reset(self):
+		self.selectables = []
+		self.addSelectable(PresetSelectable("ship-wide presets", \
+					Rect(0, 0, self.rect.width, 16)))
+		for function in self.thisShip.functions:
+			self.addSelectable(FunctionSelectable(function, \
+						Rect(20, 0, self.rect.width, 16)))
+					
+		for part in self.partsList:
+			self.addSelectable(PartHeaderSelectable(part, \
 						Rect(0, 0, self.rect.width, 16)))
-			for function in self.thisShip.functions:
+			for function in part.functions:
 				self.addSelectable(FunctionSelectable(function, \
-							Rect(20, 0, self.rect.width, 16)))
-						
-			for part in self.partsList:
-				self.addSelectable(PartHeaderSelectable(part, \
-							Rect(0, 0, self.rect.width, 16)))
-				for function in part.functions:
-					self.addSelectable(FunctionSelectable(function, \
-							Rect(20, 0, self.rect.width - 20, 16)))
-			Selecter.reset(self)
+						Rect(20, 0, self.rect.width - 20, 16)))
+		Selecter.reset(self)
 							
 class PresetSelectable(Selectable):
 	def __init__(self, string, rect):

@@ -18,14 +18,14 @@ class Strafebat(Ship):
 		Ship.__init__(self, game, x, y, script = StrafebatScript(game), color = color)
 		cockpit =StrafebatCockpit(game)
 		gyro = Gyro(game)
-		gun = StrafebatGun(game)
+		gun = StrafebatCannon(game)
 		engine = Engine(game)
 		generator = Generator(game)
 		battery = Battery(game)
 		shield = Shield(game)
-		rGun = RightGun(game)
-		lGun = LeftGun(game)
-		for part in [cockpit, gyro, gun, engine, generator, battery, shield, rGun, lGun]:
+		rCannon = RightCannon(game)
+		lCannon = LeftCannon(game)
+		for part in [cockpit, gyro, gun, engine, generator, battery, shield, rCannon, lCannon]:
 			if rand() > .8:
 				addAdjective(part)
 				if rand() > .6:
@@ -42,9 +42,9 @@ class Strafebat(Ship):
 		else: 
 			gyro.addPart(battery, 2)
 		if .8 < roll < .9:
-			generator.addPart(rGun, 0)
+			generator.addPart(rCannon, 0)
 		if .7 < roll < .8:
-			battery.addPart(lGun, 0)
+			battery.addPart(lCannon, 0)
 		self.energy = self.maxEnergy
 
 

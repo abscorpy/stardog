@@ -1,6 +1,6 @@
 #adjectives.py
 from parts import *
-PARTS = [LeftGun, RightGun, Engine, Gyro, Generator, Battery, Shield]
+PARTS = [LeftCannon, RightCannon, Engine, Gyro, Generator, Battery, Shield]
 def randItem(game, level = 1):
 	roll = randint(0, len(PARTS) -1)
 	if roll == rand() * level / 2 < .8:
@@ -22,11 +22,11 @@ def addAdjective(part, level = 1):
 	#for now, if this adjective doesn't fit, pick another at random.
 	return addAdjective(part, level)
 	
-ENERGY_USING = [Gun, Engine, Gyro, Shield]
+ENERGY_USING = [Cannon, Engine, Gyro, Shield]
 
 class Adjective:
 	level = 1
-	types = [Gun, Engine, Gyro, Battery, Generator, Cockpit, Shield]
+	types = [Cannon, Engine, Gyro, Battery, Generator, Cockpit, Shield]
 	def effect(self, part):
 		pass
 		
@@ -110,49 +110,49 @@ class Armored(Adjective):
 		
 class _50_Megawatt(Adjective):
 	"""Damage * .5, Cost * .5"""
-	types = [Gun]
+	types = [Cannon]
 	def effect(self, part):
 		part.bulletDamage *= .5
 		part.energyCost *= .5
 
 class _200_Megawatt(Adjective):
 	"""Damage * 2, Cost * 2"""
-	types = [Gun]
+	types = [Cannon]
 	def effect(self, part):
 		part.bulletDamage *= 2
 		part.energyCost *= 2
 		
 class _300_Megawatt(Adjective):
 	"""Damage * 3, Cost * 3"""
-	types = [Gun]
+	types = [Cannon]
 	def effect(self, part):
 		part.bulletDamage *= 3
 		part.energyCost *= 3
 		
 class _400_Megawatt(Adjective):
 	"""Damage * 4, Cost * 4"""
-	types = [Gun]
+	types = [Cannon]
 	def effect(self, part):
 		part.bulletDamage *= 4
 		part.energyCost *= 4
 
 class Nitrogen_Cooled(Adjective):
 	"""Rate * 1.3, Cost + 3"""
-	types = [Gun]
+	types = [Cannon]
 	def effect(self, part):
 		part.reloadTime /= 1.3
 		part.energyCost += 3
 
 class Helium_Cooled(Adjective):
 	"""Rate * 1.5, Cost + 5"""
-	types = [Gun]
+	types = [Cannon]
 	def effect(self, part):
 		part.reloadTime /= 1.5
 		part.energyCost += 5
 
 class Quantum_Accelerated(Adjective):
 	"""Rate * 2., Cost + 9"""
-	types = [Gun]
+	types = [Cannon]
 	def effect(self, part):
 		part.reloadTime /= 2
 		part.energyCost += 9

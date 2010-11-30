@@ -20,8 +20,8 @@ def starterShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	generator = Generator(game)
 	battery = Battery(game)
 	cockpit = Cockpit(game)
-	gun = LeftGun(game)
-	gun2 = RightGun(game)
+	gun = LeftCannon(game)
+	gun2 = RightCannon(game)
 	engine1 = Engine(game)
 	engine2 = Engine(game)
 	for part in [gyro, generator, battery, cockpit, gun, gun2, engine1, engine2]:
@@ -83,11 +83,12 @@ class Ship(Floater):
 	missiles = []
 	gyros = []
 	number = 0
+	numParts = 0
 	name = 'Ship'
 	level = 1
 	partEffects = []
-	skillEffects = []
-	timedEffects = []
+	effects = []
+	skills = []
 	
 	partLimit = 10
 	penalty = .1
@@ -159,6 +160,7 @@ class Ship(Floater):
 		#TODO: ? make the center of the ship the center of mass instead of the 
 		#center of the radii. 
 		for part in self.parts:
+			if isinstance(part, Dummy): continue
 			minX = min(part.offset[0] - part.radius, minX)
 			minY = min(part.offset[1] - part.radius, minY)
 			maxX = max(part.offset[0] + part.radius, maxX)
@@ -174,21 +176,29 @@ class Ship(Floater):
 		self.maxhp = 0
 		partNum = 1
 		for part in self.parts:
-			part.number = partNum
-			partNum += 1
-			part.offset = 	part.offset[0] - xCorrection, \
-							part.offset[1] - yCorrection
-			part.attach()
-		if partNum - 1 > self.partLimit:
-			self.efficiency = (1 - self.penalty) ** (partNum- 1 - self.partLimit)
+			if not isinstance(part, Dummy):
+				part.number = partNum
+				partNum += 1
+				part.offset = 	part.offset[0] - xCorrection, \
+								part.offset[1] - yCorrection
+				part.attach()
+		partNum -= 1
+		if partNum > self.partLimit:
+			self.efficiency = (1 - self.penalty) ** (partNum - self.partLimit)
 		else:
-			self.efficiency = (1 + self.bonus) ** (self.partLimit - partNum- 1)
-			
+			self.efficiency = 2 - (1 - self.bonus) ** (self.partLimit - partNum)
+		self.numParts = partNum
 		self.energy = min(self.energy, self.maxEnergy)
 		self.hp = min(self.hp, self.maxhp)
+		for skill in self.skills:
+			skill.shipReset()
+		
 		#redraw base image:
-		self.baseImage = pygame.Surface((int(self.radius * 2), \
-					int(self.radius * 2)), \
+		if self.game.pause:
+			size = int(self.radius * 2 + 60)
+		else: 
+			size = int(self.radius * 2)
+		self.baseImage = pygame.Surface((size, size), \
 					hardwareFlag | SRCALPHA).convert_alpha()
 		self.baseImage.set_colorkey((0,0,0))
 		self.basePart.draw(self.baseImage)
@@ -213,7 +223,7 @@ class Ship(Floater):
 		if isinstance(part, Gyro):
 			self.gyros.append(part)
 			self.torque += part.torque
-		if isinstance(part, Gun):
+		if isinstance(part, Cannon):
 			self.guns.append(part)
 			self.dps += part.getDPS()
 		#if isinstance(part, missileLauncher):
@@ -238,14 +248,14 @@ class Ship(Floater):
 		"""strafes right using all right engines"""
 		for engine in self.rightEngines:
 			engine.thrust()
-	def turnLeft(self):
+	def turnLeft(self, angle = None):
 		"""Turns ccw using all gyros."""
 		for gyro in self.gyros:
-			gyro.turnLeft()
-	def turnRight(self):
+			gyro.turnLeft(angle)
+	def turnRight(self, angle = None):
 		"""Turns cw using all gyros."""
 		for gyro in self.gyros:
-			gyro.turnRight()
+			gyro.turnRight(angle)
 	def shoot(self):
 		"""fires all guns."""
 		for gun in self.guns:
@@ -270,12 +280,7 @@ class Ship(Floater):
 			self.basePart.update()
 		
 		#active effects:
-		#prune expired:
-		self.timedEffects = [e for e in self.timedEffects if e.duration > 0]
-		for effect in self.timedEffects:
-			effect.duration -= 1./self.game.fps
-			effect(self)
-		for effect in self.skillEffects:
+		for effect in self.effects:
 			effect(self)
 		for effect in self.partEffects:
 			effect(self)

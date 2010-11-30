@@ -136,6 +136,8 @@ class Game:
 				if self.keys[K_RETURN % 322]:
 					self.pause = not self.pause #pause/menu
 					self.keys[K_RETURN % 322] = False
+					if self.pause:
+						self.menu.reset()
 				stardog.debug = False
 				if self.keys[K_BACKSPACE % 322]:
 					stardog.debug = True #print debug information
