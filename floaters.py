@@ -36,11 +36,7 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 	string of a file name without an axtension- there should be both a .gif 
 	and	a .bmp, which is used depends on the pygame support on the run
 	system."""
-	x, y = 0., 0.
-	dx, dy = 0., 0.
-	dir = 0
 	hp = 1
-	radius = 10
 	baseImage = None
 	color = (200, 200, 0)
 	mass = 1
@@ -154,7 +150,7 @@ class Explosion(Floater):
 		image = pygame.Surface((radius * 2, radius * 2), flags = hardwareFlag).convert()
 		image.set_colorkey((0,0,0))
 		Floater.__init__(self, game, x, y, dx, dy, radius = 0,\
-				image = image)			
+				image = image)
 		self.maxRadius = int(radius)
 		self.radius = 0
 		self.time = time
@@ -163,7 +159,7 @@ class Explosion(Floater):
 
 	def update(self):
 		Floater.update(self)
-		self.life += 1
+		self.life += 1. / self.game.fps
 		if self.life > self.time:
 			Floater.kill(self)
 		#grow or shrink: size peaks at time / 2:

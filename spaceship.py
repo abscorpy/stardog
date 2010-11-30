@@ -91,36 +91,20 @@ class Ship(Floater):
 	
 	partLimit = 10
 	penalty = .1
+	bonus = .05
 	efficiency = 1.
 	#bonuses:
-	thrustBonus = 1.
-	torqueBonus = 1.
-	shieldRegenBonus = 1.
-	shieldMaxBonus = 1.
-	generatorBonus = 1.
-	batteryBonus = 1.
-	regeneration = 0
-	energyUseBonus = 1.
-	massBonus = 1.
-	sensorBonus = 1.
-	hiddenBonus = 1.
-	
-	fireRateBonus = 1.
-	damageBonus = 1.
-	cannonBonus = 1.
-	laserBonus = 1.
-	missileBonus = 1.
-	cannonRateBonus = 1.
-	laserRateBonus = 1.
-	missileRateBonus = 1.
-	cannonRangeBonus = 1.
-	laserRangeBonus = 1.
-	missileRangeBonus = 1.
-	cannonDefenseBonus = 1.
-	laserDefenseBonus = 1.
-	missileDefenseBonus = 1.
-	cannonSpeedBonus = 1.
-	missileSpeedBonus = 1.
+	baseBonuses = {\
+	'thrustBonus' : 1., 'torqueBonus' : 1.,\
+	'shieldRegenBonus' : 1., 'shieldMaxBonus' : 1.,\
+	'generatorBonus' : 1., 'batteryBonus' : 1., 'regeneration' : 0, 'energyUseBonus' : 1.,\
+	'massBonus' : 1., 'sensorBonus' : 1., 'hiddenBonus' : 1., 'fireRateBonus' : 1.,\
+	'damageBonus' : 1., 'cannonBonus' : 1., 'laserBonus' : 1., 'missileBonus' : 1.,\
+	'cannonRateBonus' : 1., 'laserRateBonus' : 1., 'missileRateBonus' : 1.,\
+	'cannonRangeBonus' : 1., 'laserRangeBonus' : 1., 'missileRangeBonus' : 1.,\
+	'cannonDefenseBonus' : 1., 'laserDefenseBonus' : 1., 'missileDefenseBonus' : 1.,\
+	'cannonSpeedBonus' : 1., 'missileSpeedBonus' : 1.\
+	}
 
 	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
@@ -131,6 +115,7 @@ class Ship(Floater):
 		self.maxEnergy = 0
 		self.color = color
 		self.part = None
+		self.__dict__.update(self.baseBonuses)
 		if script: self.script = script
 		else: self.script = Script(game)
 		self.baseImage = pygame.Surface((200, 200), hardwareFlag | SRCALPHA).convert_alpha()
@@ -168,6 +153,7 @@ class Ship(Floater):
 		self.missiles = []
 		self.gyros = []
 		#recalculate stats:
+		self.dps = 0
 		self.partRollCall(self.basePart)
 		minX, minY, maxX, maxY = 0, 0, 0, 0
 		#TODO: ? make the center of the ship the center of mass instead of the 
@@ -193,6 +179,11 @@ class Ship(Floater):
 			part.offset = 	part.offset[0] - xCorrection, \
 							part.offset[1] - yCorrection
 			part.attach()
+		if partNum - 1 > self.partLimit:
+			self.efficiency = (1 - self.penalty) ** (partNum- 1 - self.partLimit)
+		else:
+			self.efficiency = (1 + self.bonus) ** (self.partLimit - partNum- 1)
+			
 		self.energy = min(self.energy, self.maxEnergy)
 		self.hp = min(self.hp, self.maxhp)
 		#redraw base image:
@@ -224,6 +215,7 @@ class Ship(Floater):
 			self.torque += part.torque
 		if isinstance(part, Gun):
 			self.guns.append(part)
+			self.dps += part.getDPS()
 		#if isinstance(part, missileLauncher):
 			#self.missiles.append(part)
 		for port in part.ports:

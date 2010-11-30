@@ -126,6 +126,8 @@ class PartsPanel(Panel):
 class ShipPanel(Selecter):
 	selected = None
 	scale = 1,1
+	text = None
+	
 	def __init__(self, rect, thisShip):
 		Selecter.__init__(self, rect)
 		self.thisShip = thisShip
@@ -133,7 +135,15 @@ class ShipPanel(Selecter):
 					
 	def reset(self):
 		self.scale = 2,2
-				
+		s = self.thisShip
+		text = "Parts: %s/%s     Efficiency: %s\nMass: %s KG     Forward Thrust: %s N\nMoment: %s KG m      Torque: %s N m\nMax DPS: %s\nEnergy: %s/%s\nShields: %s/%s"\
+				%(len(s.parts), s.partLimit, s.efficiency, s.mass, \
+				s.forwardThrust, int(s.moment), s.torque, \
+				s.dps, s.energy, s.maxEnergy, s.hp, s.maxhp)
+		self.removePanel(self.text)
+		self.text = TextBlock(Rect(0,0,400,100), text, color = (100,200,0))
+		self.addPanel(self.text)
+		
 	def draw(self, surface, rect):
 		double = pygame.transform.scale2x(self.thisShip.baseImage)
 		self.image.blit(double, (100, 100))
@@ -201,6 +211,7 @@ class PortPanel(ShipPanel):
 			for port in part.ports:
 				self.addSelectable(PortButton(port, part, self.thisShip, self))
 				self.selectables[-1].resize(self.scale)
+		self.addPanel(self.text)
 
 class PartTile(Selectable):
 	width = 150

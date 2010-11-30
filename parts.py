@@ -248,7 +248,7 @@ class Part(Floater):
 			#if dead, make an explosion here.
 			self.game.curSystem.add(Explosion(self.game, self.x, self.y, \
 						self.dx, self.dy, radius = self.radius * 4,\
-						time = self.maxhp * 4))
+						time = self.maxhp / 10))
 
 						
 class Gun(Part):
@@ -297,13 +297,16 @@ energy/bullet \nBullet Speed: %s \nRange: %s seconds \nFiring angle: %s CW from 
 			self.reload -= 1. / self.game.fps
 		Part.update(self)
 	
+	def getDPS(self):
+		return 1.0 * self.bulletDamage / self.reloadTime
+	
 	def shoot(self):
 		"""fires a bullet."""
 		if self.acted: return
 		self.acted = True
 		s = self.ship
 		if self.reload <= 0 and self.ship.energy > self.energyCost:
-			self.reload = self.reloadTime * s.efficiency * s.cannonRateBonus
+			self.reload = self.reloadTime / s.efficiency * s.cannonRateBonus
 			self.ship.energy -= self.energyCost
 			if soundModule:
 				setVolume(shootSound.play(), self, self.game.player)
@@ -365,7 +368,7 @@ class Engine(Part):
 		stats = (self.force,)
 		statString = """\n%s N"""
 		return Part.shortStats(self) + statString % stats
-		
+
 	def update(self):
 		""""""
 		if self.thrusting:
@@ -380,9 +383,11 @@ class Engine(Part):
 		if self.acted: return
 		self.acted = True
 		if self.ship and self.ship.energy >= self.energyCost:
+			accel = self.ship.efficiency * self.ship.thrustBonus \
+					* self.force / self.ship.mass / self.game.fps
 			dir = self.dir + self.ship.dir
-			self.ship.dx += cos(dir) * self.force / self.ship.mass / self.game.fps
-			self.ship.dy += sin(dir) * self.force / self.ship.mass / self.game.fps
+			self.ship.dx += cos(dir) * accel
+			self.ship.dy += sin(dir) * accel
 			self.ship.energy -= self.energyCost / self.game.fps
 			self.thrusting = True
 
@@ -428,7 +433,9 @@ energy/second of turning"""
 		if self.acted: return
 		self.acted = True
 		if self.ship and self.ship.energy >= self.energyCost:
-			self.ship.dir = angleNorm(self.ship.dir - self.torque / self.ship.moment / self.ship.game.fps)
+			self.ship.dir = angleNorm(self.ship.dir - self.torque \
+					/ self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus )
 			self.ship.energy -= self.energyCost / self.game.fps
 		
 	def turnRight(self):
@@ -436,7 +443,9 @@ energy/second of turning"""
 		if self.acted: return
 		self.acted = True
 		if self.ship and self.ship.energy >= self.energyCost:
-			self.ship.dir = angleNorm(self.ship.dir + self.torque / self.ship.moment / self.ship.game.fps)
+			self.ship.dir = angleNorm(self.ship.dir + self.torque \
+					/ self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus )
 			self.ship.energy -= self.energyCost / self.game.fps
 	
 class Generator(Part):
@@ -458,7 +467,8 @@ class Generator(Part):
 	def update(self):
 		if self.ship and self.ship.energy < self.ship.maxEnergy:
 			self.ship.energy = min(self.ship.maxEnergy, \
-								self.ship.energy + self.rate / self.game.fps)
+					self.ship.energy + self.rate * self.ship.efficiency \
+					* self.ship.generatorBonus / self.game.fps)
 		Part.update(self)
 	
 class Battery(Part):
@@ -478,7 +488,7 @@ class Battery(Part):
 		return Part.shortStats(self) + statString % stats
 		
 	def attach(self):
-		self.ship.maxEnergy += self.capacity
+		self.ship.maxEnergy += self.capacity * self.ship.batteryBonus
 		Part.attach(self)
 
 class Shield(Part):
@@ -504,7 +514,7 @@ class Shield(Part):
 		return Part.shortStats(self) + statString % stats
 		
 	def attach(self):
-		self.ship.maxhp += self.shieldhp
+		self.ship.maxhp += self.shieldhp * self.ship.shieldMaxBonus
 		Part.attach(self)
 		
 	def update(self):
@@ -514,7 +524,8 @@ class Shield(Part):
 				self.ship.hp = .0001
 			else:
 				self.ship.hp = min(self.ship.maxhp, \
-								self.ship.hp + self.shieldRegen / self.game.fps)
+						self.ship.hp + self.shieldRegen \
+						* self.ship.shieldRegenBonus/ self.game.fps)
 				self.ship.energy -= self.energyCost / self.game.fps
 		Part.update(self)
 
@@ -535,7 +546,7 @@ class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
 	shotCost = .3
 	shot = False
 	#engine:
-	force = 20000
+	force = 10000
 	thrustCost = .1
 	thrusted = False
 	#gyro:
