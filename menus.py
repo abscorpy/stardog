@@ -315,6 +315,19 @@ class Keys(Panel):
 		self.addPanel(PartFunctionsPanel(Rect(self.rect.left + 2, \
 					self.rect.top + 2, 	self.rect.width / 2 - 4, \
 					self.rect.height - self.keyboardRect.height - 2), thisShip))
+		self.toggleMouseButton = Button(Rect(self.rect.left, self.rect.bottom - 20, 
+								200,20), self.toggleMouse, "Turn Mouse Off")
+		self.addPanel(self.toggleMouseButton)
+		
+
+	def toggleMouse(self):
+		self.thisShip.game.mouseControl = not self.thisShip.game.mouseControl
+		if self.thisShip.game.mouseControl:
+			self.toggleMouseButton.image = FONT.render('Turn Mouse Off',\
+						True, self.color)
+		else: 
+			self.toggleMouseButton.image = FONT.render('Turn Mouse On',\
+						True, self.color)
 		
 	def unbind(self):
 		"""Removes the currently selected binding."""
