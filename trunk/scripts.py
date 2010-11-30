@@ -18,17 +18,32 @@ class Script:
 #InputScript is controlled by the keyboard:
 class InputScript(Script):
 	"""A script controlled by the keyboard."""
+	mouseControl = True
 	def __init__(self, game):
 		Script.__init__(self, game)
 		self.keys = game.keys
 		self.mouse = game.mouse
 		self.bindings = []
+		self.center =self.game.width / 2, self.game.height / 2
 
 	def update(self, ship):
 		"""decides what to do each frame."""
 		for binding in self.bindings:
 			if self.keys[binding[0]]:
 				binding[1]()
+		if self.mouseControl:
+			dir = angleNorm(atan2(self.game.mouse[0][1] - self.center[1], \
+								  self.game.mouse[0][0] - self.center[0])\
+								  -ship.dir)
+			
+			if dir < 0:
+				ship.turnLeft()
+			elif dir > 0:
+				ship.turnRight()
+			if self.game.mouse[3]:
+				ship.forward()
+			if self.game.mouse[1]:
+				ship.shoot()
 	
 	def bind(self, key, function):
 		"""binds function to key so function will be called if key is pressed.
