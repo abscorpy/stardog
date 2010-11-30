@@ -37,9 +37,9 @@ class InputScript(Script):
 								  -ship.dir)
 			
 			if dir < 0:
-				ship.turnLeft()
+				ship.turnLeft(dir)
 			elif dir > 0:
-				ship.turnRight()
+				ship.turnRight(dir)
 			if self.game.mouse[3]:
 				ship.forward()
 			if self.game.mouse[1]:

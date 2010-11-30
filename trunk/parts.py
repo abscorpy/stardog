@@ -250,8 +250,23 @@ class Part(Floater):
 						self.dx, self.dy, radius = self.radius * 4,\
 						time = self.maxhp / 10))
 
-						
-class Gun(Part):
+			
+class Dummy(Part):
+	"""A dummy part used by the parts menu."""
+	def __init__(self, game):
+		Part.__init__(self, game)
+		self.ports = []
+		
+	def update(self):
+		if self.parent: 
+			#a Dummy should never be a base part, so ignore that case.
+			for port in self.parent.ports:
+				if port.part == self:
+					port.part = None
+					self.kill()
+					self.ship.reset()
+	
+class Cannon(Part):
 	baseImage = pygame.image.load("res/default" + ext).convert()
 	image = None
 	bulletImage = None
@@ -259,7 +274,7 @@ class Gun(Part):
 	bulletRadius = 2
 	bulletDamage = 2
 	bulletRange = 4
-	name = "Gun"
+	name = "Cannon"
 	shootPoint = -30, 0 
 	shootDir = 90
 	reloadTime = .5 #in seconds
@@ -317,20 +332,19 @@ energy/bullet \nBullet Speed: %s \nRange: %s seconds \nFiring angle: %s CW from 
 					self.bulletRange * s.cannonRangeBonus, image = self.bulletImage))
 
 	
-	
-class LeftGun(Gun):#move to config
+class LeftCannon(Cannon):#move to config
 	baseImage = pygame.image.load("res/parts/leftgun" + ext).convert()
 	shootPoint = 0, - 30
 	shootDir = 270
-	name = "Left Gun"
+	name = "Left Cannon"
 
-class RightGun(Gun):#move to config
+class RightCannon(Cannon):#move to config
 	baseImage = pygame.image.load("res/parts/rightgun" + ext).convert()
 	shootPoint = 0, 30
 	shootDir = 90
-	name = "Right Gun"
+	name = "Right Cannon"
 		
-class StrafebatGun(Gun):#move to config
+class StrafebatCannon(Cannon):#move to config
 	baseImage = pygame.image.load("res/parts/strafebatgun" + ext).convert()
 	shootDir = 180
 	shootPoint = -20, 0
@@ -428,24 +442,32 @@ energy/second of turning"""
 		statString = """\n%s N*m"""
 		return Part.shortStats(self) + statString % stats
 		
-	def turnLeft(self):
+	def turnLeft(self, angle = None):
 		"""rotates the ship counter-clockwise."""
 		if self.acted: return
 		self.acted = True
+		if angle:
+			angle = max(- self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus, -abs(angle) )
+		else:
+			angle = self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus
 		if self.ship and self.ship.energy >= self.energyCost:
-			self.ship.dir = angleNorm(self.ship.dir - self.torque \
-					/ self.ship.moment / self.ship.game.fps \
-					* self.ship.efficiency * self.ship.torqueBonus )
+			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.energyCost / self.game.fps
 		
-	def turnRight(self):
+	def turnRight(self, angle = None):
 		"""rotates the ship clockwise."""
 		if self.acted: return
 		self.acted = True
+		if angle:
+			angle = min(self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus, abs(angle) )
+		else:
+			angle = self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus
 		if self.ship and self.ship.energy >= self.energyCost:
-			self.ship.dir = angleNorm(self.ship.dir + self.torque \
-					/ self.ship.moment / self.ship.game.fps \
-					* self.ship.efficiency * self.ship.torqueBonus )
+			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.energyCost / self.game.fps
 	
 class Generator(Part):
@@ -530,7 +552,7 @@ class Shield(Part):
 		Part.update(self)
 
 
-class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
+class Drone(Cockpit, Engine, Gyro, Cannon, Generator, Battery):
 	baseImage = pygame.image.load("res/ship" + ext).convert()
 	mass = 10
 	name = "Tiny Fighter Chassis"
@@ -624,7 +646,7 @@ class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
 			self.ship.energy -= self.energyCost / self.game.fps * self.energyCost
 			self.thrusting = True
 			
-	def turnLeft(self):
+	def turnLeft(self, angle = None):
 		"""rotates the ship counter-clockwise."""
 		if self.turned: return
 		self.turned = True
@@ -633,7 +655,7 @@ class Drone(Cockpit, Engine, Gyro, Gun, Generator, Battery):
 						self.torque / self.ship.moment / self.ship.game.fps)
 			self.ship.energy -= self.turnCost / self.game.fps * self.energyCost
 		
-	def turnRight(self):
+	def turnLeft(self, angle = None):
 		"""rotates the ship clockwise."""
 		if self.turned: return
 		self.turned = True

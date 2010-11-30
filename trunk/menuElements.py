@@ -29,6 +29,10 @@ class Panel:
 		if self.panels.count(panel):
 			self.panels.remove(panel)
 	
+	def reset(self):
+		for panel in self.panels:
+			panel.reset()
+	
 	def click(self, button, pos):
 		"""called when this panel is clicked on."""
 		#pass the click on to first colliding child:
@@ -389,7 +393,8 @@ class Selecter(ScrollPanel):
 			#shrink full image:
 			if self.image.get_width() < x:
 				self.image = pygame.Surface((x * 1.5,\
-						self.image.get_height()), hardwareFlag | SRCALPHA).convert_alpha()
+						self.image.get_height()), hardwareFlag | SRCALPHA)\
+						.convert_alpha()
 				self.image.set_colorkey((0,0,0))
 			#grow full image:
 			if self.image.get_width() > x * 3:
@@ -400,6 +405,7 @@ class Selecter(ScrollPanel):
 				#set the offset to 0.
 				if self.image.get_width() < self.visibleRect.width:
 					self.visibleRect.left = 0
+		Panel.reset(self)
 	
 	def move(self, pos, rel):
 		oldpos = pos[0] - rel[0] , pos[1] - rel[1]
