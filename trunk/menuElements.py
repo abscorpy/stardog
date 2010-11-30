@@ -122,7 +122,7 @@ class Button(Panel):
 		else:
 			self.color = self.inactiveColor
 		Panel.move(self, pos, rel)
-
+		
 class ShapeButton(Button):
 	"""ShapeButton(rect, function, points) -> a button that looks like
 	the line through points, is at rect, and does function when clicked.
@@ -315,7 +315,7 @@ class Selecter(ScrollPanel):
 		posNew = pos[0] - self.rect.left + self.visibleRect.left, \
 				pos[1] - self.rect.top + self.visibleRect.top
 		for selectable in self.selectables:
-			if selectable.rect.collidepoint(posNew):
+			if selectable.rect.collidepoint(posNew) and button == 1:
 				self.setSelected(selectable)
 		
 	def addSelectable(self, selectable):

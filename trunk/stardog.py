@@ -62,6 +62,7 @@ class Game:
 		self.top_left = 0, 0
 		self.width = screen.get_width()
 		self.height = screen.get_height()
+		self.mouseControl = True
 		#key polling:
 		self.keys = []
 		for _i in range (322):

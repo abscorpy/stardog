@@ -31,7 +31,7 @@ class InputScript(Script):
 		for binding in self.bindings:
 			if self.keys[binding[0]]:
 				binding[1]()
-		if self.mouseControl:
+		if self.game.mouseControl:
 			dir = angleNorm(atan2(self.game.mouse[0][1] - self.center[1], \
 								  self.game.mouse[0][0] - self.center[0])\
 								  -ship.dir)
