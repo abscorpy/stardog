@@ -85,10 +85,11 @@ class Ship(Floater):
 	number = 0
 	numParts = 0
 	name = 'Ship'
+	skills = []
 	level = 1
 	partEffects = []
 	effects = []
-	skills = []
+	skillEffects = []
 	
 	partLimit = 10
 	penalty = .1
@@ -190,7 +191,7 @@ class Ship(Floater):
 		self.numParts = partNum
 		self.energy = min(self.energy, self.maxEnergy)
 		self.hp = min(self.hp, self.maxhp)
-		for skill in self.skills:
+		for skill in self.skillEffects:
 			skill.shipReset()
 		
 		#redraw base image:
@@ -344,7 +345,13 @@ class Ship(Floater):
 
 class Player(Ship):
 	xp = 0
-	developmentPoints = 0
+	developmentPoints = 5
+	
+	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
+				color = (255, 255, 255)):
+		Ship.__init__(self, game, x, y, dx, dy, dir, script, color)
+		from skills import *
+		self.skills = [Modularity(self), Agility(self), Composure(self)]
 	def xpQuest(self, xp):
 		self.xp += xp
 	def xpKill(self, ship):

@@ -15,8 +15,8 @@ class Menu(TopLevelPanel):
 		self.thisShip = thisShip
 		self.parts = PartsPanel(subFrameRect, thisShip)
 		self.keys = Keys(subFrameRect, thisShip)
-		self.skills = Skills(subFrameRect)
-		self.store = Store(subFrameRect)
+		self.skills = Skills(subFrameRect, thisShip)
+		self.store = Store(subFrameRect, thisShip)
 		x = 2
 		y = 2
 		h = 24
@@ -476,16 +476,15 @@ class BindingSelectable(Selectable):
 					str(self.function.__name__), color = (200,100,100)))	
 		
 class Skills(Panel):
-	def __init__(self, rect):
+	def __init__(self, rect, thisShip):
 		Panel.__init__(self, rect)
 		self.addPanel(Label(Rect(self.rect.width / 2 - 60, 2, 0, 0),\
 			"Skills", BIG_FONT))
-		rect = Rect(100,100,100,100)
-		self.addPanel(Button(Rect(100,100,100,100), \
-					lambda:self.skill('modularity'), None, SMALL_FONT))
-		rect = Rect(rect)
-		rect.x, rect.y = rect.x + 2, rect.y + 2
-		self.panels[-1].addPanel(TextBlock(rect,'Modularity:\nincrease the \nnumber of \nparts your \nship can have \nbefore losing \nefficiency.', SMALL_FONT, (100,200,0), 100))
+		rect = Rect(100,0,300,100)
+		for skill in thisShip.skills:
+			rect = Rect(rect)
+			rect.y += 150
+			self.addPanel(SkillTile(rect, self, skill, thisShip))
 		
 	
 	def skill(self, skillName):
@@ -496,8 +495,32 @@ class SkillTreeTab(Selectable):
 class SkillTreeSelector(Selecter):
 	pass
 	
+class SkillTile(Button):
+	def __init__(self, rect, parent, skill, ship):
+		self.skill = skill
+		self.parent = parent 
+		self.ship = ship
+		function = self.getSkill
+		Button.__init__(self, rect, function, None)
+		rect1 = Rect(rect.x + 5, rect.y + 5, 20, rect.width - 10)
+		rect2 = Rect(rect.x + 5, rect.y + 25, 20, rect.width - 10)
+		rect3 = Rect(rect.x + 5, rect.y + 45, 200, rect.width - 10)
+		self.addPanel(Label(rect1, str(skill.__class__), color = (200,200,255)))
+		self.addPanel(Label(rect2, 'level ' + str(skill.level), color = (100,200,0)))
+		self.addPanel(TextBlock(rect3, skill.__doc__, SMALL_FONT, (100,200,0)))
+	
+	def getSkill(self):
+		if self.ship.developmentPoints >= self.skill.cost():
+			self.skill.levelUp()
+			self.ship.developmentPoints -= self.skill.cost()
+	
 class Store(Panel):
-	def __init__(self, rect):
+	def __init__(self, rect, thisShip):
+		self.thisShip = thisShip
 		Panel.__init__(self, rect)
 		self.addPanel(Label(Rect(self.rect.width / 2 - 60, 2, 0, 0),\
 			"Store", BIG_FONT))
+
+
+
+
