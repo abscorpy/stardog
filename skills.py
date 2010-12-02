@@ -2,7 +2,7 @@
 
 class Skill:
 	"""A skill."""
-	def __init__(self, ship, level = 1):
+	def __init__(self, ship, level = 0):
 		self.level = level
 		self.ship = ship
 		
@@ -21,7 +21,7 @@ class Modularity(Skill):
 	"levels 1-6: +1 part per level\n"\
 	"levels 7-12: +2 parts per level\n"\
 	"levels 12+: +3 parts per level"
-	def __init__(self, ship, level = 1):
+	def __init__(self, ship, level = 0):
 		Skill.__init__(self, ship, level)
 		self.extraParts = 0
 		if level > 12:
@@ -32,12 +32,13 @@ class Modularity(Skill):
 			self.level = 6
 		self.extraParts += level
 	
-	def shipReset(self, ship):
-		ship.partlimit += extraParts
+	def shipReset(self):
+		self.ship.partLimit += self.extraParts
 		
 	def levelUp(self):
-		Skill.levelUp(self)
-		self.extraParts += min(level // 6, 3)
+		self.level += 1
+		self.extraParts += min(self.level // 6 + 1, 3)
+		self.ship.reset()
 		
 class Agility(Skill):
 	"""Increases a ship's torque, allowing it to turn faster.

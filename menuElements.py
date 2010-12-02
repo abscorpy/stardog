@@ -47,10 +47,48 @@ class Panel:
 		for panel in self.panels:
 			if panel.rect.collidepoint(oldpos) or panel.rect.collidepoint(pos):
 				panel.move(pos, rel)
+		
+	def drag(self, start):
+		"""drag(start): 
+		The mouse has started dragging at start.  This should be passed down to
+		any colliding subpanels.  If all subpanels return None, this should 
+		return a Dragable object at start, or None if there isn't any."""
+		for panel in self.panels:
+			if panel.rect.collidepoint(start):
+				dragged = panel.drag(start)
+				if dragged:
+					return dragged
+		return None
+		
+	def drop(self, pos, dropped):
+		"""drop(pos, dropped): 
+		The dragged object was dropped on this panel at pos.
+		This should be passed down to any colliding subpanels.  If all 
+		subpanels return None, this should return None if the dropped
+		object has no effect here, 1 if the object should be moved here,
+		2 if the object should exist here and at the source, or another 
+		non-zero, non-None value for special cases. 
+		Use is:
+			dragged = source.drag(mousePos)
+			...
+			source.endDrag(target.drop(mousePos2, dragged), dragged)"""
+		for panel in self.panels:
+			if panel.rect.collidepoint(pos):
+				result = panel.drop(pos, dropped)
+				if result:
+					return result
+	
+	def endDrag(self, dragged, result):
+		"""called when a drag from here drops with a non-None result."""
+		if result == 1:
+			self.removePanel(dragged)
 	
 	def draw(self, surface, rect):
 		"""draws this panel on the surface."""
-		rect = rect.clip(self.rect)
+		if rect:
+			rect = rect.clip(self.rect)
+		else:
+			rect = self.rect
 		if self.drawBorder:
 			pygame.draw.rect(surface, self.color, rect, 1)
 		if self.image:
@@ -65,6 +103,9 @@ class TopLevelPanel(Panel):
 	buffer.  Must be the ultimate parent of any panel that responds to events,
 	and events should all be passed to .handleEvent(event)."""
 	bgColor = 20,40,100,200
+	dragged = None
+	dragSource = None
+	internalPos = None
 	def __init__(self, rect):
 		Panel.__init__(self, rect)
 		self.image = pygame.Surface(rect.size, \
@@ -74,15 +115,27 @@ class TopLevelPanel(Panel):
 	def handleEvent(self, event):
 		"""Examines the event and passes it down to children as appropriate."""
 		if event.type == pygame.MOUSEBUTTONDOWN:
-			internalPos = event.pos[0] - self.rect.left, \
+			self.internalPos = event.pos[0] - self.rect.left, \
 							event.pos[1] - self.rect.top
-			self.click(event.button, internalPos)
+			self.click(event.button, self.internalPos)
 		elif event.type == pygame.MOUSEBUTTONUP:
-			pass
+			if self.dragged:
+				result = self.dragSource.endDrag(self.drop(event.pos, \
+												self.dragged), self.dragged)
+				if result:
+					dragSource.endDrag(self.dragged, result)
+				self.dragged = None
+				self.dragSource = None
 		elif event.type == pygame.MOUSEMOTION:
-			internalPos = event.pos[0] - self.rect.left, \
+			self.internalPos = event.pos[0] - self.rect.left, \
 							event.pos[1] - self.rect.top
-			self.move(internalPos, event.rel)
+			if event.buttons[0]:
+				if not self.dragged:
+					self.dragged = self.drag(self.internalPos)
+					if self.dragged: 
+						self.dragged, self.dragSource = self.dragged
+			else: 
+				self.move(self.internalPos, event.rel)
 		elif event.type == pygame.KEYDOWN:
 			pass
 		elif event.type == pygame.KEYUP:
@@ -97,8 +150,39 @@ class TopLevelPanel(Panel):
 		pygame.draw.rect(self.image, self.color, rect, 1)
 		for panel in self.panels:
 			panel.draw(self.image, rect)
+		if self.dragged:
+			self.dragged.draggingDraw(self)
 		surface.blit(self.image, self.rect)
 			
+class Dragable(Panel):
+	dragOffset = 0,0
+	def __init__(self, rect, parent):
+		Panel.__init__(self, rect)
+		self.parent = parent
+		self.image = pygame.Surface(rect.size).convert()
+		self.image.set_colorkey((0,0,0))
+			
+	def drag(self, start):
+		drag = Panel.drag(self, start)
+		if drag: return drag
+		self.dragOffset =  start[0] - self.rect.left, start[1] - self.rect.top
+		return self, self.parent
+			
+	def draggingDraw(self, topLevelPanel):
+		surface = topLevelPanel.image
+		pos = topLevelPanel.internalPos[0] - self.dragOffset[0], \
+				topLevelPanel.internalPos[1] - self.dragOffset[1]
+		#draw self (floating):
+		surface.blit(self.image, pos)
+		#draw subpanels:
+		for panel in self.panels:
+			tmp = panel.rect.topleft
+			panel.rect.left += pos[0] - self.rect.left
+			panel.rect.top += pos[1] - self.rect.top
+			panel.draw(surface, rect = None)
+			panel.rect.topleft = tmp
+			
+	
 class Button(Panel):
 	"""Button(rect, function, text) -> a button that says text and does
 	function when clicked. """
@@ -265,7 +349,6 @@ class ScrollPanel(Panel):
 			if panel.rect.collidepoint(oldpos) or panel.rect.collidepoint(pos):
 				panel.move(pos, rel)
 	
-	
 class Selectable(Panel):
 	activeColor = (200,255,200)
 	inactiveColor = (100,200,100)
@@ -292,6 +375,37 @@ class Selectable(Panel):
 		self.selected = False
 		self.color = self.inactiveColor
 		
+class DragableSelectable(Dragable):
+	activeColor = (200,255,200)
+	inactiveColor = (100,200,100)
+	selectedColor = (200,50,50)
+	selected = False
+	def __init__(self, rect, parent): 
+		Dragable.__init__(self, rect, parent)
+		self.color = self.inactiveColor
+		
+	def move(self, pos, rel):
+		"""called when the mouse moves to or from this panel."""
+		if not self.selected and self.rect.collidepoint(pos):
+			self.color = self.activeColor
+		elif not self.selected:
+			self.color = self.inactiveColor
+		Panel.move(self, pos, rel)
+	
+	def select(self):
+		self.selected = True
+		self.color = self.selectedColor
+	
+	def unselect(self):
+		self.selected = False
+		self.color = self.inactiveColor
+				
+	def endDrag(self, dragged, result):
+		"""called when a drag from here drops with a non-None result."""
+		if result == 1:
+			self.removePanel(dragged)
+			self.removeSelectable(dragged)
+		
 class Selecter(ScrollPanel):
 	selected = None
 	selectables = []
@@ -312,10 +426,19 @@ class Selecter(ScrollPanel):
 			self.selected.unselect()
 		self.selected = selectable
 		self.selected.select()
-	
+	def drag(self, start):
+		if ScrollPanel.drag(self, start):
+			return	1#returns 1 if something has been clicked.
+		posNew = start[0] - self.rect.left + self.visibleRect.left, \
+				start[1] - self.rect.top + self.visibleRect.top
+		for selectable in self.selectables:
+			if selectable.rect.collidepoint(posNew):
+				drag = selectable.drag(posNew)
+				if drag: return drag
+		
 	def click(self, button, pos):
 		if ScrollPanel.click(self, button, pos):
-			return	#returns 1 if something has been clicked.
+			return	1#returns 1 if something has been clicked.
 		posNew = pos[0] - self.rect.left + self.visibleRect.left, \
 				pos[1] - self.rect.top + self.visibleRect.top
 		for selectable in self.selectables:

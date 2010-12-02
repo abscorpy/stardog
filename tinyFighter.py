@@ -13,6 +13,7 @@ class TinyFighter(Ship):
 	strafeRadius = 100
 	planet = None
 	stage = 0
+	timeOut = 30
 	level = .5
 	def __init__(self, game, x, y, dx = 0, dy = 0, color = (70, 180,0)):
 		self.target = game.player
@@ -42,6 +43,9 @@ class TinyFighterScript(AIScript):
 			if -50 < dx < 50 and -50 < dy < 50:
 				ship.stage = 1
 		if ship.stage == 1:
+			if ship.timeOut <= 0:
+				ship.stage = 0
+			ship.timeOut -= 1. / ship.game.fps
 			speed = self.relativeSpeed(ship, target)
 			accel = ship.forwardThrust / ship.mass
 			distance = dist(ship.x, ship.y, target.x, target.y) - self.swarmRadius
@@ -64,22 +68,7 @@ class TinyFighterScript(AIScript):
 			if distance > self.swarmRadius:
 				ship.stage = 0
 					
-		# x = target.x - ship.x
-		# y = target.y - ship.y
-		# distance = dist(ship.x, ship.y, target.x, target.y) - self.swarmRadius
-		# turnTime = ship.moment / ship.torque * 180
-		# speed = self.relativeSpeed(ship, target)
-		## v/a = time to stop, d/v = time to arrive
-		# if distance > 0 and speed / accel + turnTime < distance / speed:
-			# self.intercept(ship, target)
-		# else: #going too fast!
-			# if self.turnTowards(ship, target, 180):
-				# ship.forward()
-		# if distance < self.shootingRange:
-			# angle = angleNorm(atan2(target.y - ship.y, target.x - ship.x)\
-				# - ship.dir)
-			# if - self.acceptableError < angle < self.acceptableError:
-				# ship.shoot()
+
 		
 		
 		
