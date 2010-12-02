@@ -29,7 +29,7 @@ class Part(Floater):
 	parent = None
 	dir = 270
 	mass = 10
-	# position in relation to the center of the parent
+	# position in relation to the center of the ship
 	#and the center of this part:
 	offset = 0, 0
 	#whether this should be redrawn each frame:
@@ -450,7 +450,7 @@ energy/second of turning"""
 			angle = max(- self.torque / self.ship.moment / self.ship.game.fps \
 					* self.ship.efficiency * self.ship.torqueBonus, -abs(angle) )
 		else:
-			angle = self.torque / self.ship.moment / self.ship.game.fps \
+			angle = - self.torque / self.ship.moment / self.ship.game.fps \
 					* self.ship.efficiency * self.ship.torqueBonus
 		if self.ship and self.ship.energy >= self.energyCost:
 			self.ship.dir = angleNorm(self.ship.dir + angle)
@@ -650,18 +650,28 @@ class Drone(Cockpit, Engine, Gyro, Cannon, Generator, Battery):
 		"""rotates the ship counter-clockwise."""
 		if self.turned: return
 		self.turned = True
+		if angle:
+			angle = max(- self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus, -abs(angle) )
+		else:
+			angle = - self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus
 		if self.ship and self.ship.energy >= self.turnCost * self.energyCost:
-			self.ship.dir = angleNorm(self.ship.dir - \
-						self.torque / self.ship.moment / self.ship.game.fps)
+			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.turnCost / self.game.fps * self.energyCost
 		
-	def turnLeft(self, angle = None):
+	def turnRight(self, angle = None):
 		"""rotates the ship clockwise."""
 		if self.turned: return
 		self.turned = True
+		if angle:
+			angle = min(self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus, abs(angle) )
+		else:
+			angle = self.torque / self.ship.moment / self.ship.game.fps \
+					* self.ship.efficiency * self.ship.torqueBonus
 		if self.ship and self.ship.energy >= self.turnCost * self.energyCost:
-			self.ship.dir = angleNorm(self.ship.dir + \
-						self.torque / self.ship.moment / self.ship.game.fps)
+			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.turnCost / self.game.fps * self.energyCost
 
 

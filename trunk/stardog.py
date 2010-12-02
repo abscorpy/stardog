@@ -52,7 +52,7 @@ class Game:
 	"""Game(resolution = None, fullscreen = False)
 	-> new game instance. Multiple game instances
 	are probably a bad idea."""
-
+	menu = None
 	def __init__(self, screen):
 		self.pause = False
 		stardog.debug = True
@@ -178,11 +178,5 @@ class Game:
 			self.curSystem = SolarA1(self, self.player)
 	
 if __name__ == '__main__':
-	try:
-		pass
-		import psyco
-		#psyco.full()
-	except ImportError:
-		print 'this game may run faster if you install psyco.'
 	game = Game(screen)
 	game.run()

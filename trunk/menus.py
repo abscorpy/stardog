@@ -202,7 +202,7 @@ class PortPanel(ShipPanel):
 			part.parent = None
 			part.ship.parts.remove(part)
 			port.part = None
-			self.reset
+			#self.reset
 	
 	def reset(self):
 		"""remakes this panel to reflect ship changes."""
@@ -225,22 +225,65 @@ class PortPanel(ShipPanel):
 				port.addPart(Dummy(self.thisShip.game))
 			else:
 				self.dummify(port.part)
-
-class PartTile(Selectable):
+class ShipPartPanel(DragableSelectable):
+	drawBorder = False
+	def __init__(self, part, parent):
+		width,height = part.image.get_size()
+		rect = Rect(\
+				part.offset[0] + parent.rect.x + parent.centerx - width / 2, \
+				part.offset[1] + parent.rect.y + parent.centery - height / 2, \
+				width, height)
+		DragableSelectable.__init__(self, rect, parent)
+		self.part = part
+		if part:
+			image = pygame.transform.scale2x(self.part.image).convert()
+		else:
+			image = pygame.transform.scale2x(Part.baseImage).convert()
+		image.set_colorkey((0,0,0)) # idk why this one's white.
+		
+	def drag(self, start):
+		if not self.part:
+			return
+		return (PartTile(self.part, Rect(0, 0, PartTile.width, PartTile.height), \
+				self), self)
+		
+	def update(self):
+		DragableSelectable.update(self)
+		if self.selected:
+			self.drawBorder = True
+		else:
+			self.drawBorder = False
+		
+	def endDrag(self, dragged, result):
+		if result == 1 and self.part:
+			self.unequip(self.part)
+			self.parent.reset()
+			
+	def unequip(self, part):
+		"""a recursive helper method for endDrag."""
+		if not self.part: return
+		self.part.ship.inventory.append(part)
+		for recursivePort in part.ports:
+			self.unequip(recursivePort.part)
+		for port in self.parent.ports:
+			if port.part == part:
+				port.part = None
+		part.parent = None
+		part.ship.parts.remove(part)
+	
+class PartTile(DragableSelectable):
 	width = 150
 	height = 150
 	partImageOffset = 50,50
-	def __init__(self, part, rect):
+	def __init__(self, part, rect, parent):
 		"""PartTile(part, rect) -> new PartTile.
 		The menu interface for a part. Display it like a button!"""
+		DragableSelectable.__init__(self, rect, parent)
 		self.part = part
-		Selectable.__init__(self, rect)
-		self.image = pygame.Surface((self.width,self.height), \
-					hardwareFlag).convert()
-		self.image.set_colorkey((0,0,0))
 		bigImage = pygame.transform.scale2x(self.part.image)
 		bigImage.set_colorkey((255,255,255)) # idk why this one's white.
 		self.image.blit(bigImage, PartTile.partImageOffset)
+		#add text labels:
 		self.addPanel(Label(rect, part.name))
 		self.panels[-1].rect.width = self.rect.width
 		string = part.shortStats()
@@ -260,6 +303,7 @@ class PortButton(Selectable):
 	selected = False
 	width = 12
 	scale = 2,2
+	
 	def __init__(self, port, part, thisShip, parent):
 		self.port = port
 		self.part = part
@@ -299,7 +343,7 @@ class InventoryPanel(Selecter):
 		self.selectables = []
 		for part in self.partList:
 			self.addSelectable(PartTile(part, \
-						Rect(0,0,PartTile.width, PartTile.height)))
+						Rect(0,0,PartTile.width, PartTile.height), self))
 		Selecter.reset(self)
 
 class Keys(Panel):
@@ -506,13 +550,20 @@ class SkillTile(Button):
 		rect2 = Rect(rect.x + 5, rect.y + 25, 20, rect.width - 10)
 		rect3 = Rect(rect.x + 5, rect.y + 45, 200, rect.width - 10)
 		self.addPanel(Label(rect1, str(skill.__class__), color = (200,200,255)))
-		self.addPanel(Label(rect2, 'level ' + str(skill.level), color = (100,200,0)))
+		self.levelLabel = Label(rect2, 'level ' + str(skill.level),\
+					color = (100,200,0))
+		self.addPanel(self.levelLabel)
 		self.addPanel(TextBlock(rect3, skill.__doc__, SMALL_FONT, (100,200,0)))
 	
 	def getSkill(self):
 		if self.ship.developmentPoints >= self.skill.cost():
 			self.skill.levelUp()
 			self.ship.developmentPoints -= self.skill.cost()
+			self.removePanel(self.levelLabel)
+			rect = self.levelLabel.rect
+			self.levelLabel = Label(rect, 'level ' + str(self.skill.level),\
+						color = (100,200,0))
+			self.addPanel(self.levelLabel)
 	
 class Store(Panel):
 	def __init__(self, rect, thisShip):

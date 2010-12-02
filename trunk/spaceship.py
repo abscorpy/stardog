@@ -6,6 +6,7 @@ from floaters import *
 from pygame.locals import *
 import stardog
 from adjectives import addAdjective
+from skills import *
 
 def starterShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), player = False):
@@ -154,6 +155,8 @@ class Ship(Floater):
 		self.guns = []
 		self.missiles = []
 		self.gyros = []
+		self.partLimit = Ship.partLimit
+		self.__dict__.update(Ship.baseBonuses)
 		#recalculate stats:
 		self.dps = 0
 		self.partRollCall(self.basePart)
@@ -191,9 +194,8 @@ class Ship(Floater):
 		self.numParts = partNum
 		self.energy = min(self.energy, self.maxEnergy)
 		self.hp = min(self.hp, self.maxhp)
-		for skill in self.skillEffects:
+		for skill in self.skills:
 			skill.shipReset()
-		
 		#redraw base image:
 		if self.game.pause:
 			size = int(self.radius * 2 + 60)
@@ -330,6 +332,7 @@ class Ship(Floater):
 		pos[0] += - imageOffset[0] - self.radius
 		pos[1] += - imageOffset[1] - self.radius
 		surface.blit(buffer, pos) 
+		
 	def takeDamage(self, damage, other):
 		self.hp = max(self.hp - damage, 0)
 		if isinstance(other, Bullet) and other.ship == self.game.player:
@@ -350,7 +353,6 @@ class Player(Ship):
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255)):
 		Ship.__init__(self, game, x, y, dx, dy, dir, script, color)
-		from skills import *
 		self.skills = [Modularity(self), Agility(self), Composure(self)]
 	def xpQuest(self, xp):
 		self.xp += xp
