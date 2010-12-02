@@ -120,10 +120,8 @@ class TopLevelPanel(Panel):
 			self.click(event.button, self.internalPos)
 		elif event.type == pygame.MOUSEBUTTONUP:
 			if self.dragged:
-				result = self.dragSource.endDrag(self.drop(event.pos, \
-												self.dragged), self.dragged)
-				if result:
-					dragSource.endDrag(self.dragged, result)
+				self.dragSource.endDrag(self.dragged, self.drop(event.pos, \
+												self.dragged))
 				self.dragged = None
 				self.dragSource = None
 		elif event.type == pygame.MOUSEMOTION:
@@ -426,16 +424,27 @@ class Selecter(ScrollPanel):
 			self.selected.unselect()
 		self.selected = selectable
 		self.selected.select()
+		
 	def drag(self, start):
-		if ScrollPanel.drag(self, start):
-			return	1#returns 1 if something has been clicked.
+		result = ScrollPanel.drag(self, start)
+		if result: return result
 		posNew = start[0] - self.rect.left + self.visibleRect.left, \
 				start[1] - self.rect.top + self.visibleRect.top
 		for selectable in self.selectables:
 			if selectable.rect.collidepoint(posNew):
-				drag = selectable.drag(posNew)
-				if drag: return drag
+				result = selectable.drag(posNew)
+				if result: return result
 		
+	def drop(self, pos, dropped):
+		result = ScrollPanel.drop(self, pos, dropped)
+		if result: return result
+		posNew = pos[0] - self.rect.left + self.visibleRect.left, \
+				pos[1] - self.rect.top + self.visibleRect.top
+		for selectable in self.selectables:
+			if selectable.rect.collidepoint(posNew):
+				result = selectable.drop(posNew, dropped)
+				if result: return result
+
 	def click(self, button, pos):
 		if ScrollPanel.click(self, button, pos):
 			return	1#returns 1 if something has been clicked.

@@ -75,7 +75,7 @@ class Part(Floater):
 		statString = """%s/%s"""
 		return statString % stats
 		
-	def addPart(self, part, port, flip = False):
+	def addPart(self, part, port):
 		"""addPart(part, portNum) -> connects part to port portNum
 		of this part."""
 		#TODO: pygame.transform.flip(Surface, xbool, ybool)
@@ -253,6 +253,7 @@ class Part(Floater):
 			
 class Dummy(Part):
 	"""A dummy part used by the parts menu."""
+	mass = 0
 	def __init__(self, game):
 		Part.__init__(self, game)
 		self.ports = []

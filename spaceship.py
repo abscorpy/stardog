@@ -114,6 +114,7 @@ class Ship(Floater):
 				color = (255, 255, 255)):
 		Floater.__init__(self, game, x, y, dx, dy, dir, 1)
 		self.inventory = []
+		self.ports = [Port((0,0), 0, self)]
 		self.energy = 0
 		self.maxEnergy = 0
 		self.color = color
@@ -129,7 +130,7 @@ class Ship(Floater):
 		for function in self.functions:
 			self.functionDescriptions.append(function.__doc__)
 
-	def addPart(self, part):
+	def addPart(self, part, portIndex = 0):
 		"""ship.addPart(part) -> Sets the main part for this ship.
 		Only used for the base part (usually a cockpit), other parts are added to parts."""
 		part.parent = self
@@ -139,6 +140,7 @@ class Ship(Floater):
 		part.image = colorShift(part.baseImage, self.color).convert()
 		part.image.set_colorkey((0,0,0))
 		self.basePart = part
+		self.ports[0].part = part
 		self.reset()
 
 	def reset(self):
