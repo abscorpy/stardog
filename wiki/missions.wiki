@@ -19,3 +19,15 @@ If you successfully help the humans colonize all of Proto space, military intell
 
 ===Union Missions===
 The Union will send you on missions throughout the Alliance.  They will include bringing messages to the Archivists, Benefactors, and uplifted (with varying receptions), engaging in diplomatic interactions with the Dramatics, independent systems, and (fruitlessly) the AI, defending the Alliance from Nanopirates and the Memoryless, and eventually helping attack and eliminate the Nanopirates.
+
+===Archivist Missions===
+===Benefactor Missions===
+===Uplifted Missions===
+===Nanopirate Missions===
+===AI Missions===
+===Dramatic Missions===
+===Memoryless Missions===
+===Tree Missions===
+===Protos Missions===
+===Children of the Stars Missions===
+===Xenosite Missions===
