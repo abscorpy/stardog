@@ -1,6 +1,7 @@
 #adjectives.py
 from parts import *
-PARTS = [LeftCannon, RightCannon, Engine, Gyro, Generator, Battery, Shield]
+PARTS = [LeftCannon, RightCannon, Engine, Gyro, Generator, Battery, Shield,
+		LeftLaser, RightLaser, MissileLauncher]
 def randItem(game, level = 1):
 	roll = randint(0, len(PARTS) -1)
 	if roll == rand() * level / 2 < .8:
@@ -22,11 +23,11 @@ def addAdjective(part, level = 1):
 	#for now, if this adjective doesn't fit, pick another at random.
 	return addAdjective(part, level)
 	
-ENERGY_USING = [Cannon, Engine, Gyro, Shield]
+ENERGY_USING = [Gun, Engine, Gyro, Shield]
 
 class Adjective:
 	level = 1
-	types = [Cannon, Engine, Gyro, Battery, Generator, Cockpit, Shield]
+	types = [Gun, Engine, Gyro, Battery, Generator, Cockpit, Shield]
 	def effect(self, part):
 		pass
 		
@@ -112,28 +113,28 @@ class _50_Megawatt(Adjective):
 	"""Damage * .5, Cost * .5"""
 	types = [Cannon]
 	def effect(self, part):
-		part.bulletDamage *= .5
+		part.damage *= .5
 		part.energyCost *= .5
 
 class _200_Megawatt(Adjective):
 	"""Damage * 2, Cost * 2"""
 	types = [Cannon]
 	def effect(self, part):
-		part.bulletDamage *= 2
+		part.damage *= 2
 		part.energyCost *= 2
 		
 class _300_Megawatt(Adjective):
 	"""Damage * 3, Cost * 3"""
 	types = [Cannon]
 	def effect(self, part):
-		part.bulletDamage *= 3
+		part.damage *= 3
 		part.energyCost *= 3
 		
 class _400_Megawatt(Adjective):
 	"""Damage * 4, Cost * 4"""
 	types = [Cannon]
 	def effect(self, part):
-		part.bulletDamage *= 4
+		part.damage *= 4
 		part.energyCost *= 4
 
 class Nitrogen_Cooled(Adjective):
@@ -268,13 +269,13 @@ class Damaged(Adjective):
 		part.hp = part.hp / 2
 	
 
-adjectives = Sturdy, Durable, Solid, Fragile, \
- Titanium, Carbonfiber, Nanosteel, \
- Nanosilk, Doublesilk, Plated, Reinforced, \
- Armored, _50_Megawatt, _200_Megawatt, _300_Megawatt, \
- _400_Megawatt, Nitrogen_Cooled, Helium_Cooled, \
- Quantum_Accelerated, Hydrogen_Fusion, Dilithium,\
- Antimatter, Advanced_Chemical, Magnetic, \
- Kinetic, Alpha_Decay, Nuclear, Stored_Antimatter,\
- Delicate, Efficient, Miserly, Leaky, Inefficient, \
- Obsolete, Damaged, Heavy
+adjectives = (Sturdy, Durable, Solid, Fragile, 
+ Titanium, Carbonfiber, Nanosteel, 
+ Nanosilk, Doublesilk, Plated, Reinforced, 
+ Armored, _50_Megawatt, _200_Megawatt, _300_Megawatt, 
+ _400_Megawatt, Nitrogen_Cooled, Helium_Cooled, 
+ Quantum_Accelerated, Hydrogen_Fusion, Dilithium,
+ Antimatter, Advanced_Chemical, Magnetic, 
+ Kinetic, Alpha_Decay, Nuclear, Stored_Antimatter,
+ Delicate, Efficient, Miserly, Leaky, Inefficient, 
+ Obsolete, Damaged, Heavy)

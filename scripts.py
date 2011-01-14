@@ -72,7 +72,7 @@ class AIScript(Script):
 				
 		if ship.guns:
 			shootingRange = 400 ** 2
-				#(ship.guns[0].bulletRange * ship.guns[0].bulletSpeed) ** 2 / 2
+				#(ship.guns[0].bulletRange * ship.guns[0].speed) ** 2 / 2
 		else: #without guns kamikaze. 
 			if self.turnTowards(ship, target):
 				ship.forward()
@@ -168,7 +168,7 @@ class AIScript(Script):
 	def interceptShot(self, ship, target):
 		if not ship.guns:
 			return
-		speed = ship.guns[0].bulletSpeed
+		speed = ship.guns[0].speed
 		time = dist(ship.x, ship.y, target.x, target.y) / speed
 		dummy = Ballistic(target.x, target.y, \
 						target.dx - ship.dx, target.dy - ship.dy)

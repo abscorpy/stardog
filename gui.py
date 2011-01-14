@@ -47,9 +47,9 @@ class HUD:
 		pygame.draw.rect(self.image, (0, 180, 80), (x, y, \
 			5, self.game.height / 6), 1) # empty bar
 
-		pygame.draw.rect(self.image, (0, 180, 80), (x, y \
-			+ h - h * thisShip.xp / thisShip.next(), 5, h \
-			* thisShip.xp / thisShip.next())) # full bar
+		pygame.draw.rect(self.image, (0, 180, 80), \
+			(x, y + h - h * thisShip.xp / thisShip.next(), 5, \
+			h * thisShip.xp / thisShip.next())) # full bar
 		if(fontModule):# and thisShip.developmentPoints:
 			self.image.blit(FONT.render(str(thisShip.developmentPoints), \
 						False, (0, 180, 80)), (x, y - 20))
@@ -96,34 +96,31 @@ class HUD:
 				pygame.draw.rect(self.image, color, (dotPos[0],dotPos[1],2,2))
 
 
-numLayers = 5
-starsPerLayer = 20
+numStars = 500
 class BG:
 	def __init__(self, game):
 		self.game = game
 		self.stars = []
 		dimmer = 1
-		for layer in range(numLayers):
-			self.stars.append([])
-			for star in range(starsPerLayer):
-				brightness = int(randint(150, 255) / dimmer)
-				# a position and a color
-				self.stars[-1].append((randint(0, self.game.width), \
-										randint(0, self.game.height), \
-						(randint(brightness * 3 / 4, brightness), \
-						 randint(brightness * 3 / 4, brightness), \
-						 randint(brightness * 3 / 4, brightness))))
-			dimmer += .3
+		for star in range(numStars):
+			brightness = int(randint(50, 255))
+			# a position, a color, and a depth.
+			self.stars.append((
+				randint(0, self.game.width), 
+				randint(0, self.game.height),
+				randint(1,20), 
+				(randint(brightness * 3 / 4, brightness), 
+				 randint(brightness * 3 / 4, brightness), 
+				 randint(brightness * 3 / 4, brightness))))
 
 	def draw(self, surface, thisShip):
+		pa = pygame.PixelArray(surface)
 		"""updates the HUD and draws it."""
 		depth = 1.
-		for layer in self.stars:
-			for star in layer:
-				pygame.draw.rect(surface, star[2], \
-					((star[0] - thisShip.x / depth) % self.game.width,
-					(star[1] - thisShip.y / depth) % self.game.height, 2, 2))
-			depth = depth * 3 / 2
+		for star in self.stars:
+			x = int(star[0] - thisShip.x / star[2]) % (self.game.width-1)
+			y =	int(star[1] - thisShip.y / star[2]) % (self.game.height-1)
+			pa[x][y] = star[3]
 			
 class BGNova:
 	def __init__(self, game):

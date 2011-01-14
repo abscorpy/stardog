@@ -21,9 +21,12 @@ def starterShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	generator = Generator(game)
 	battery = Battery(game)
 	cockpit = Cockpit(game)
+	#gun = LeftLaser(game)
+	#gun2 = RightLaser(game)
 	gun = LeftCannon(game)
 	gun2 = RightCannon(game)
-	engine1 = Engine(game)
+	engine1 = MissileLauncher(game)
+	#engine1 = Engine(game)
 	engine2 = Engine(game)
 	for part in [gyro, generator, battery, cockpit, gun, gun2, engine1, engine2]:
 		if rand() > .8:
@@ -139,7 +142,6 @@ class Ship(Floater):
 		part.ship = self
 		part.image = colorShift(part.baseImage, self.color).convert()
 		part.image.set_colorkey((0,0,0))
-		self.basePart = part
 		self.ports[0].part = part
 		self.reset()
 
@@ -161,7 +163,7 @@ class Ship(Floater):
 		self.__dict__.update(Ship.baseBonuses)
 		#recalculate stats:
 		self.dps = 0
-		self.partRollCall(self.basePart)
+		self.partRollCall(self.ports[0].part)
 		minX, minY, maxX, maxY = 0, 0, 0, 0
 		#TODO: ? make the center of the ship the center of mass instead of the 
 		#center of the radii. 
@@ -206,36 +208,37 @@ class Ship(Floater):
 		self.baseImage = pygame.Surface((size, size), \
 					hardwareFlag | SRCALPHA).convert_alpha()
 		self.baseImage.set_colorkey((0,0,0))
-		self.basePart.draw(self.baseImage)
+		if self.ports[0].part:
+			self.ports[0].part.draw(self.baseImage)
 
 	def partRollCall(self, part):
 		"""adds parts to self.parts recursively."""
 		if part:
 			self.parts.append(part)
-		if isinstance(part, Engine):
-			if part.dir == 180:
-				self.reverseEngines.append(part)
-				self.reverseThrust += part.force
-			if part.dir == 0:
-				self.forwardEngines.append(part)
-				self.forwardThrust += part.force
-			if part.dir == 90:
-				self.rightEngines.append(part)
-				self.rightThrust += part.force
-			if part.dir == 270:
-				self.leftEngines.append(part)
-				self.leftThrust += part.force
-		if isinstance(part, Gyro):
-			self.gyros.append(part)
-			self.torque += part.torque
-		if isinstance(part, Cannon):
-			self.guns.append(part)
-			self.dps += part.getDPS()
-		#if isinstance(part, missileLauncher):
-			#self.missiles.append(part)
-		for port in part.ports:
-			if port.part:
-				self.partRollCall(port.part)
+			if isinstance(part, Engine):
+				if part.dir == 180:
+					self.reverseEngines.append(part)
+					self.reverseThrust += part.force
+				if part.dir == 0:
+					self.forwardEngines.append(part)
+					self.forwardThrust += part.force
+				if part.dir == 90:
+					self.rightEngines.append(part)
+					self.rightThrust += part.force
+				if part.dir == 270:
+					self.leftEngines.append(part)
+					self.leftThrust += part.force
+			if isinstance(part, Gyro):
+				self.gyros.append(part)
+				self.torque += part.torque
+			if isinstance(part, Gun):
+				self.guns.append(part)
+				self.dps += part.getDPS()
+			#if isinstance(part, missileLauncher):
+				#self.missiles.append(part)
+			for port in part.ports:
+				if port.part:
+					self.partRollCall(port.part)
 				
 	def forward(self):
 		"""thrust forward using all forward engines"""
@@ -281,8 +284,8 @@ class Ship(Floater):
 		# actual updating:
 		Floater.update(self)
 		#parts updating:
-		if self.basePart:
-			self.basePart.update()
+		if self.ports[0].part:
+			self.ports[0].part.update()
 		
 		#active effects:
 		for effect in self.effects:
@@ -344,13 +347,13 @@ class Ship(Floater):
 		"""play explosion effect than call Floater.kill(self)"""
 		if soundModule:
 			setVolume(explodeSound.play(), self, self.game.player)
-		Floater.kill(self)
 		for part in self.inventory:
 			part.scatter(self)
+		Floater.kill(self)
 
 class Player(Ship):
 	xp = 0
-	developmentPoints = 5
+	developmentPoints = 50
 	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255)):

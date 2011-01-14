@@ -178,5 +178,11 @@ class Game:
 			self.curSystem = SolarA1(self, self.player)
 	
 if __name__ == '__main__':
+	try:
+		pass
+		import psyco
+		#psyco.full()
+	except ImportError:
+		print 'this game may run faster if you install psyco.'
 	game = Game(screen)
 	game.run()

@@ -51,7 +51,7 @@ def not0(num):
 	"""if num is 0, returns .001.  To prevent div by 0 errors."""
 	if num:
 		return num
-	return .001
+	return .000001
 
 sqrt = math.sqrt
 #random generators:
@@ -98,6 +98,15 @@ if pygame.image.get_extended():
 else:
 	ext = ".bmp"
 	
+def loadImage(filename, colorkey=(0,0,0)):
+	try:
+		image = pygame.image.load(filename).convert()
+		image.set_colorkey(colorkey)
+	except pygame.error:
+		image = pygame.image.load("res/default" + ext).convert()
+		image.set_colorkey((255,255,255))
+	return image
+	
 def colorShift(surface, color):
 	"""Converts every pixel with equal red and blue values to a shade of 
 	color.  Attempts to maintain value and saturation of surface. 
@@ -132,6 +141,25 @@ def collisionTest(a, b):
 	and b.y < a.y + r \
 	and dist2(a, b) < r ** 2
 
-
+def linePointDist(linePoint1, linePoint2, point, infinite = False):
+	line = linePoint2[0] - linePoint1[0], linePoint2[1] - linePoint1[1]
+	lineDist = sqrt(line[0] ** 2 + line[1] ** 2)
+	toPoint = point[0] - linePoint1[0], point[1] - linePoint1[1]
+	projectionDist = (line[0] * toPoint[0] + line[1] * toPoint[1]) / lineDist
+	if projectionDist < 0 and not infinite:
+		closest = linePoint1
+	elif projectionDist > lineDist and not infinite:
+		closest = linePoint2
+	else: 
+		ratio = projectionDist / lineDist
+		closest = (line[0] * ratio + linePoint1[0],
+					  line[1] * ratio + linePoint1[1])
+	return dist(closest[0], closest[1], point[0], point[1])
+	
+	
+	
+	
+	
+	
 	
 	
