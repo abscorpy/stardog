@@ -18,6 +18,7 @@ class SolarSystem:
 		self.game = game
 		self.floaters = pygame.sprite.Group()
 		self.ships = pygame.sprite.Group()
+		self.specialOperations = []
 		self.bg = BG(self.game) # the background layer
 		pygame.mixer.music.load("res/space music.ogg")
 		pygame.mixer.music.play(-1)
@@ -32,6 +33,9 @@ class SolarSystem:
 		for i in range(len(floaters)):
 			for j in range(i + 1, len(floaters)):
 				collide(floaters[i], floaters[j])
+		for function in self.specialOperations:
+			function()
+		self.specialOperations = []
 		
 	def draw(self, surface, offset):
 		self.bg.draw(surface, self.game.player)
@@ -84,7 +88,7 @@ class SolarA1(SolarSystem):
 		for planet in self.planets:
 			planet.numShips = 0
 			planet.ships = pygame.sprite.Group()
-			planet.respawn = 0
+			planet.respawn = 30
 			self.add(planet)
 		self.fighterTimer = 2
 			
@@ -96,12 +100,9 @@ class SolarA1(SolarSystem):
 				if planet.respawn > 0:#countdown the timer
 					planet.respawn -= 1. / self.game.fps
 					continue
-				elif planet.respawn < -100: #reset respawn timer
-					planet.respawn = self.respawnTime
-					continue
 				else:
 					#respawn now!
-					planet.respawn = - 200#sentinal value
+					planet.respawn = self.respawnTime #reset respawn timer
 					planet.numShips += 1
 					for i in range(planet.numShips):
 						angle = randint(0, 360)
@@ -119,7 +120,7 @@ class SolarA1(SolarSystem):
 			self.add(TinyFighter(self.game, x, y, self.game.player.dx, self.game.player.dy))
 			self.fighterTimer = 60 / self.fightersPerMinute
 		else:
-			self.fighterTimer -= 1. / self.game.fps
+			pass#self.fighterTimer -= 1. / self.game.fps
 		
 	
 def collide(a, b):
@@ -130,9 +131,9 @@ def collide(a, b):
 	#code only needs to be added here, instead of in every other
 	#class.
 	#test rect first (faster), then circle:
-	if collisionTest(a, b):
+	if a.tangible and b.tangible and collisionTest(a, b):
 		#planet/?
-		if isinstance(b, Planet): tmp = a; a = b; b = tmp
+		if isinstance(b, Planet): a,b = b,a
 		if isinstance(a, Planet):
 			if  sign(b.x - a.x) == sign(b.dx - a.dx) \
 			and sign(b.y - a.y) == sign(b.dy - a.dy):# moving away from planet.
@@ -144,8 +145,12 @@ def collide(a, b):
 			if isinstance(b, Part) and b.parent == None:
 				planet_freePart_collision(a, b)
 				return True
+		if isinstance(b, Explosion): a,b = b,a
+		if isinstance(a, Explosion):
+			explosion_push(a,b)
+			#but don't return!
 		#shield ship/?
-		if isinstance(b, Ship) and b.hp > 0: tmp = a; a = b; b = tmp
+		if isinstance(b, Ship) and b.hp > 0: a,b = b,a
 		if isinstance(a, Ship) and a.hp > 0:
 			#shield ship/free part
 			if isinstance(b, Part) and b.parent == None:
@@ -158,7 +163,7 @@ def collide(a, b):
 				# moving into ship, not out of it.
 				crash(a,b)
 				hit = True
-				#if this ship no longer has shields:
+				#if this ship no longer has shields, start over:
 				if a.hp <= 0:
 					collide(a, b)
 					return True
@@ -172,7 +177,7 @@ def collide(a, b):
 			return hit
 
 		#ship / ?
-		if isinstance(b, Ship): tmp = a; a = b;	b = tmp
+		if isinstance(b, Ship): a,b = b,a
 		if isinstance(a, Ship):
 			#ship/free part
 			if isinstance(b, Part) and b.parent == None:
@@ -180,12 +185,13 @@ def collide(a, b):
 				return True
 							
 			#recurse to ship parts
+			hit = False
 			for part in a.parts:
 				if collide(b, part):#works for ship/ship, too.
 					#if that returned true, everything
 					#should be done already.
-					return True
-			return False
+					hit = True
+			return hit
 			
 		#free part/free part
 		if isinstance(b, Part) and b.parent == None \
@@ -242,11 +248,21 @@ def ship_freePart_collision(ship, part):
 	if ship.game.player == ship:
 		ship.game.menu.parts.inventoryPanel.reset() #TODO: make not suck
 	
+def explosion_push(explosion, floater):
+	"""The push of an explosion.  The rest of the effect is handled by the
+	collision branching, which continues."""
+	force = (explosion.force / 
+			not0(dist2(explosion, floater)) * explosion.radius ** 2)
+	dir = atan2(floater.y - explosion.y, floater.x - explosion.x)
+	accel = force / not0(floater.mass)
+	floater.dx += accel * cos(dir) / explosion.game.fps
+	floater.dy += accel * sin(dir) / explosion.game.fps
+	
 def crash(a, b):
 	if soundModule:
 		setVolume(hitSound.play(), a, b)
 	hpA = a.hp
 	hpB = b.hp
-	a.takeDamage(hpB, b)
-	b.takeDamage(hpA, a)
+	if hpB > 0: a.takeDamage(hpB, b)
+	if hpA > 0: b.takeDamage(hpA, a)
 	

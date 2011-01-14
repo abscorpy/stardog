@@ -17,6 +17,8 @@ def setVolume(channel, floater1, floater2):
 
 BULLET_IMAGE = pygame.image.load("res/shot" + ext).convert()
 BULLET_IMAGE.set_colorkey((0,0,0))
+MISSILE_IMAGE = pygame.image.load("res/missile" + ext).convert()
+MISSILE_IMAGE.set_colorkey((0,0,0))
 DEFAULT_IMAGE = pygame.image.load("res/default" + ext).convert()
 DEFAULT_IMAGE.set_colorkey((0,0,0))
 
@@ -40,6 +42,7 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 	baseImage = None
 	color = (200, 200, 0)
 	mass = 1
+	tangible = True
 
 	def __init__(self, game, x, y, dx = 0., dy = 0., dir = 270, radius = 10, \
 			image = None):
@@ -55,7 +58,7 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 			image = DEFAULT_IMAGE
 		#rotate() takes a counter-clockwise angle. 
 		self.image = pygame.transform.rotate(image, -self.dir).convert()
-		self.image.set_colorkey((0,0,0))
+		#self.image.set_colorkey((0,0,0))
 		self.rect = self.image.get_rect()
 
 	def update(self):
@@ -63,8 +66,6 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 		self.x += self.dx / self.game.fps
 		self.y += self.dy / self.game.fps
 		self.rect.center = (self.x, self.y)
-		# if self.hp <= 0:
-			# self.kill()
 
 	def takeDamage(self, damage, other):
 		self.hp -= damage
@@ -109,31 +110,37 @@ class Bullet(Floater):
 		if self.life > self.range:
 			self.kill()
 
-class UnguidedMissile(Bullet):
+class Missile(Bullet):
 	life = 0
+	turning = 0
+	percision = 0
+	hp = 1
+	impacted = None
 	explode = False
 
-	def __init__(self, game, ship):
-		Bullet.__init__(self, game, ship)
-		self.image = pygame.transform.rotate(MISSILE_IMAGE, -self.dir)
-		self.image.set_colorkey((0,0,0))
-		self.dx = MISSILE_SPEED * cos(ship.dir) + ship.dx
-		self.dy = MISSILE_SPEED * sin(ship.dir) + ship.dy
-		self.time = (dist(ship.target[0], ship.target[1], self.game.width / 2, \
-                          self.game.height / 2) - ship.radius) / MISSILE_SPEED
+	def __init__(self, game, launcher, damage, speed, acceleration, range, 
+				explosionRadius, image = None):
+		Bullet.__init__(self, game, launcher, self.hp, speed, range, image)
+		self.damage = damage
+		self.turning = launcher.turning
+		self.percision = launcher.percision
+		self.acceleration = launcher.acceleration
+		self.explosionRadius = explosionRadius
 
 	def update(self):
-		self.life += 1
+		self.life += 1. / self.game.fps
 		self.dir = (self.dir + 180) % 360 - 180
 		Floater.update(self)
-		if self.life > self.time:
+		self.dx += self.acceleration * cos(self.dir) / self.game.fps
+		self.dy += self.acceleration * sin(self.dir) / self.game.fps
+		if self.life > self.range:
 			self.kill()
 
 	def detonate(self):
-		explosion = Explosion(self.game, self.x, self.y, \
-					self.dx - cos(self.dir) * MISSILE_SPEED / 2, \
-					self.dy - sin(self.dir) * MISSILE_SPEED / 2, \
-				MISSILE_RADIUS, MISSILE_TIME, MISSILE_DAMAGE)
+		explosion = Explosion(self.game, self.x, self.y, 
+				self.dx - self.acceleration * self.range * cos(self.dir),
+				self.dy - self.acceleration * self.range * sin(self.dir),
+				self.explosionRadius, 1.5, self.damage)
 		self.game.curSystem.add(explosion)
 
 	def kill(self):
@@ -142,56 +149,161 @@ class UnguidedMissile(Bullet):
 			setVolume(missileSound.play(), self, self.game.player)
 		Floater.kill(self)
 
+	def takeDamage(self, damage, other):
+		self.impacted = other
+		Floater.takeDamage(self, damage, other)
+		
 class Explosion(Floater):
 	life = 0
 
 	def __init__(self, game, x, y, dx = 0, dy = 0, radius = 10,\
-				time = 1, damage = 0):
+				time = 1, damage = 0, force = 80000):
 		image = pygame.Surface((radius * 2, radius * 2), flags = hardwareFlag).convert()
 		image.set_colorkey((0,0,0))
 		Floater.__init__(self, game, x, y, dx, dy, radius = 0,\
 				image = image)
 		self.maxRadius = int(radius)
+		self.force = force
 		self.radius = 0
 		self.time = time
 		self.damage = damage
-		self.hp = 0
+		self.hp = damage / (self.time * self.game.fps)
+		if damage == 0:
+			self.tangible = False
 
 	def update(self):
 		Floater.update(self)
 		self.life += 1. / self.game.fps
 		if self.life > self.time:
 			Floater.kill(self)
+		self.hp = self.damage / (self.time * self.game.fps)
 		#grow or shrink: size peaks at time / 2:
 		if self.life < self.time / 4:
 			self.radius = int(self.maxRadius * self.life * 4 / self.time)
 		else:
 			self.radius = int(self.maxRadius * (self.time * 4 / 3 \
 						- self.life * 4 / 3) / self.time)
+		
+	def draw(self, surface, offset = (0,0)):
 		self.image.fill((0, 0, 0, 0))
-		#draw the explosion this frame:
-		#TODO: move this into a draw method.
-		for _circle in range(self.radius / 4):
+		for circle in range(self.radius / 4):
 			color = (randint(100, 155), randint(000, 100), randint(0, 20), \
 					randint(100, 255))
 			radius = randint(self.radius / 4, self.radius / 2)
 			r = randint(0, self.radius - radius)
 			theta = randint(0, 360)
-			offset = (int(cos(theta) * r + self.maxRadius), \
+			pos = (int(cos(theta) * r + self.maxRadius), \
 					  int(sin(theta) * r + self.maxRadius))
-			pygame.draw.circle(self.image, color, offset, radius)
+			pygame.draw.circle(self.image, color, pos, radius)
+		Floater.draw(self, surface, offset)
 
 	def kill(self):
-		self.hp = self.damage / FPS
+		pass
+		
+	def takeDamage(self, damage, other):
+		pass
+		
 		
 
+class LaserBeam(Floater):
+	"""LaserBeam(game, laser, damage, range) -> new LaserBeam
 
+	A LaserBeam is the projectile of a Laser.  They are line segments
+	that reach their end point instantly.  A LaserBeam has a different 
+	collision mechanism: they use line/circle collision, and it is checked 
+	during initialization."""
+	life = .5 #seconds
+	hp = 0
+	tangible = False
+	
+	def __init__(self, game, laser, damage, range):
+		dir = laser.dir + laser.ship.dir
+		cost = cos(dir) #cost is short for cos(theta)
+		sint = sin(dir)
+		x = laser.x + laser.shootPoint[0] * cost\
+					- laser.shootPoint[1] * sint + laser.ship.dx / game.fps
+		y = laser.y + laser.shootPoint[0] * sint\
+					+ laser.shootPoint[1] * cost + laser.ship.dy / game.fps
+		start = x,y
+		dir += laser.shootDir # not used for the offset; needed for the dir.
+		stop = x + range * cos(dir), y + range * sin(dir)		
+		x, y = (start[0] + stop[0]) / 2., (start[1] + stop[1]) / 2.
+		Floater.__init__(self, game, x, y, laser.ship.dx, laser.ship.dy,
+						radius = 0)
+		self.damage = damage
+		self.start = start
+		self.stop = stop
+		left = min(start[0], stop[0])
+		top = min(start[1], stop[1])
+		width = abs(start[0] - stop[0])
+		height = abs(start[1] - stop[1])
+		self.rect = Rect(left, top, width, height)
+		self.slope = (start[1]-stop[1]) / not0(start[0] - stop[0])
+		self.laser = laser
+		self.life = laser.imageDuration
+		self.ship = laser.ship
+		self.width = laser.beamWidth
+		if 'target' in laser.ship.__dict__:
+			self.target = laser.ship.target
+		self.game.curSystem.specialOperations.append(self.collision)
 
-
-
-
-
-
-
-
-
+		
+	def intersect(self, floater, skipRect = False):
+		#check rect collide:
+		if floater != self and (skipRect or self.rect.colliderect(floater.rect)):
+			#check line-circle collide:
+			dist = linePointDist(self.start, self.stop, (floater.x, floater.y))
+			if dist	< floater.radius:
+				return dist
+				
+	def collision(self):
+		from spaceship import Ship
+		colliders = []
+		for floater in self.game.curSystem.floaters:
+			if floater.tangible and self.intersect(floater):
+				colliders.append(floater)
+		if colliders:
+			#recurse for parts in a ship:
+			for floater in colliders[:]:
+				if isinstance(floater, Ship):
+					for part in floater.parts:
+						if self.intersect(part, True):
+							colliders.append(part)
+			#sort so that the nearest gets hit first:
+			dir = sign(self.stop[1] + self.stop[0] * self.slope - 
+					self.start[1] + self.start[0] * self.slope)
+			colliders.sort(key = lambda f: 
+					(f.y + f.x * self.slope) * dir - f.radius)
+			#hit until damage is used up
+			for floater in colliders:
+				tmp = floater.hp
+				floater.takeDamage(self.damage, self)
+				self.damage -= tmp
+				if self.damage < 1: #fudge it for effect: 1 not 0
+					#adjust stop based on last hit target:
+					self.stop = (floater.x, (floater.x - self.start[0]) 
+											* self.slope + self.start[1])
+					break
+				
+					
+	def update(self):
+		self.life -= 1. / self.game.fps
+		Floater.update(self)
+		self.start = (self.start[0] + self.dx / self.game.fps,
+						self.start[1] + self.dy / self.game.fps)
+		self.stop = (self.stop[0] + self.dx / self.game.fps, 
+						self.stop[1] + self.dy / self.game.fps)
+		if self.life < 0:
+			self.kill()
+	
+	def draw(self, surface, offset):
+		start = self.start[0] - offset[0], self.start[1] - offset[1]
+		stop =  self.stop[0] - offset[0], self.stop[1] - offset[1]
+		pygame.draw.line(surface, self.ship.color, start, stop, 1)
+		
+	def takeDamage(self, damage, other):
+		pass
+	
+		
+		
+		
