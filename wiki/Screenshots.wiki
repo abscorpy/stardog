@@ -1,3 +1,8 @@
 #Screenshots of Stardog
 
-<img = http://www.tc.umn.edu/~poth0018/bigstardog.png>
+<img src="http://www.tc.umn.edu/~poth0018/stardog.png"><br/>
+Earlier graphics.  Fighting a ship with a shield generator. <br/><br/>
+<img src="http://www.tc.umn.edu/~poth0018/Stardog parts menu.png"><br/>
+The parts menu for a ship just starting out.<br/><br/>
+<img src="http://www.tc.umn.edu/~poth0018/Stardog parts menu2.png"><br/>
+The parts menu later.  A ship can have unlimited parts, but this ship's part limit is only 10, so the efficiency of each part has fallen to .531.  More levels to Modularity would help!
