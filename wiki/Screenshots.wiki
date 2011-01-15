@@ -1,0 +1,3 @@
+#Screenshots of Stardog
+
+<img = http://www.tc.umn.edu/~poth0018/bigstardog.png>
