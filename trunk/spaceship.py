@@ -8,7 +8,34 @@ import stardog
 from adjectives import addAdjective
 from skills import *
 
-def starterShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
+def makeFighter(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
+				color = (255, 255, 255), player = False):
+	"""starterShip(x,y) -> default starting ship at x,y."""
+	if player:
+		ship = Player(game, x, y, dx = dx, dy = dy, dir = dir, \
+				script = script, color = color)
+	else:
+		ship = Ship(game, x, y, dx = dx, dy = dy, dir = dir, \
+				script = script, color = color)
+	cockpit = Fighter(game)
+	gun = MachineGun(game)
+	engine = Engine(game)
+	shield = FighterShield(game)
+	for part in [cockpit, gun, engine, shield]:
+		if rand() > .8:
+			addAdjective(part)
+			if rand() > .6:
+				addAdjective(part)
+		part.color = color
+	ship.addPart(cockpit)
+	cockpit.addPart(engine, 3)
+	cockpit.addPart(gun, 0)
+	cockpit.addPart(shield, 2)
+	ship.reset()
+	ship.energy = ship.maxEnergy * .8
+	return ship
+	
+def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), player = False):
 	"""starterShip(x,y) -> default starting ship at x,y."""
 	if player:
@@ -20,48 +47,92 @@ def starterShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	gyro = Gyro(game)
 	generator = Generator(game)
 	battery = Battery(game)
-	cockpit = Cockpit(game)
-	#gun = LeftLaser(game)
-	#gun2 = RightLaser(game)
-	gun = LeftCannon(game)
-	gun2 = RightCannon(game)
-	engine1 = MissileLauncher(game)
-	#engine1 = Engine(game)
-	engine2 = Engine(game)
-	for part in [gyro, generator, battery, cockpit, gun, gun2, engine1, engine2]:
+	cockpit = Destroyer(game)
+	gun = RightLaser(game)
+	engine = Engine(game)
+	shield = Shield(game)
+	for part in [gyro, generator, battery, cockpit, gun, engine, shield]:
 		if rand() > .8:
 			addAdjective(part)
 			if rand() > .6:
 				addAdjective(part)
 		part.color = color
 	ship.addPart(cockpit)
-	cockpit.addPart(engine1, 0)
-	cockpit.addPart(gun2, 1)
-	cockpit.addPart(gyro, 2)
-	cockpit.addPart(gun, 3)
-	gyro.addPart(battery, 1)
-	battery.addPart(generator, 0)
-	generator.addPart(engine2, 0)
-	ship.energy = ship.maxEnergy * .8
+	cockpit.addPart(gun, 2)
+	cockpit.addPart(battery, 3)
+	cockpit.addPart(generator, 4)
+	cockpit.addPart(gyro, 5)
+	cockpit.addPart(shield, 6)
+	gyro.addPart(engine, 1)
 	ship.reset()
-	return ship
-
-def playerShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255)):
+	ship.energy = ship.maxEnergy * .8
+	return ship	
+	
+def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
+				color = (255, 255, 255), player = False):
 	"""starterShip(x,y) -> default starting ship at x,y."""
-	ship = starterShip(game, x, y, dx, dy, dir, script, color, player=True)
-	script.bind(K_DOWN % 322, ship.reverse)
-	script.bind(K_UP % 322, ship.forward)
-	script.bind(K_RIGHT % 322, ship.turnRight)
-	script.bind(K_LEFT % 322, ship.turnLeft)
-	script.bind(K_RCTRL % 322, ship.shoot)
-	script.bind(K_s % 322, ship.reverse)
-	script.bind(K_w % 322, ship.forward)
-	script.bind(K_e % 322, ship.left)
-	script.bind(K_q % 322, ship.right)
-	script.bind(K_d % 322, ship.turnRight)
-	script.bind(K_a % 322, ship.turnLeft)
-	script.bind(K_LCTRL % 322, ship.shoot)
+	if player:
+		ship = Player(game, x, y, dx = dx, dy = dy, dir = dir, \
+				script = script, color = color)
+	else:
+		ship = Ship(game, x, y, dx = dx, dy = dy, dir = dir, \
+				script = script, color = color)
+	cockpit = Interceptor(game)
+	gyro = Gyro(game)
+	generator = Generator(game)
+	battery = Battery(game)
+	gun = LeftFlakCannon(game)
+	gun2 = RightFlakCannon(game)
+	missile = MissileLauncher(game)
+	engine = Engine(game)
+	engine2 = Engine(game)
+	for part in [gyro, generator, battery, cockpit, gun, gun2, engine, engine2,
+				missile]:
+		if rand() > .8:
+			addAdjective(part)
+			if rand() > .6:
+				addAdjective(part)
+		part.color = color
+	ship.addPart(cockpit)
+	cockpit.addPart(missile, 0)
+	cockpit.addPart(gun, 2)
+	cockpit.addPart(gun2, 3)
+	cockpit.addPart(generator, 4)
+	cockpit.addPart(gyro, 5)
+	generator.addPart(battery, 0)
+	battery.addPart(engine, 0)
+	gyro.addPart(engine2, 1)
+	ship.reset()
+	ship.energy = ship.maxEnergy * .8
+	return ship
+	
+def playerShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
+				color = (255, 255, 255), type = 'fighter'):
+	"""starterShip(x,y) -> default starting ship at x,y."""
+	if type == 'destroyer':
+		ship = makeDestroyer(game, x, y, dx, dy, dir, 
+				script, color, player=True)
+	elif type == 'interceptor':
+		ship = makeInterceptor(game, x, y, dx, dy, dir, 
+				script, color, player=True)
+	else:
+		ship = makeFighter(game, x, y, dx, dy, dir, 
+				script, color, player=True)
+	#default controls:
+	script.bind(K_DOWN, ship.reverse)
+	script.bind(K_UP, ship.forward)
+	script.bind(K_RIGHT, ship.turnRight)
+	script.bind(K_LEFT, ship.turnLeft)
+	script.bind(K_RCTRL, ship.shoot)
+	script.bind(K_s, ship.reverse)
+	script.bind(K_w, ship.forward)
+	script.bind(K_e, ship.left)
+	script.bind(K_q, ship.right)
+	script.bind(K_d, ship.turnRight)
+	script.bind(K_a, ship.turnLeft)
+	script.bind(K_LCTRL, ship.shoot)
+	script.bind(K_SPACE, ship.launchMissiles)
+	
 	return ship
 
 class Ship(Floater):
@@ -132,6 +203,7 @@ class Ship(Floater):
 		self.functionDescriptions = []
 		for function in self.functions:
 			self.functionDescriptions.append(function.__doc__)
+		self.baseBonuses = self.baseBonuses.copy()
 
 	def addPart(self, part, portIndex = 0):
 		"""ship.addPart(part) -> Sets the main part for this ship.
@@ -232,10 +304,11 @@ class Ship(Floater):
 				self.gyros.append(part)
 				self.torque += part.torque
 			if isinstance(part, Gun):
-				self.guns.append(part)
+				if isinstance(part, MissileLauncher):
+					self.missiles.append(part)
+				else:
+					self.guns.append(part)
 				self.dps += part.getDPS()
-			#if isinstance(part, missileLauncher):
-				#self.missiles.append(part)
 			for port in part.ports:
 				if port.part:
 					self.partRollCall(port.part)

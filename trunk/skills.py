@@ -17,10 +17,10 @@ class Skill:
 		return 1
 
 class Modularity(Skill):
-	"Increases the number of parts a ship can have before losing efficiency.\n"\
-	"levels 1-6: +1 part per level\n"\
-	"levels 7-12: +2 parts per level\n"\
-	"levels 12+: +3 parts per level"
+	("Increases the number of parts a ship can have before losing efficiency.\n"
+	"levels 1-6: +1 part per level\n"
+	"levels 7-12: +2 parts per level\n"
+	"levels 12+: +3 parts per level")
 	def __init__(self, ship, level = 0):
 		Skill.__init__(self, ship, level)
 		self.extraParts = 0

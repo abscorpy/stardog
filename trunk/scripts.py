@@ -49,6 +49,7 @@ class InputScript(Script):
 		"""binds function to key so function will be called if key is pressed.
 		Can bind more than one function to a key, and more than one key to
 		a function."""
+		key = key % 322
 		if not self.bindings.count((key, function)):
 			self.bindings.append((key, function))
 			

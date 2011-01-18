@@ -15,7 +15,9 @@ class Strafebat(Ship):
 		roll = rand()
 		self.target = game.player
 		self.circling = False
-		Ship.__init__(self, game, x, y, script = StrafebatScript(game), color = color)
+		Ship.__init__(self, game, x, y, script = StrafebatScript(game), 
+						color = color)
+		self.baseBonuses['damageBonus'] = .5
 		cockpit =StrafebatCockpit(game)
 		gyro = Gyro(game)
 		gun = StrafebatCannon(game)
@@ -25,7 +27,8 @@ class Strafebat(Ship):
 		shield = Shield(game)
 		rCannon = RightCannon(game)
 		lCannon = LeftCannon(game)
-		for part in [cockpit, gyro, gun, engine, generator, battery, shield, rCannon, lCannon]:
+		for part in [cockpit, gyro, gun, engine, generator, battery, shield, 
+						rCannon, lCannon]:
 			if rand() > .8:
 				addAdjective(part)
 				if rand() > .6:

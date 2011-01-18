@@ -107,12 +107,12 @@ def loadImage(filename, colorkey=(0,0,0)):
 		image.set_colorkey((255,255,255))
 	return image
 	
-def colorShift(surface, color):
+def colorShift(surface, color, colorkey = (0,0,0)):
 	"""Converts every pixel with equal red and blue values to a shade of 
 	color.  Attempts to maintain value and saturation of surface. 
 	Returns a new Surface."""
 	s = pygame.Surface(surface.get_size(), flags = hardwareFlag).convert()
-	s.set_colorkey((0,0,0))
+	s.set_colorkey(colorkey)
 	s.blit(surface, (0,0))
 	pa = pygame.PixelArray(s)
 	alpha = surface.get_alpha()

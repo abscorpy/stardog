@@ -120,7 +120,7 @@ class SolarA1(SolarSystem):
 			self.add(TinyFighter(self.game, x, y, self.game.player.dx, self.game.player.dy))
 			self.fighterTimer = 60 / self.fightersPerMinute
 		else:
-			pass#self.fighterTimer -= 1. / self.game.fps
+			self.fighterTimer -= 1. / self.game.fps
 		
 	
 def collide(a, b):

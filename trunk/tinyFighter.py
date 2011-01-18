@@ -18,7 +18,9 @@ class TinyFighter(Ship):
 	def __init__(self, game, x, y, dx = 0, dy = 0, color = (70, 180,0)):
 		self.target = game.player
 		self.circling = False
-		Ship.__init__(self, game, x, y, dx, dy, script = TinyFighterScript(game), color = color)
+		Ship.__init__(self, game, x, y, dx, dy, 
+						script = TinyFighterScript(game), color = color)
+		self.baseBonuses['damageBonus'] = .5
 		self.addPart(Drone(game))
 		self.energy = self.maxEnergy
 		self.inventory.append(randItem(self.game, self.level))

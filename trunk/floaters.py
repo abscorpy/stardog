@@ -126,7 +126,9 @@ class Missile(Bullet):
 		self.percision = launcher.percision
 		self.acceleration = launcher.acceleration
 		self.explosionRadius = explosionRadius
-
+		self.time = launcher.explosionTime
+		self.force = launcher.force
+		
 	def update(self):
 		self.life += 1. / self.game.fps
 		self.dir = (self.dir + 180) % 360 - 180
@@ -138,9 +140,9 @@ class Missile(Bullet):
 
 	def detonate(self):
 		explosion = Explosion(self.game, self.x, self.y, 
-				self.dx - self.acceleration * self.range * cos(self.dir),
-				self.dy - self.acceleration * self.range * sin(self.dir),
-				self.explosionRadius, 1.5, self.damage)
+				self.dx - self.acceleration * self.life * cos(self.dir),
+				self.dy - self.acceleration * self.life * sin(self.dir),
+				self.explosionRadius, self.time, self.damage, self.force)
 		self.game.curSystem.add(explosion)
 
 	def kill(self):
@@ -157,7 +159,7 @@ class Explosion(Floater):
 	life = 0
 
 	def __init__(self, game, x, y, dx = 0, dy = 0, radius = 10,\
-				time = 1, damage = 0, force = 80000):
+				time = 1, damage = 0, force = 6000):
 		image = pygame.Surface((radius * 2, radius * 2), flags = hardwareFlag).convert()
 		image.set_colorkey((0,0,0))
 		Floater.__init__(self, game, x, y, dx, dy, radius = 0,\
@@ -186,7 +188,7 @@ class Explosion(Floater):
 		
 	def draw(self, surface, offset = (0,0)):
 		self.image.fill((0, 0, 0, 0))
-		for circle in range(self.radius / 4):
+		for circle in range(min(self.radius / 4, 80)):
 			color = (randint(100, 155), randint(000, 100), randint(0, 20), \
 					randint(100, 255))
 			radius = randint(self.radius / 4, self.radius / 2)
