@@ -492,13 +492,14 @@ class StrafebatCannon(Cannon):#move to config
 	name = "fore gun"
 	image = None
 		
-class MachineGun(Cannon):
+class MachineGun(Cannon):#move to config
 	baseImage = loadImage('res/parts/machine gun.bmp')
-	damage = 1
-	reloadTime = .1
-	energyCost = .2
+	damage = .5
+	reloadTime = .2
+	energyCost = .7
 	shootDir = 180
 	shootPoint = -14, 0
+	range = 1
 	speed = 600
 	name = 'machine gun'
 	
@@ -507,11 +508,15 @@ class FlakCannon(Cannon):
 	damage = 1
 	energyCost = 3
 	reloadTime = .08
-	burstSize = 4
-	reloadBurst = 0
-	burst = 4
+	burstSize = 5
 	reloadBurstTime = 3
-	
+	range = 6
+	speed = 150
+	def __init__(self, game):
+		self.burst = self.burstSize
+		self.reloadBurst = self.reloadBurstTime
+		Cannon.__init__(self, game)
+		
 	def stats(self):
 		stats = (self.speed, self.numBullets, self.spread)
 		statString = ("\Bullet Speed: %i m/s\nNumber of Bullets: %i"
@@ -548,19 +553,18 @@ class FlakCannon(Cannon):
 			if self.burst <= 0:
 				self.reloadBurst = self.reloadBurstTime
 			
-class LeftFlakCannon(FlakCannon):
+class LeftFlakCannon(FlakCannon):#move to config
 	baseImage = loadImage("res/parts/leftflak.bmp")
 	shootPoint = 0, - 20
 	shootDir = 270
 	name = "Left Flak Cannon"
 	
-class RightFlakCannon(FlakCannon):
+class RightFlakCannon(FlakCannon):#move to config
 	baseImage = loadImage("res/parts/rightflak.bmp")
 	shootPoint = 0, 20
 	shootDir = 90
 	name = "Right Flak Cannon"
 	
-
 class Engine(Part):
 	baseImage = loadImage("res/parts/engine" + ext)
 	image = None
@@ -746,11 +750,12 @@ class Shield(Part):
 				self.ship.energy -= self.energyCost / self.game.fps
 		Part.update(self)
 
-class FighterShield(Shield):
+class FighterShield(Shield):#move to config
 	baseImage =  loadImage("res/parts/fighter shield.bmp")
 	shieldhp = .6
-	shieldRegen = .2
+	shieldRegen = .1
 	energyCost = .5
+	name = 'fighter shield'
 		
 class Cockpit(Battery, Generator, Gyro):
 	baseImage = loadImage("res/parts/cockpit.bmp")
@@ -775,10 +780,12 @@ class Cockpit(Battery, Generator, Gyro):
 					"\nEnergy Produced: %s/second")
 		return Part.stats(self) + statString % stats
 		
-class Interceptor(Cockpit):
+class Interceptor(Cockpit):#move to config
 	mass = 20
 	hp = 15
 	baseImage = loadImage("res/parts/interceptor.bmp")
+	name = 'interceptor cockpit'
+	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
 		self.ports = [
@@ -789,11 +796,13 @@ class Interceptor(Cockpit):
 					Port((-6, 12), 0, self),
 					Port((-6, -12), 0, self)]
 					
-class Destroyer(Cockpit):
+class Destroyer(Cockpit):#move to config
 	mass = 60
 	hp = 30
 	energyCost = .6
 	baseImage = loadImage("res/parts/destroyer.bmp")
+	name = 'destroyer cockpit'
+	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
 		self.ports = [
@@ -805,13 +814,15 @@ class Destroyer(Cockpit):
 					Port((-15, -8), 0, self),
 					Port((-15, 8), 0, self)]
 					
-class Fighter(Cockpit):
+class Fighter(Cockpit):#move to config
 	mass = 10
 	hp = 10
-	energyCost = .1
-	rate = .6
-	capacity = 3
+	energyCost = .2
+	rate = 1.5
+	capacity = 5
 	baseImage = loadImage("res/parts/fighter.bmp")
+	name = 'destroyer cockpit'
+	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
 		self.ports = [

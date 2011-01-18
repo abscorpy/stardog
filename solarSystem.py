@@ -10,10 +10,9 @@ from gui import *
 import stardog
 
 class SolarSystem:
-
-	"""Game(resolution = None, fullscreen = False) 
-	-> new game instance. Multiple game instances
-	are probably a bad idea."""
+	"""A SolarSystem holds ships and other floaters."""
+	boundries = ((-30000, 30000), (-30000, 30000))
+	drawEdgeWarning = False
 	def __init__(self, game):
 		self.game = game
 		self.floaters = pygame.sprite.Group()
@@ -33,6 +32,22 @@ class SolarSystem:
 		for i in range(len(floaters)):
 			for j in range(i + 1, len(floaters)):
 				collide(floaters[i], floaters[j])
+		#keep ships in system for now:
+		edge = self.boundries
+		if self.drawEdgeWarning:
+			self.drawEdgeWarning -= 1
+			if self.drawEdgeWarning <=0:
+				self.drawEdgeWarning = False
+		for ship in self.ships:
+			if ship.x < edge[0][0] and ship.dx < 0 \
+			or ship.x > edge[0][1] and ship.dx > 0:
+				ship.dx = 0
+				self.drawEdgeWarning = self.game.fps
+			if ship.y < edge[1][0] and ship.dy < 0 \
+			or ship.y > edge[1][1] and ship.dy > 0:
+				ship.dy = 0
+				self.drawEdgeWarning = self.game.fps
+				
 		for function in self.specialOperations:
 			function()
 		self.specialOperations = []
@@ -62,7 +77,7 @@ class SolarA1(SolarSystem):
 	fightersPerMinute = 5
 	def __init__(self, game, player, numPlanets = 10):
 		SolarSystem.__init__(self, game)
-		self.sun = (Planet( game, 0, 0, radius = 4000, mass = 1000000, \
+		self.sun = (Planet( game, 0, 0, radius = 2000, mass = 180000, \
 					color = (255, 255, 255), image = None)) # the star
 		#place player:
 		angle = randint(0,360)
@@ -72,10 +87,10 @@ class SolarA1(SolarSystem):
 		self.add(self.sun)
 		self.planets = []
 		#add planets:
-		d = 10000
+		d = 5000
 		for i in range(numPlanets):
 			angle = randint(0,360)
-			distanceFromSun = randint(d, d+5000)
+			distanceFromSun = randint(d, d + 1200)
 			color = randint(40,255),randint(40,255),randint(40,255)
 			radius = randint(100,500)
 			mass = randnorm(radius * 10, 800)
@@ -83,7 +98,7 @@ class SolarA1(SolarSystem):
 				distanceFromSun * sin(angle), radius = radius, mass = mass, \
 				color = color))
 			self.add(self.planets[i])
-			d+= 5000
+			d+= 1200
 				
 		for planet in self.planets:
 			planet.numShips = 0

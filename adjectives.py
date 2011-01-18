@@ -1,7 +1,8 @@
 #adjectives.py
 from parts import *
 PARTS = [LeftCannon, RightCannon, Engine, Gyro, Generator, Battery, Shield,
-		LeftLaser, RightLaser, MissileLauncher]
+		LeftLaser, RightLaser, MissileLauncher, MachineGun, FighterShield, 
+		LeftFlakCannon, RightFlakCannon]
 def randItem(game, level = 1):
 	roll = randint(0, len(PARTS) -1)
 	if roll == rand() * level / 2 < .8:

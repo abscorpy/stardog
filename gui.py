@@ -11,7 +11,7 @@ radarRadius = 100
 radarScale = 200.0 # 1 radar pixel = radarScale space pixels
 radarRadiusBig = 400
 radarScaleBig = 200.0 # 1 radar pixel = radarScale space pixels
-
+edgeWarning = loadImage('res/edgeofsystem.bmp')
 class HUD:
 
 	def __init__(self, game):
@@ -52,13 +52,14 @@ class HUD:
 			h * thisShip.xp / thisShip.next())) # full bar
 		if(fontModule):# and thisShip.developmentPoints:
 			self.image.blit(FONT.render(str(thisShip.developmentPoints), \
-						False, (0, 180, 80)), (x, y - 20))
+						False, (0, 180, 80)), (x - 9, y - 20))
 						
 		#FPS
 		if(fontModule):
 			self.image.blit(FONT.render(str(self.game.fps), \
 						False, (200, 20, 255)), (100, 100))
-
+		if thisShip.game.curSystem.drawEdgeWarning:
+			self.image.blit(edgeWarning, (20, self.game.height - 100))
 		#blit the HUD to the screen:
 		surface.blit(self.image, (0, 0))
 		
