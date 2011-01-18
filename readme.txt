@@ -11,7 +11,8 @@ or
 python stardog.py mode x y
 
 where mode is f for fullscreen, w for windowed, at resolution x,y.  Omit x,y for max resolution. 
-Stardog requires Python and Pygame.  Stardog will run faster if Psyco is installed.
+Stardog requires Python 2.6ish and Pygame.  Stardog will run faster if Psyco is installed.
+(This assumes python is in your path variable.)
 
 Controls:
 
@@ -21,6 +22,7 @@ Del: self-destruct
 wasd/arrows: thrust and turn
 q/e: strafe
 ctrl: shoot
+space: launch missiles
 Mouse: move to turn, left click to shoot, right click to thrust
 
 Keys can be changed in the menu. If you want to use the keyboard, you should probably disable mouse control in the keys menu (otherwise your ship will keep turning towards the mouse).
@@ -32,6 +34,14 @@ This source is given only under the GPL General Public License.  If you are inte
 
 
 CHANGES:
+
+since 0.2011.01.14:
+Separate Fighter, Destroyer, and Interceptor types!
+Type chooser added to intro menu.  Intro menu shows after each death.
+Adds Flak Cannons and smaller Fighter Shields. 
+Missiles mapped to the spacebar by default.
+SolarSystem is now smaller.  So is the sun.  There are boundaries that stop the ship, and a warning is shown when trying to pass them.
+Gyroscope made smaller.
 
 since 0.2010.11.30:
 Player's parts no longer fall off when hit. (Enemies' still do.)
