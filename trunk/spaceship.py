@@ -426,7 +426,7 @@ class Ship(Floater):
 
 class Player(Ship):
 	xp = 0
-	developmentPoints = 50
+	developmentPoints = 2
 	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255)):
@@ -451,7 +451,7 @@ class Player(Ship):
 		Ship.update(self)
 	
 	def next(self):
-		return 1.1 ** self.level * 100
+		return 1.1 ** self.level * 10
 	
 	
 	
