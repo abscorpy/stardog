@@ -273,8 +273,11 @@ class ShipPartPanel(DragableSelectable):
 		self.parent.setSelected(self)
 		
 	def drag(self, start):
-		if not self.part:
+		if not self.part or self.part.parent == self.part.ship:
 			return None
+		if not self.selected:
+			self.select()
+			self.parent.selected = self
 		return (PartTile(self.part, Rect(0, 0, PartTile.width, PartTile.height), \
 				self), self)
 

@@ -75,34 +75,34 @@ class Game:
 		
 		self.hud = HUD(self) # the heads up display
 		
-		intro = IntroMenu(self, Rect(100, 100, self.width - 200,\
-					self.height - 200))
-		self.running = True
-		while self.running and intro.running:
-			#event polling:
-			for event in pygame.event.get():
-				if event.type == pygame.QUIT:
-					pygame.quit()
-					return
-				intro.handleEvent(event)
-			intro.update()
-			self.screen.fill((0, 0, 0, 0))
-			intro.draw(self.screen)
-			pygame.display.flip()
-		#setup initial state:
+						
 		self.playerScript = InputScript(self)
-		self.player = playerShip(self, 0,0, \
-				script = self.playerScript, color = self.playerColor)
-				
-		self.curSystem = SolarA1(self, self.player)
 		
 	def run(self):
 		"""Runs the game."""
 		
+		self.running = True
 		while self.running:
 			# initialize starting ships:
 			# eventually this will be replaced by loading solarSystems 
 			# from files. 
+			intro = IntroMenu(self, Rect(100, 100, self.width - 200,\
+						self.height - 200))
+			while self.running and intro.running:
+				#event polling:
+				for event in pygame.event.get():
+					if event.type == pygame.QUIT:
+						pygame.quit()
+						return
+					intro.handleEvent(event)
+				intro.update()
+				self.screen.fill((0, 0, 0, 0))
+				intro.draw(self.screen)
+				pygame.display.flip()
+			#setup initial state:
+			self.player = playerShip(self, 0,0, script = self.playerScript,
+							color = self.playerColor, type = self.playerType)
+			self.curSystem = SolarA1(self, self.player)
 			self.curSystem.add(self.player)
 			
 			self.menu = Menu(self, Rect(100, 100, self.width - 200,\
@@ -132,6 +132,7 @@ class Game:
 						
 				#game-level key input:
 				if self.keys[K_DELETE % 322]:
+					self.keys[K_DELETE % 322] = False
 					self.player.kill() #suicide
 				if self.keys[K_RETURN % 322]:
 					self.pause = not self.pause #pause/menu
@@ -172,10 +173,6 @@ class Game:
 				pygame.display.flip()
 				self.clock.tick(FPS)#aim for FPS but adjust vars for self.fps.
 				self.fps = max(1, int(self.clock.get_fps()))
-			#end of round maintainance:
-			self.player = playerShip(self, 0, 0, \
-				script = self.playerScript, color = self.playerColor)
-			self.curSystem = SolarA1(self, self.player)
 	
 if __name__ == '__main__':
 	try:
