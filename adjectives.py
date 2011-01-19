@@ -1,5 +1,6 @@
 #adjectives.py
 from parts import *
+from partCatalog import *
 PARTS = [LeftCannon, RightCannon, Engine, Gyro, Generator, Battery, Shield,
 		LeftLaser, RightLaser, MissileLauncher, MachineGun, FighterShield, 
 		LeftFlakCannon, RightFlakCannon]

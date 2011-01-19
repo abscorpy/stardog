@@ -38,15 +38,23 @@ class SolarSystem:
 			self.drawEdgeWarning -= 1
 			if self.drawEdgeWarning <=0:
 				self.drawEdgeWarning = False
-		for ship in self.ships:
-			if ship.x < edge[0][0] and ship.dx < 0 \
-			or ship.x > edge[0][1] and ship.dx > 0:
-				ship.dx = 0
-				self.drawEdgeWarning = self.game.fps
-			if ship.y < edge[1][0] and ship.dy < 0 \
-			or ship.y > edge[1][1] and ship.dy > 0:
-				ship.dy = 0
-				self.drawEdgeWarning = self.game.fps
+		for floater in self.floaters:
+			if floater.x < edge[0][0] and floater.dx < 0 \
+			or floater.x > edge[0][1] and floater.dx > 0:
+				if isinstance(floater, Ship):
+					floater.dx = 0
+					if floater == self.game.player:
+						self.drawEdgeWarning = self.game.fps
+				else:
+					floater.kill()
+			if floater.y < edge[1][0] and floater.dy < 0 \
+			or floater.y > edge[1][1] and floater.dy > 0:
+				if isinstance(floater, Ship):
+					floater.dy = 0
+					if floater == self.game.player:
+						self.drawEdgeWarning = self.game.fps
+				else:
+					floater.kill()
 				
 		for function in self.specialOperations:
 			function()
@@ -74,7 +82,7 @@ class SolarSystem:
 
 class SolarA1(SolarSystem):
 	respawnTime = 30
-	fightersPerMinute = 5
+	fightersPerMinute = 50
 	def __init__(self, game, player, numPlanets = 10):
 		SolarSystem.__init__(self, game)
 		self.sun = (Planet( game, 0, 0, radius = 2000, mass = 180000, \

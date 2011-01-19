@@ -76,7 +76,6 @@ class Game:
 		self.hud = HUD(self) # the heads up display
 		
 						
-		self.playerScript = InputScript(self)
 		
 	def run(self):
 		"""Runs the game."""
@@ -100,6 +99,7 @@ class Game:
 				intro.draw(self.screen)
 				pygame.display.flip()
 			#setup initial state:
+			self.playerScript = InputScript(self)
 			self.player = playerShip(self, 0,0, script = self.playerScript,
 							color = self.playerColor, type = self.playerType)
 			self.curSystem = SolarA1(self, self.player)

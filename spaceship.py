@@ -2,6 +2,7 @@
 	
 from utils import *
 from parts import *
+from partCatalog import *
 from floaters import *
 from pygame.locals import *
 import stardog
