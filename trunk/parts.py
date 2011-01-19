@@ -5,7 +5,6 @@ from utils import *
 from scripts import *
 from pygame.locals import *
 from floaters import *
-#from projectiles import *
 import stardog
 
 PART_OVERLAP = 4
@@ -297,7 +296,6 @@ class Part(Floater):
 						self.dx, self.dy, radius = self.radius * 4,\
 						time = self.maxhp / 5))
 
-			
 class Dummy(Part):
 	"""A dummy part used by the parts menu."""
 	mass = 0
@@ -459,50 +457,6 @@ class Laser(Gun):
 					self.damage * s.efficiency * s.damageBonus * s.laserBonus, \
 					self.range * s.laserRangeBonus))
 	
-class LeftLaser(Laser):#move to config
-	baseImage = loadImage("res/parts/leftlaser" + ext)
-	shootPoint = 0, - 15
-	shootDir = 270
-	name = "Left Laser"
-	
-class RightLaser(Laser):#move to config
-	baseImage = loadImage("res/parts/rightlaser" + ext)
-	shootPoint = 0, 15
-	shootDir = 90
-	name = "Right Laser"
-	
-class LeftCannon(Cannon):#move to config
-	baseImage = loadImage("res/parts/leftgun" + ext)
-	shootPoint = 0, - 30
-	shootDir = 270
-	name = "Left Cannon"
-
-class RightCannon(Cannon):#move to config
-	baseImage = loadImage("res/parts/rightgun" + ext)
-	shootPoint = 0, 30
-	shootDir = 90
-	name = "Right Cannon"
-		
-class StrafebatCannon(Cannon):#move to config
-	baseImage = loadImage("res/parts/strafebatgun" + ext)
-	shootDir = 180
-	shootPoint = -20, 0
-	damage = .5
-	energyCost = 1
-	name = "fore gun"
-	image = None
-		
-class MachineGun(Cannon):#move to config
-	baseImage = loadImage('res/parts/machine gun.bmp')
-	damage = .5
-	reloadTime = .2
-	energyCost = .7
-	shootDir = 180
-	shootPoint = -14, 0
-	range = 1
-	speed = 600
-	name = 'machine gun'
-	
 class FlakCannon(Cannon):
 	spread = 50
 	damage = 1
@@ -518,9 +472,9 @@ class FlakCannon(Cannon):
 		Cannon.__init__(self, game)
 		
 	def stats(self):
-		stats = (self.speed, self.numBullets, self.spread)
-		statString = ("\Bullet Speed: %i m/s\nNumber of Bullets: %i"
-						"\nBullet Spread: %i degrees")
+		stats = (self.speed, self.burstSize, self.reloadBurstTime, self.spread)
+		statString = ("\Bullet Speed: %i m/s\nBurst Size: %i"
+					"\nBurst reload: %i seconds\nBullet Spread: %i degrees")
 		return Gun.stats(self) + statString % stats
 	def update(self):
 		Gun.update(self)
@@ -552,19 +506,7 @@ class FlakCannon(Cannon):
 			self.shootDir = baseDir # restore shootDir.
 			if self.burst <= 0:
 				self.reloadBurst = self.reloadBurstTime
-			
-class LeftFlakCannon(FlakCannon):#move to config
-	baseImage = loadImage("res/parts/leftflak.bmp")
-	shootPoint = 0, - 20
-	shootDir = 270
-	name = "Left Flak Cannon"
-	
-class RightFlakCannon(FlakCannon):#move to config
-	baseImage = loadImage("res/parts/rightflak.bmp")
-	shootPoint = 0, 20
-	shootDir = 90
-	name = "Right Flak Cannon"
-	
+				
 class Engine(Part):
 	baseImage = loadImage("res/parts/engine" + ext)
 	image = None
@@ -750,13 +692,6 @@ class Shield(Part):
 				self.ship.energy -= self.energyCost / self.game.fps
 		Part.update(self)
 
-class FighterShield(Shield):#move to config
-	baseImage =  loadImage("res/parts/fighter shield.bmp")
-	shieldhp = .6
-	shieldRegen = .1
-	energyCost = .5
-	name = 'fighter shield'
-		
 class Cockpit(Battery, Generator, Gyro):
 	baseImage = loadImage("res/parts/cockpit.bmp")
 	image = None

@@ -1,0 +1,34 @@
+#partCatalogue
+from parts import *
+
+class LeftFlakCannon(FlakCannon): 
+	baseImage = loadImage("res/parts/leftflak.bmp"); shootPoint = 0, - 20;
+	shootDir = 270; name = "Left Flak Cannon"	
+class MachineGun(Cannon):#move to config
+	baseImage = loadImage('res/parts/machine gun.bmp')
+	damage = .5;reloadTime = .2;energyCost = .7;shootDir = 180
+	shootPoint = -14, 0;range = 1;speed = 600;name = 'machine gun'	
+class RightFlakCannon(FlakCannon):#move to config
+	baseImage = loadImage("res/parts/rightflak.bmp")
+	shootPoint = 0, 20;	shootDir = 90;	name = "Right Flak Cannon"	
+class LeftLaser(Laser):#move to config
+	baseImage = loadImage("res/parts/leftlaser" + ext)
+	shootPoint = 0, - 15; shootDir = 270;	name = "Left Laser"	
+class RightLaser(Laser):#move to config
+	baseImage = loadImage("res/parts/rightlaser" + ext)
+	shootPoint = 0, 15;	shootDir = 90;	name = "Right Laser"
+class LeftCannon(Cannon):#move to config
+	baseImage = loadImage("res/parts/leftgun" + ext)
+	shootPoint = 0, - 30; shootDir = 270;name = "Left Cannon"
+class RightCannon(Cannon):#move to config
+	baseImage = loadImage("res/parts/rightgun" + ext)
+	shootPoint = 0, 30;	shootDir = 90;	name = "Right Cannon"		
+class StrafebatCannon(Cannon):#move to config
+	baseImage = loadImage("res/parts/strafebatgun" + ext)
+	shootDir = 180;	shootPoint = -20, 0;	damage = .5
+	energyCost = 1;	name = "fore gun";	
+class FighterShield(Shield):#move to config
+	baseImage =  loadImage("res/parts/fighter shield.bmp")
+	mass = 4;	shieldhp = .6;	shieldRegen = .1;	energyCost = .5
+	name = 'fighter shield'
+	
