@@ -167,7 +167,7 @@ class Ship(Floater):
 	effects = []
 	skillEffects = []
 	
-	partLimit = 10
+	partLimit = 8
 	penalty = .1
 	bonus = .05
 	efficiency = 1.
@@ -428,7 +428,7 @@ class Ship(Floater):
 class Player(Ship):
 	xp = 0
 	developmentPoints = 2
-	
+	landed = False
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255)):
 		Ship.__init__(self, game, x, y, dx, dy, dir, script, color)
@@ -449,6 +449,9 @@ class Player(Ship):
 			self.level += 1
 			self.developmentPoints += 1
 			self.xp = 0
+		if self.landed \
+		and dist2(self, self.landed) > (self.landed.radius * 2) ** 2:
+			self.landed = False
 		Ship.update(self)
 	
 	def next(self):

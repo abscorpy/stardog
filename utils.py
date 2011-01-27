@@ -84,6 +84,7 @@ try:
 	hitSound = pygame.mixer.Sound("res/se_sdest.wav")
 	explodeSound = pygame.mixer.Sound("res/se_explode03.wav")
 	missileSound =  pygame.mixer.Sound("res/se_explode02.wav")
+	messageSound =  pygame.mixer.Sound("res/message pip.ogg")
 	soundModule = True
 except (ImportError, NotImplementedError):
 	soundModule = False

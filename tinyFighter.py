@@ -1,6 +1,5 @@
 #tinyFighter.py
 
-#strafebat.py
 
 from utils import *
 from spaceship import *
@@ -70,45 +69,3 @@ class TinyFighterScript(AIScript):
 			if distance > self.swarmRadius:
 				ship.stage = 0
 					
-
-		
-		
-		
-
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			

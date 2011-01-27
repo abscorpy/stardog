@@ -11,6 +11,7 @@ class Panel:
 	color = (100, 200, 100, 100)
 	image = None
 	drawBorder = True
+	bgColor = None
 	def __init__(self, rect):
 		self.rect = rect
 		self.panels = []
@@ -96,6 +97,8 @@ class Panel:
 			rect = rect.clip(self.rect)
 		else:
 			rect = self.rect
+		if self.bgColor:
+			pygame.draw.rect(surface, self.bgColor, rect, 0)
 		if self.drawBorder:
 			pygame.draw.rect(surface, self.color, rect, 1)
 		if self.image:
@@ -109,15 +112,15 @@ class TopLevelPanel(Panel):
 	Like a panel, but has a handleEvent() method and draws subpanels to a 
 	buffer.  Must be the ultimate parent of any panel that responds to events,
 	and events should all be passed to .handleEvent(event)."""
-	bgColor = 20,40,100,200
+	bgColor = 20,40,100
 	dragged = None
 	dragSource = None
 	internalPos = None
 	def __init__(self, rect):
 		Panel.__init__(self, rect)
 		self.image = pygame.Surface(rect.size, \
-							flags = (SRCALPHA | hardwareFlag)).convert_alpha()
-		self.image.set_colorkey((0,0,0))
+							flags = (hardwareFlag)).convert()
+		self.image.set_alpha(200)
 							
 	def handleEvent(self, event):
 		"""Examines the event and passes it down to children as appropriate."""
@@ -171,6 +174,7 @@ class TopLevelPanel(Panel):
 			
 class Dragable(Panel):
 	dragOffset = 0,0
+	drawBorderDragging = True
 	def __init__(self, rect, parent):
 		Panel.__init__(self, rect)
 		self.parent = parent
@@ -189,7 +193,7 @@ class Dragable(Panel):
 				topLevelPanel.internalPos[1] - self.dragOffset[1]
 		#draw self (floating):
 		surface.blit(self.image, pos)
-		if self.drawBorder:
+		if self.drawBorderDragging:
 			rect = Rect(self.rect)
 			rect.topleft = pos
 			pygame.draw.rect(surface, self.color, rect, 1)
@@ -300,6 +304,8 @@ class ScrollPanel(Panel):
 		rect = rect.clip(self.rect)
 		if self.drawBorder:
 			pygame.draw.rect(surface, self.color, rect, 1)
+		if self.bgColor:
+			pygame.draw.rect(surface, self.bgColor, rect, 0)
 			
 		for panel in self.panels:
 			panel.draw(self.image, self.visibleRect)
@@ -387,6 +393,9 @@ class Selectable(Panel):
 	inactiveColor = (100,200,100)
 	selectedColor = (200,50,50)
 	selected = False
+	bgInactive = None
+	bgActive = None
+	bgSelected = None
 	
 	def __init__(self, rect):
 		Panel.__init__(self, rect)
@@ -396,22 +405,29 @@ class Selectable(Panel):
 		"""called when the mouse moves to or from this panel."""
 		if not self.selected and self.rect.collidepoint(pos):
 			self.color = self.activeColor
+			self.bgColor = self.bgActive
 		elif not self.selected:
 			self.color = self.inactiveColor
+			self.bgColor = self.bgInactive
 		Panel.move(self, pos, rel)
 	
 	def select(self):
 		self.selected = True
 		self.color = self.selectedColor
+		self.bgColor = self.bgSelected
 	
 	def unselect(self):
 		self.selected = False
 		self.color = self.inactiveColor
+		self.bgColor = self.bgInactive
 		
 class DragableSelectable(Dragable):
 	activeColor = (200,255,200)
 	inactiveColor = (100,200,100)
 	selectedColor = (200,50,50)
+	bgInactive = None
+	bgActive = None
+	bgSelected = None
 	selected = False
 	def __init__(self, rect, parent): 
 		Dragable.__init__(self, rect, parent)
@@ -421,17 +437,21 @@ class DragableSelectable(Dragable):
 		"""called when the mouse moves to or from this panel."""
 		if not self.selected and self.rect.collidepoint(pos):
 			self.color = self.activeColor
+			self.bgColor = self.bgActive
 		elif not self.selected:
 			self.color = self.inactiveColor
+			self.bgColor = self.bgInactive
 		Panel.move(self, pos, rel)
 	
 	def select(self):
 		self.selected = True
 		self.color = self.selectedColor
+		self.bgColor = self.bgSelected
 	
 	def unselect(self):
 		self.selected = False
 		self.color = self.inactiveColor
+		self.bgColor = self.bgInactive
 				
 	def endDrag(self, dragged, result):
 		"""called when a drag from here drops with a non-None result."""
@@ -465,16 +485,24 @@ class Selecter(ScrollPanel):
 		if result: return result
 		posNew = start[0] - self.rect.left + self.visibleRect.left, \
 				start[1] - self.rect.top + self.visibleRect.top
+		#check selected first:
+		if self.selected and self.selected.rect.collidepoint(posNew):
+			dragged = self.selected.drag(posNew)
+			if dragged:
+				return dragged
 		for selectable in self.selectables:
 			if selectable.rect.collidepoint(posNew):
 				result = selectable.drag(posNew)
 				if result: return result
 		
 	def drop(self, pos, dropped):
-		#result = ScrollPanel.drop(self, pos, dropped)
-		#if result: return result
 		posNew = pos[0] - self.rect.left + self.visibleRect.left, \
 				pos[1] - self.rect.top + self.visibleRect.top
+		#check selected first:
+		if self.selected and self.selected.rect.collidepoint(posNew):
+			result = self.selected.drop(posNew, dropped)
+			if result:
+				return result
 		for selectable in self.selectables:
 			if selectable.rect.collidepoint(posNew):
 				result = selectable.drop(posNew, dropped)
