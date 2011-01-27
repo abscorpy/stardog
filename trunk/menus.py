@@ -2,7 +2,7 @@
 from utils import *
 from menuElements import *
 import stardog
-from parts import Dummy, PART_OVERLAP, DEFAULT_IMAGE
+from parts import Dummy, PART_OVERLAP, DEFAULT_IMAGE, FlippablePart
 from spaceship import Ship
 
 DEFAULT_SELECTED_IMAGE = pygame.image.load("res/defaultselected" + ext).convert()
@@ -14,8 +14,8 @@ class Menu(TopLevelPanel):
 	color = (100, 100, 255, 250)
 	def __init__(self, game, rect, thisShip):
 		TopLevelPanel.__init__(self, rect)
-		subFrameRect = Rect(84, 2, \
-					self.rect.width - 86, self.rect.height-4)
+		subFrameRect = Rect(0, 0, \
+					self.rect.width, self.rect.height)
 		self.thisShip = thisShip
 		self.parts = PartsPanel(subFrameRect, thisShip)
 		self.keys = Keys(subFrameRect, thisShip)
@@ -52,35 +52,29 @@ class Menu(TopLevelPanel):
 			self.activeMenu.update()
 
 class PartsPanel(Panel):
-	selectedPart = None
-	selectedPort = None
+	image = loadImage('res/partsmenubg.bmp')
 	def __init__(self, rect, thisShip):
 		Panel.__init__(self, rect)
 		self.thisShip = thisShip
-		x, y, w, h = rect.left, rect.top, rect.width, rect.height
-		inventoryTop = y + h - PartTile.height - 6
-		remove = Button(Rect(x + 2, \
-				inventoryTop - 18, 100, 16), self.remove, " REMOVE")
-		add = Button(Rect(x + 100 + 6, \
-				inventoryTop - 18, 100, 16), self.add, " ADD/SWAP")
-		paint = Button(Rect(x + 200 + 10, \
-				inventoryTop - 18, 100, 16), self.paint, " PAINT PART")
-		self.inventoryPanel = InventoryPanel(\
-				Rect(x + 2, inventoryTop, w - 4, PartTile.height + 4), \
+		inventoryColor = (20,50,35)
+		shipColor = (50,20,70)
+		flip = Button(Rect(100, 300, 100, 20), self.flip, " FLIP")
+		remove = Button(Rect(200, 300, 100, 20), self.remove, " REMOVE")
+		add = Button(Rect(300, 300, 100, 20), self.add, " ADD/SWAP")
+		paint = Button(Rect(400, 300, 100, 20), self.paint, " PAINT PART")
+		self.inventoryPanel = InventoryPanel(
+				Rect(500, 30, 300, 570), 
 				self, thisShip.inventory)
-		self.shipPanel = \
-				ShipPanel(Rect(x + 2, y + 2, w / 2 - 2, inventoryTop - 4 - 18),\
-				self, thisShip)
-		x += w / 2
-		self.descriptionShip = PartDescriptionPanel(\
-				Rect(x + 2, y + 2, w / 2 - 4, inventoryTop / 2 - 4))
-		y += inventoryTop / 2
-		self.descriptionInventory = PartDescriptionPanel(\
-				Rect(x + 2, y, w / 2 - 4, inventoryTop / 2 - 4))
+		self.shipPanel = ShipPanel(Rect(100, 0, 401, 300), self, thisShip)
+		self.descriptionShip = PartDescriptionPanel(
+					Rect(100, 320, 201, 500), self.shipPanel)
+		self.descriptionInventory = PartDescriptionPanel(
+					Rect(300, 320, 201, 500), self.inventoryPanel)
 		self.addPanel(self.descriptionShip)
 		self.addPanel(self.descriptionInventory)
 		self.addPanel(self.shipPanel)
 		self.addPanel(self.inventoryPanel)
+		self.addPanel(flip)
 		self.addPanel(remove)
 		self.addPanel(add)
 		self.addPanel(paint)
@@ -92,10 +86,22 @@ class PartsPanel(Panel):
 		if self.inventoryPanel.selected \
 		and self.inventoryPanel.selected.part != self.descriptionInventory.part:
 			self.descriptionInventory.setPart(self.inventoryPanel.selected.part)
-
+			
+	def flip(self):
+		"""flips the selected part if it is a FlippablePart."""
+		if self.shipPanel.selected and self.shipPanel.selected.part:
+			part = self.shipPanel.selected.part
+			if isinstance(part, FlippablePart):
+				part.flip()
+				part.unequip()
+				self.shipPanel.selected.port.addPart(part)
+				self.descriptionShip.setPart(self.shipPanel.selected.part)
+				
+				self.shipPanel.reset()
+			
 	def remove(self):
 		"""removes the selected part from the ship and updates menus"""
-		if self.shipPanel.selected:
+		if self.shipPanel.selected and self.shipPanel.selected.part:
 			self.descriptionInventory.setPart(self.shipPanel.selected.part)
 			self.descriptionShip.setPart(None)
 			self.shipPanel.selected.part.unequip()
@@ -128,6 +134,7 @@ class PartsPanel(Panel):
 class ShipPanel(Selecter):
 	selected = None
 	text = None
+	drawBorder = False
 	
 	def __init__(self, rect, parent, thisShip):
 		Selecter.__init__(self, rect)
@@ -155,41 +162,42 @@ class ShipPanel(Selecter):
 					dummy.dir = port.dir + part.dir
 					cost = cos(part.dir) #cost is short for cos(theta)
 					sint = sin(part.dir)
-					dummy.offset = part.offset[0] + port.offset[0] * cost \
-						- port.offset[1] * sint \
-						- cos(dummy.dir) * (dummy.width - PART_OVERLAP) / 2, \
-						part.offset[1] + port.offset[0] * sint \
-						+ port.offset[1] * cost \
-						- sin(dummy.dir) * (dummy.width - PART_OVERLAP) / 2
+					dummy.offset = (part.offset[0] + port.offset[0] * cost 
+						- port.offset[1] * sint 
+						- cos(dummy.dir) * (dummy.width - PART_OVERLAP) / 2, 
+						part.offset[1] + port.offset[0] * sint 
+						+ port.offset[1] * cost 
+						- sin(dummy.dir) * (dummy.width - PART_OVERLAP) / 2)
 					#rotate takes a ccw angle.
-					dummy.image = colorShift(pygame.transform.rotate(dummy.baseImage, \
-								-dummy.dir), dummy.color).convert()
+					dummy.image = colorShift(pygame.transform.rotate(
+							dummy.baseImage, -dummy.dir), dummy.color).convert()
 					dummy.image.set_colorkey((0,0,0))
 					self.selectables.append(ShipPartPanel(dummy, self))
 					self.selectables[-1].port = port
-
 		#update ship stats display:
 			#tabs not displaying correctly, so using spaces.
-		text = "Parts: %s/%s\nEfficiency: %s\nMass: %s KG\n"+\
-			"Forward Thrust: %s KN\nMoment: %s KG m\nTorque: %s KN m\n"+\
-			"Max DPS: %s\nEnergy: %s/%s\nShields: %s/%s"
-		values = (s.numParts, s.partLimit, round(s.efficiency,3), int(s.mass),\
-				int(s.forwardThrust/1000), int(s.moment), int(s.torque/1000), \
-				round(s.dps,2), int(s.energy), int(s.maxEnergy), int(s.hp),\
-				int(s.maxhp))
+		text = ("Parts: %i/%i\nEfficiency: %s\nMass: %i KG\n" +
+			"Forward Thrust: %i KN\nMoment: %i KG m\nTorque: %i KN m\n" +
+			"Max DPS: %2d\nEnergy: %i/%i\nShields: %i/%i")
+		values = (s.numParts, s.partLimit, s.efficiency, s.mass,
+				s.forwardThrust/1000, s.moment, s.torque/1000, 
+				s.dps, s.energy, s.maxEnergy, s.hp, s.maxhp)
 		self.removePanel(self.text)
-		self.text = TextBlock(Rect(0,0,400,100), text%values, color = (100,200,0))
+		self.text = (TextBlock(Rect(0,0,400,100), text%values, 
+					color = (100,200,0)))
 		self.addPanel(self.text)
 		Panel.reset(self) 
 		#not Selectable.reset(), because that rearranges the selectables.
 		
 class PartDescriptionPanel(Panel):
+	drawBorder = False
 	"""displays descriptions of parts."""
-	def __init__(self, rect):
+	def __init__(self, rect, selecter = None):
 		Panel.__init__(self, rect)
 		self.part = None
 		self.text = None
 		self.name = None
+		self.selecter = selecter
 		
 	def setPart(self, part):
 		self.part = part
@@ -199,12 +207,13 @@ class PartDescriptionPanel(Panel):
 			if self.image:
 				self.image.fill((0,0,0,0))
 			return
-		self.image = pygame.Surface((self.rect.width, self.rect.height), \
+		self.image = pygame.Surface((self.rect.width, self.rect.height), 
 					hardwareFlag).convert()
 		self.image.set_colorkey((0,0,0))
 		bigImage = pygame.transform.scale2x(self.part.image)
 		bigImage.set_colorkey((255,255,255)) # idk why this one's white.
-		self.image.blit(bigImage, (self.rect.width - 80, 60 - bigImage.get_height() / 2))
+		self.image.blit(bigImage, 
+				(self.rect.width / 2 - bigImage.get_width() / 2, 5))
 		string = part.stats()
 		string += '\nFunctions: '
 		for function in part.functions:
@@ -212,12 +221,21 @@ class PartDescriptionPanel(Panel):
 		if not part.functions: string += 'None'
 		string += '\n'
 		for adj in part.adjectives:
-			string += "\n  %s: %s"%(str(adj.__class__).split('.')[-1], adj.__doc__)
-		x, y, w, h = self.rect.left, self.rect.top, self.rect.width, self.rect.height
-		self.name = Label(Rect(x + 4, y + 4, w, 20), part.name, FONT, (100, 200, 0))
-		self.text = TextBlock(Rect(x + 4, y + 24, w, h), string, SMALL_FONT, (0, 150, 0))
+			string += "\n  %s: %s"%(str(adj.__class__).split('.')[-1],
+														adj.__doc__)
+		x, y = self.rect.left, self.rect.top
+		w, h = self.rect.width, self.rect.height
+		self.name = Label(Rect(x + 4, y + 44, w, 20), part.name, FONT, 
+				(100, 200, 0))
+		self.text = TextBlock(Rect(x + 4, y + 64, w, h), string, SMALL_FONT, 
+				(0, 150, 0))
 		self.addPanel(self.name)
 		self.addPanel(self.text)
+	
+	def update(self):
+		if self.selecter and self.selecter.selected.part != self.part:
+			self.setPart(self.selecter.selected.part)
+		Panel.update(self)
 	
 	def reset(self):
 		self.setPart(self.part)
@@ -230,9 +248,9 @@ class ShipPartPanel(DragableSelectable):
 	def __init__(self, part, parent):
 		width = part.image.get_width() * 2
 		height = part.image.get_height() * 2
-		rect = Rect(\
-			part.offset[0] * 2 + parent.rect.centerx - width / 2, \
-			part.offset[1] * 2 + parent.rect.centery - height / 2, \
+		rect = Rect(
+			part.offset[0] * 2 + parent.rect.width / 2 - width / 2, 
+			part.offset[1] * 2 + parent.rect.height / 2 - height / 2, 
 			width, height)
 		DragableSelectable.__init__(self, rect, parent)
 		self.ship = parent.thisShip
@@ -278,7 +296,7 @@ class ShipPartPanel(DragableSelectable):
 		if not self.selected:
 			self.select()
 			self.parent.selected = self
-		return (PartTile(self.part, Rect(0, 0, PartTile.width, PartTile.height), \
+		return (PartTile(self.part, Rect(0, 0, PartTile.width, PartTile.height),
 				self), self)
 
 	def drop(self, pos, dropped):
@@ -337,9 +355,15 @@ class ShipPartPanel(DragableSelectable):
 		part.parent = None
 	
 class PartTile(DragableSelectable):
-	width = 150
-	height = 150
-	partImageOffset = 50,50
+	drawBorder = False
+	width = 300
+	height = 50
+	partImageOffset = 0,12
+	drawBorderDragging = False
+	selectedColor = (255,200,200)
+	bgInactive = None
+	bgActive = (80, 80, 75)
+	bgSelected = (80, 50, 75)
 	def __init__(self, part, rect, parent):
 		"""PartTile(part, rect) -> new PartTile.
 		The menu interface for a part. Display it like a button!"""
@@ -349,24 +373,30 @@ class PartTile(DragableSelectable):
 		bigImage.set_colorkey((255,255,255)) # idk why this one's white.
 		self.image.blit(bigImage, PartTile.partImageOffset)
 		#add text labels:
+		rect = Rect(rect)
+		rect.x += 30
 		self.addPanel(Label(rect, part.name))
 		self.panels[-1].rect.width = self.rect.width
 		string = part.shortStats()
 		i = string.find('\n')
 		rect = Rect(rect)
-		rect.y += 16; rect.x += 2
-		self.addPanel(Label(rect, string[:i], color = (200,0,0)))
+		rect.x += 8; rect.y += 14
+		self.addPanel(Label(rect, string[:i], color = (200,0,0),
+					font = SMALL_FONT))
 		self.panels[-1].rect.width = self.rect.width
 		rect = Rect(rect)
-		rect.y += 60
-		self.addPanel(TextBlock(rect, string[i:], color = (0, 150, 0)))
+		rect.y += 12
+		self.addPanel(TextBlock(rect, string[i+1:], color = (0, 150, 0),
+					font = SMALL_FONT))
+
 		
 class InventoryPanel(Selecter):
+	drawBorder = False
 	selected = None
 	def __init__(self, rect, parent, partList):
 		"""InventoryPanel(rect, partList) -> a Selecter that resets to the 
 		provided list of parts."""
-		Selecter.__init__(self, rect, vertical = False)
+		Selecter.__init__(self, rect, vertical = True)
 		self.partList = partList
 		self.parent = parent
 		self.reset()

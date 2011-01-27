@@ -50,9 +50,9 @@ class HUD:
 		pygame.draw.rect(self.image, (0, 180, 80), \
 			(x, y + h - h * thisShip.xp / thisShip.next(), 5, \
 			h * thisShip.xp / thisShip.next())) # full bar
-		if(fontModule):# and thisShip.developmentPoints:
+		if(fontModule) and thisShip.developmentPoints:
 			self.image.blit(FONT.render(str(thisShip.developmentPoints), \
-						False, (0, 180, 80)), (x - 9, y - 20))
+						False, (0, 180, 80)), (x, y - 20))
 						
 		#FPS
 		if(fontModule):
@@ -97,14 +97,14 @@ class HUD:
 				pygame.draw.rect(self.image, color, (dotPos[0],dotPos[1],2,2))
 
 
-numStars = 500
+numStars = 300
 class BG:
 	def __init__(self, game):
 		self.game = game
 		self.stars = []
 		dimmer = 1
 		for star in range(numStars):
-			brightness = int(randint(50, 255))
+			brightness = int(randint(100, 255))
 			# a position, a color, and a depth.
 			self.stars.append((
 				randint(0, self.game.width), 
@@ -113,8 +113,11 @@ class BG:
 				(randint(brightness * 3 / 4, brightness), 
 				 randint(brightness * 3 / 4, brightness), 
 				 randint(brightness * 3 / 4, brightness))))
+		self.pic = pygame.transform.scale(loadImage('res/Tarantula Nebula.jpg', None), 
+					(game.width,game.height))
 
 	def draw(self, surface, thisShip):
+		surface.blit(self.pic, (0,0))
 		pa = pygame.PixelArray(surface)
 		"""updates the HUD and draws it."""
 		depth = 1.
@@ -122,6 +125,9 @@ class BG:
 			x = int(star[0] - thisShip.x / star[2]) % (self.game.width-1)
 			y =	int(star[1] - thisShip.y / star[2]) % (self.game.height-1)
 			pa[x][y] = star[3]
+			pa[x+1][y] = star[3]
+			pa[x][y+1] = star[3]
+			pa[x+1][y+1] = star[3]
 			
 class BGNova:
 	def __init__(self, game):

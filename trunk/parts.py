@@ -7,7 +7,7 @@ from pygame.locals import *
 from floaters import *
 import stardog
 
-PART_OVERLAP = 4
+PART_OVERLAP = 0
 DETACH_SPACE = 3
 DETACH_SPEED = 8
 
@@ -59,8 +59,8 @@ class Part(Floater):
 					self.baseImage.get_width() / 2)
 		Floater.__init__(self, game, 0, 0, dir = 270, radius = radius)
 		self.image = self.baseImage.copy()
-		self.width = self.image.get_width()
-		self.height = self.image.get_height()
+		self.width = self.image.get_width() - 4
+		self.height = self.image.get_height() - 4
 		#the length of this list is the number of connections.
 		 #each element is the part there, (x,y,dir) position of the connection.
 		 #the example is at the bottom of the part, pointed down.
@@ -68,12 +68,12 @@ class Part(Floater):
 	
 	def stats(self):
 		stats = (self.hp, self.maxhp, self.mass, len(self.ports))
-		statString = """HP: %s/%s \nMass: %s \nPorts: %s"""
+		statString = """HP: %i/%i \nMass: %i KG\nPorts: %i"""
 		return statString % stats
 	
 	def shortStats(self):
 		stats = (self.hp, self.maxhp)
-		statString = """%s/%s"""
+		statString = """%i/%i"""
 		return statString % stats
 		
 	def addPart(self, part, port):
@@ -112,14 +112,10 @@ class Part(Floater):
 		while part in self.ship.inventory:
 			self.ship.inventory.remove(part)
 		#unequip the part if it collides with others, except parent(self).
-		# cost = cos(part.ship.dir) #cost is short for cos(theta)
-		# sint = sin(part.ship.dir)
-		# part.x = part.ship.x + part.offset[0] * cost - part.offset[1] * sint
-		# part.y = part.ship.y + part.offset[0] * sint + part.offset[1] * cost
 		# for other in self.ship.parts:
 			# if other is not self and other is not part:
-				# if collisionTest(part, other) \
-				# and pygame.sprite.collide_mask(part, other):
+				# if abs(part.offset[0] - other.offset[0]) < 7 \
+				# and abs(part.offset[1] - other.offset[1]) < 7:
 					# part.unequip()
 		#allow the ship to re-adjust:
 		self.ship.reset()
@@ -311,6 +307,22 @@ class Dummy(Part):
 					port.part = None
 					self.kill()
 					self.ship.reset()
+
+class FlippablePart(Part):
+	def flip(self):
+		try:
+			self.shootPoint = self.shootPoint[0], -self.shootPoint[1]
+			self.shootDir = -self.shootDir
+		except AttributeError:
+			pass
+		if self.baseImage:
+			self.baseImage = pygame.transform.flip(self.baseImage, False, True)
+		if self.name and self.name.find('Right') != -1:
+			i = self.name.find('Right')
+			self.name = self.name[:i] + 'Left' + self.name[i+5:]
+		elif self.name and self.name.find('Left') != -1:
+			i = self.name.find('Left')
+			self.name = self.name[:i] + 'Right' + self.name[i+4:]
 					
 class Gun(Part):
 	baseImage = loadImage("res/default" + ext)
@@ -473,7 +485,7 @@ class FlakCannon(Cannon):
 		
 	def stats(self):
 		stats = (self.speed, self.burstSize, self.reloadBurstTime, self.spread)
-		statString = ("\Bullet Speed: %i m/s\nBurst Size: %i"
+		statString = ("\nBullet Speed: %i m/s\nBurst Size: %i"
 					"\nBurst reload: %i seconds\nBullet Spread: %i degrees")
 		return Gun.stats(self) + statString % stats
 	def update(self):
@@ -667,13 +679,13 @@ class Shield(Part):
 	
 	def stats(self):
 		stats = (self.shieldhp, self.shieldRegen, self.energyCost)
-		statString = """\nMax Shield: %2d \nRegeneration Rate: %2d/second \
-		\nCost: %senergy/second of regeneration"""
+		statString = ("\nMax Shield: %2d \nRegeneration Rate: %2d/sec"
+				"nCost: %2d energy/sec of regen")
 		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.shieldhp, self.shieldRegen)
-		statString = """\n%2d max \n% regen"""
+		statString = """\n%2d max \n%2d regen"""
 		return Part.shortStats(self) + statString % stats
 		
 	def attach(self):
@@ -693,7 +705,7 @@ class Shield(Part):
 		Part.update(self)
 
 class Cockpit(Battery, Generator, Gyro):
-	baseImage = loadImage("res/parts/cockpit.bmp")
+	baseImage = loadImage("res/parts/cockpit.gif")
 	image = None
 	energyCost = .2 #gyro
 	torque = 35000 #gyro
@@ -741,13 +753,13 @@ class Destroyer(Cockpit):#move to config
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
 		self.ports = [
-					Port((17, 0), 180, self),
-					Port((5, -8), 90, self),
-					Port((5, 8), -90, self),
-					Port((-9, -13), 90, self),
-					Port((-9, 13), -90, self),
-					Port((-15, -8), 0, self),
-					Port((-15, 8), 0, self)]
+					Port((25, 0), 180, self),
+					Port((8, -8), 90, self),
+					Port((8, 8), -90, self),
+					Port((-14, -13), 90, self),
+					Port((-14, 13), -90, self),
+					Port((-25, -8), 0, self),
+					Port((-25, 8), 0, self)]
 					
 class Fighter(Cockpit):#move to config
 	mass = 10

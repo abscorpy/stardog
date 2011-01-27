@@ -38,6 +38,7 @@ class SolarSystem:
 			self.drawEdgeWarning -= 1
 			if self.drawEdgeWarning <=0:
 				self.drawEdgeWarning = False
+				
 		for floater in self.floaters:
 			if floater.x < edge[0][0] and floater.dx < 0 \
 			or floater.x > edge[0][1] and floater.dx > 0:
@@ -81,15 +82,17 @@ class SolarSystem:
 		self.floaters.empty()
 
 class SolarA1(SolarSystem):
+	tinyFighters = []
+	maxFighters = 15
 	respawnTime = 30
-	fightersPerMinute = 50
+	fightersPerMinute = 2
 	def __init__(self, game, player, numPlanets = 10):
 		SolarSystem.__init__(self, game)
 		self.sun = (Planet( game, 0, 0, radius = 2000, mass = 180000, \
 					color = (255, 255, 255), image = None)) # the star
 		#place player:
 		angle = randint(0,360)
-		distanceFromSun = randint(10000, 40000)
+		distanceFromSun = randint(8000, 18000)
 		player.x = distanceFromSun * cos(angle)
 		player.y = distanceFromSun * sin(angle)
 		self.add(self.sun)
@@ -135,13 +138,19 @@ class SolarA1(SolarSystem):
 						planet.ships.add(ship)
 						self.add(ship)
 						ship.planet = planet
-		if self.fighterTimer <= 0:
-			angle = randint(0,360)
-			distance = randint(1000, 4000)
-			x = distance * cos(angle) + self.game.player.x
-			y = distance * sin(angle) + self.game.player.y
-			self.add(TinyFighter(self.game, x, y, self.game.player.dx, self.game.player.dy))
-			self.fighterTimer = 60 / self.fightersPerMinute
+		#tiny fighters
+		if self.fighterTimer <= 0 and len(self.tinyFighters) < self.maxFighters:
+			numSpawn = randint(1,3)
+			for i in range(numSpawn):
+				angle = randint(0,360)
+				distance = randint(1000, 4000)
+				x = distance * cos(angle) + self.game.player.x
+				y = distance * sin(angle) + self.game.player.y
+				fighter = TinyFighter(self.game, x, y, self.game.player.dx, 
+									self.game.player.dy)
+				self.add(fighter)
+				self.tinyFighters.append(fighter)					
+				self.fighterTimer = 60 / self.fightersPerMinute
 		else:
 			self.fighterTimer -= 1. / self.game.fps
 		
@@ -258,8 +267,9 @@ def planet_ship_collision(planet, ship):
 			planet.damage[ship] = damage
 	else:
 		#landing:
-				# if ship == planet.game.player:
-					# planet.game.pause = True
+		if ship == planet.game.player and not ship.landed:
+			planet.game.pause = True
+			ship.landed = planet
 		ship.dx, ship.dy = planet.dx, planet.dy
 
 def planet_freePart_collision(planet, part):

@@ -15,12 +15,9 @@ def setVolume(channel, floater1, floater2):
 						(floater2.x - floater1.x) ** 2 + \
 						(floater2.y - floater1.y) ** 2 + .0001)))
 
-BULLET_IMAGE = pygame.image.load("res/shot" + ext).convert()
-BULLET_IMAGE.set_colorkey((0,0,0))
-MISSILE_IMAGE = pygame.image.load("res/missile" + ext).convert()
-MISSILE_IMAGE.set_colorkey((0,0,0))
-DEFAULT_IMAGE = pygame.image.load("res/default" + ext).convert()
-DEFAULT_IMAGE.set_colorkey((0,0,0))
+BULLET_IMAGE = loadImage("res/shot.bmp")
+MISSILE_IMAGE = loadImage("res/missile" + ext)
+DEFAULT_IMAGE = loadImage("res/default" + ext)
 
 
 		
@@ -96,7 +93,6 @@ class Bullet(Floater):
 		Floater.__init__(self, game, x, y, dx = dx, dy = dy, \
 							dir = dir, radius = gun.bulletRadius, \
 							image = image)
-		self.image.set_colorkey((255,255,255))
 		self.range = range
 		self.hp = damage
 		self.life = 0.
@@ -217,6 +213,8 @@ class LaserBeam(Floater):
 	life = .5 #seconds
 	hp = 0
 	tangible = False
+	baseImage = loadImage("res/laser.bmp").convert()
+	baseImage.set_colorkey((0,0,0))
 	
 	def __init__(self, game, laser, damage, range):
 		dir = laser.dir + laser.ship.dir
@@ -227,10 +225,11 @@ class LaserBeam(Floater):
 		y = laser.y + laser.shootPoint[0] * sint\
 					+ laser.shootPoint[1] * cost + laser.ship.dy / game.fps
 		start = x,y
-		dir += laser.shootDir # not used for the offset; needed for the dir.
+		dir = laser.dir + laser.ship.dir + laser.shootDir
+		length = range
 		stop = x + range * cos(dir), y + range * sin(dir)		
 		x, y = (start[0] + stop[0]) / 2., (start[1] + stop[1]) / 2.
-		Floater.__init__(self, game, x, y, laser.ship.dx, laser.ship.dy,
+		Floater.__init__(self, game, x, y, laser.ship.dx, laser.ship.dy, dir,
 						radius = 0)
 		self.damage = damage
 		self.start = start
@@ -245,6 +244,10 @@ class LaserBeam(Floater):
 		self.life = laser.imageDuration
 		self.ship = laser.ship
 		self.width = laser.beamWidth
+		self.image = pygame.transform.rotate(
+					pygame.transform.scale(
+					colorShift(self.baseImage, self.ship.color),
+					(int(length), 5)), -dir)
 		if 'target' in laser.ship.__dict__:
 			self.target = laser.ship.target
 		self.game.curSystem.specialOperations.append(self.collision)
@@ -285,6 +288,7 @@ class LaserBeam(Floater):
 					#adjust stop based on last hit target:
 					self.stop = (floater.x, (floater.x - self.start[0]) 
 											* self.slope + self.start[1])
+					self.length = dist(self.start[0],self.start[1], self.stop[0], self.stop[1])
 					break
 				
 					
@@ -298,10 +302,6 @@ class LaserBeam(Floater):
 		if self.life < 0:
 			self.kill()
 	
-	def draw(self, surface, offset):
-		start = self.start[0] - offset[0], self.start[1] - offset[1]
-		stop =  self.stop[0] - offset[0], self.stop[1] - offset[1]
-		pygame.draw.line(surface, self.ship.color, start, stop, 1)
 		
 	def takeDamage(self, damage, other):
 		pass

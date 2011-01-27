@@ -44,7 +44,7 @@ from gui import *
 from planet import *
 from spaceship import *
 from strafebat import *
-from intro import *
+from dialogs import *
 # import yaml
 # import yamlpygame
 
@@ -63,6 +63,17 @@ class Game:
 		self.width = screen.get_width()
 		self.height = screen.get_height()
 		self.mouseControl = True
+		self.timer = 0
+		self.triggers = []
+		#messenger, with controls as first message:
+		self.messenger = Messenger(self)
+		self.triggers.append(Trigger(self, timerCondition(self, 5), messageAction(self,
+				'You: Wow, the stars are beautiful.')))
+		self.triggers.append(Trigger(self, timerCondition(self, 10), messageAction(self, 
+				"You: I'm thinking thoughts! Have I always had thoughts?  I don't know.")))
+		self.triggers.append(Trigger(self, timerCondition(self, 15), messageAction(self, 
+				"You: Hey, I see planets.  I wonder what they're like.")))
+		
 		#key polling:
 		self.keys = []
 		for _i in range (322):
@@ -75,7 +86,7 @@ class Game:
 		
 		self.hud = HUD(self) # the heads up display
 		
-						
+	
 		
 	def run(self):
 		"""Runs the game."""
@@ -105,10 +116,12 @@ class Game:
 			self.curSystem = SolarA1(self, self.player)
 			self.curSystem.add(self.player)
 			
-			self.menu = Menu(self, Rect(100, 100, self.width - 200,\
-					self.height - 200), self.player)
+			self.menu = Menu(self, Rect((self.width - 800) / 2,
+										(self.height - 600) / 2,
+										800, 600), self.player)
 			for x in range(10):
 				self.clock.tick()
+				
 			#The in-round loop (while player is alive and has enemies):
 			while self.running and self.curSystem.ships.has(self.player):
 				#event polling:
@@ -151,18 +164,21 @@ class Game:
 				or self.keys[K_RCTRL % 322] and self.keys[K_q % 322]:
 					self.running = False
 					
-					
 				#unpaused:
 				if not self.pause:
 					#update action:
+					for trigger in self.triggers:
+						trigger.update()
 					self.curSystem.update()
 					self.top_left = self.player.x - self.width / 2, \
 							self.player.y - self.height / 2
+					self.messenger.update()
 							
 				#draw the layers:
 				self.screen.fill((0, 0, 0, 0))
 				self.curSystem.draw(self.screen, self.top_left)
 				self.hud.draw(self.screen, self.player)
+				self.messenger.draw(self.screen)
 				
 				#paused:
 				if self.pause:
@@ -173,6 +189,7 @@ class Game:
 				pygame.display.flip()
 				self.clock.tick(FPS)#aim for FPS but adjust vars for self.fps.
 				self.fps = max(1, int(self.clock.get_fps()))
+				self.timer += 1. / self.fps
 	
 if __name__ == '__main__':
 	try:
@@ -181,5 +198,27 @@ if __name__ == '__main__':
 		#psyco.full()
 	except ImportError:
 		print 'this game may run faster if you install psyco.'
+	thickarrow_strings = (            #sized 24x16
+	  "X               ",
+	  "XX              ",
+	  "X.X             ",
+	  "X..X            ",
+	  "X. .X           ",
+	  "X.  .X          ",
+	  "X.   .X         ",
+	  "X.    .X        ",
+	  "X.     .X       ",
+	  "X.   ....X      ",
+	  "X. ..XXXXXX     ",
+	  "X..XXX          ",
+	  "X.XX            ",
+	  "XX              ",
+	  "X               ",
+	  "                ")
+	#note: black is and white are fliped.
+	datatuple, masktuple = pygame.cursors.compile( thickarrow_strings,
+									  black='X', white='.', xor='o' )
+	pygame.mouse.set_cursor( (16,16), (0,0), datatuple, masktuple )
+
 	game = Game(screen)
 	game.run()

@@ -34,6 +34,16 @@ This source is given only under the GPL General Public License.  If you are inte
 
 
 CHANGES:
+since 0.2011.01.18:
+Parts menu layout changed.
+Parts now drag and drop onto the selected part, like you would expect.
+Destroyer is longer.
+Left or Right parts can now be flipped.
+Adds background image.
+Adds message system.
+Adds trigger-based scripting system. 
+
+
 
 since 0.2011.01.14:
 Separate Fighter, Destroyer, and Interceptor types!
