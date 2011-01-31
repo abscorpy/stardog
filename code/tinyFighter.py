@@ -34,7 +34,7 @@ class TinyFighterScript(AIScript):
 	interceptSpeed = 200
 	def update(self, ship):
 		target = ship.target
-		if stardog.debug: print ship.stage
+		if self.game.debug: print ship.stage
 		if ship.stage == 0:
 			dx = target.dx - ship.dx
 			dy = target.dy - ship.dy

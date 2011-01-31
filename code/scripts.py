@@ -150,7 +150,7 @@ class AIScript(Script):
 			accel = ship.forwardThrust / ship.mass
 			speed = sqrt( dist(ship.x, ship.y, target.x, target.y) / not0(accel))
 		time = dist(ship.x, ship.y, target.x, target.y) / not0(speed)
-		if stardog.debug: print time, ship
+		if self.game.debug: print time, ship
 		dummy = Ballistic(target.x, target.y, \
 						target.dx - ship.dx, target.dy - ship.dy)
 		pos = self.predictBallistic(dummy, time)

@@ -21,6 +21,7 @@ class Planet(Floater):
 		self.damage = {}
 		if image == None:
 			self.image = None
+		self.inventory = []
 	
 	def update(self):
 		self.hp = 100
@@ -48,3 +49,7 @@ class Planet(Floater):
 		
 	def takeDamage(self, damage, other):
 		pass
+		
+class Sun(Planet):
+	PLANET_DAMAGE = 300
+	LANDING_SPEED = -999

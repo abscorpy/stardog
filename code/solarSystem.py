@@ -18,6 +18,7 @@ class SolarSystem:
 		self.floaters = pygame.sprite.Group()
 		self.ships = pygame.sprite.Group()
 		self.specialOperations = []
+		self.onScreen = []
 		self.bg = BG(self.game) # the background layer
 		pygame.mixer.music.load("res/space music.ogg")
 		pygame.mixer.music.play(-1)
@@ -32,10 +33,12 @@ class SolarSystem:
 		for i in range(len(floaters)):
 			for j in range(i + 1, len(floaters)):
 				collide(floaters[i], floaters[j])
+				#see collide() at bottom of this module.
+				
 		#keep ships in system for now:
 		edge = self.boundries
 		if self.drawEdgeWarning:
-			self.drawEdgeWarning -= 1
+			self.drawEdgeWarning -= 1. / self.game.fps
 			if self.drawEdgeWarning <=0:
 				self.drawEdgeWarning = False
 				
@@ -45,7 +48,7 @@ class SolarSystem:
 				if isinstance(floater, Ship):
 					floater.dx = 0
 					if floater == self.game.player:
-						self.drawEdgeWarning = self.game.fps
+						self.drawEdgeWarning = 1
 				else:
 					floater.kill()
 			if floater.y < edge[1][0] and floater.dy < 0 \
@@ -56,19 +59,28 @@ class SolarSystem:
 						self.drawEdgeWarning = self.game.fps
 				else:
 					floater.kill()
-				
-		for function in self.specialOperations:
-			function()
-		self.specialOperations = []
-		
-	def draw(self, surface, offset):
-		self.bg.draw(surface, self.game.player)
+					
+		#list floaters that are on screen now:
+		self.onScreen = []
+		offset = (self.game.player.x - self.game.width / 2, 
+				self.game.player.y - self.game.height / 2)
 		for floater in self.floaters:
 			r = floater.radius
 			if (r + floater.x > offset[0] \
 				and floater.x - r < offset[0] + self.game.width)\
 			and (r + floater.y > offset[1] \
 				and floater.y - r < offset[1] + self.game.height):
+					self.onScreen.append(floater)
+					
+		#do any special actions that don't fit elsewhere:
+		#(currently just laser collisions)
+		for function in self.specialOperations:
+			function()
+		self.specialOperations = []
+		
+	def draw(self, surface, offset):
+		self.bg.draw(surface, self.game.player)
+		for floater in self.onScreen:
 				floater.draw(surface, offset)
 		
 	def add(self, floater):
@@ -162,7 +174,6 @@ def collide(a, b):
 	#good object-orientation, but when a new subclass is added
 	#code only needs to be added here, instead of in every other
 	#class.
-	#test rect first (faster), then circle:
 	if a.tangible and b.tangible and collisionTest(a, b):
 		#planet/?
 		if isinstance(b, Planet): a,b = b,a
@@ -174,9 +185,15 @@ def collide(a, b):
 			if isinstance(b, Ship):
 				planet_ship_collision(a, b)
 				return True
+			#planet/part
 			if isinstance(b, Part) and b.parent == None:
 				planet_freePart_collision(a, b)
 				return True
+			#planet/planet
+			if isinstance(b, Planet):
+				planet_planet_collision(a,b)
+				return True
+				
 		if isinstance(b, Explosion): a,b = b,a
 		if isinstance(a, Explosion):
 			explosion_push(a,b)
@@ -270,10 +287,18 @@ def planet_ship_collision(planet, ship):
 		if ship == planet.game.player and not ship.landed:
 			planet.game.pause = True
 			ship.landed = planet
+			ship.game.menu.parts.reset()
 		ship.dx, ship.dy = planet.dx, planet.dy
 
 def planet_freePart_collision(planet, part):
-	part.dx, part.dy = planet.dx, planet.dy
+	part.kill()
+	planet.inventory.append(part)
+	
+def planet_planet_collision(a, b):
+	if a.mass > b.mass:
+		b.kill()
+	else:
+		a.kill()
 		
 def ship_freePart_collision(ship, part):
 	part.kill()

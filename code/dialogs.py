@@ -141,7 +141,18 @@ def planetCondition(game, planet):
 	
 def solarSystemCondition(game, solarSystem):
 	return lambda: game.curSystem == solarSystem
+
+def seeShipCondition(game):
+	from spaceship import Ship
+	def see():
+		for floater in game.curSystem.onScreen:
+			if isinstance(floater,Ship):
+				return True
+		return False
+	return see
 	
 def messageAction(game, text, color = (200,200,100)):
 	return lambda: game.messenger.message(text, color)
+	
+
 		
