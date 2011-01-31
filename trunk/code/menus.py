@@ -12,15 +12,15 @@ class Menu(TopLevelPanel):
 	"""The top level menu object. Menu(mouse, rect) -> new Menu"""
 	activeMenu = None
 	color = (100, 100, 255, 250)
-	def __init__(self, game, rect, thisShip):
+	def __init__(self, game, rect, player):
 		TopLevelPanel.__init__(self, rect)
 		subFrameRect = Rect(0, 0, \
 					self.rect.width, self.rect.height)
-		self.thisShip = thisShip
-		self.parts = PartsPanel(subFrameRect, thisShip)
-		self.keys = Keys(subFrameRect, thisShip)
-		self.skills = Skills(subFrameRect, thisShip)
-		self.store = Store(subFrameRect, thisShip)
+		self.player = player
+		self.parts = PartsPanel(subFrameRect, player)
+		self.keys = Keys(subFrameRect, player)
+		self.skills = Skills(subFrameRect, player)
+		self.store = Store(subFrameRect, player)
 		x = 2
 		y = 2
 		h = 24
@@ -52,10 +52,11 @@ class Menu(TopLevelPanel):
 			self.activeMenu.update()
 
 class PartsPanel(Panel):
-	image = loadImage('res/partsmenubg.bmp')
-	def __init__(self, rect, thisShip):
+	baseImage = loadImage('res/partsmenubg.bmp')
+	tradeImage = loadImage('res/partstrademenubg.bmp')
+	def __init__(self, rect, player):
 		Panel.__init__(self, rect)
-		self.thisShip = thisShip
+		self.player = player
 		inventoryColor = (20,50,35)
 		shipColor = (50,20,70)
 		flip = Button(Rect(100, 300, 100, 20), self.flip, " FLIP")
@@ -64,8 +65,8 @@ class PartsPanel(Panel):
 		paint = Button(Rect(400, 300, 100, 20), self.paint, " PAINT PART")
 		self.inventoryPanel = InventoryPanel(
 				Rect(500, 30, 300, 570), 
-				self, thisShip.inventory)
-		self.shipPanel = ShipPanel(Rect(100, 0, 401, 300), self, thisShip)
+				self, self.player.inventory)
+		self.shipPanel = ShipPanel(Rect(100, 0, 401, 300), self, self.player)
 		self.descriptionShip = PartDescriptionPanel(
 					Rect(100, 320, 201, 500), self.shipPanel)
 		self.descriptionInventory = PartDescriptionPanel(
@@ -86,6 +87,12 @@ class PartsPanel(Panel):
 		if self.inventoryPanel.selected \
 		and self.inventoryPanel.selected.part != self.descriptionInventory.part:
 			self.descriptionInventory.setPart(self.inventoryPanel.selected.part)
+			
+	def reset(self):
+		if self.player.landed:
+			self.image = self.tradeImage
+		else:
+			self.image = self.baseImage
 			
 	def flip(self):
 		"""flips the selected part if it is a FlippablePart."""
@@ -111,7 +118,7 @@ class PartsPanel(Panel):
 	def add(self):
 		"""adds the selected part to the ship and updates menus"""
 		if self.shipPanel.selected and self.inventoryPanel.selected:
-			self.thisShip.inventory.remove(self.inventoryPanel.selected.part)
+			self.player.inventory.remove(self.inventoryPanel.selected.part)
 			self.descriptionInventory.setPart(self.shipPanel.selected.part)
 			if self.shipPanel.selected.part:
 				self.shipPanel.selected.part.unequip()
@@ -125,7 +132,7 @@ class PartsPanel(Panel):
 		"""paints the selected part to match this ship."""
 		if self.inventoryPanel.selected:
 			part = self.inventoryPanel.selected.part
-			part.color = self.thisShip.color
+			part.color = self.player.color
 			part.image = colorShift(pygame.transform.rotate(part.baseImage, \
 						-part.dir), part.color).convert()
 			part.image.set_colorkey((255,255,255))
@@ -136,17 +143,17 @@ class ShipPanel(Selecter):
 	text = None
 	drawBorder = False
 	
-	def __init__(self, rect, parent, thisShip):
+	def __init__(self, rect, parent, player):
 		Selecter.__init__(self, rect)
-		self.thisShip = thisShip
+		self.player = player
 		self.parent = parent
 		self.reset()
 					
 	def reset(self):
-		s = self.thisShip
+		s = self.player
 		self.selected = None
 		self.addPanel(self.text)
-		self.thisShip.reset()
+		self.player.reset()
 		self.panels = []
 		self.selectables = []
 		if not s.parts:
@@ -253,7 +260,7 @@ class ShipPartPanel(DragableSelectable):
 			part.offset[1] * 2 + parent.rect.height / 2 - height / 2, 
 			width, height)
 		DragableSelectable.__init__(self, rect, parent)
-		self.ship = parent.thisShip
+		self.ship = parent.player
 		if not isinstance(part, Dummy):
 			self.part = part
 		if part.parent:
@@ -338,7 +345,7 @@ class ShipPartPanel(DragableSelectable):
 			self.shipPanel.selected.port.addPart(\
 						self.inventoryPanel.selected.part)
 			self.descriptionShip.setPart(self.inventoryPanel.selected.part)
-			self.thisShip.reset()
+			self.player.reset()
 			self.shipPanel.reset()
 			self.inventoryPanel.reset()
 			self.inventoryPanel.selected = None
@@ -426,20 +433,20 @@ class InventoryPanel(Selecter):
 class Keys(Panel):
 	bindingMessage = pygame.image.load("res/keybind.gif")
 	"""the Keys panel of the menu."""
-	def __init__(self, rect, thisShip):
+	def __init__(self, rect, player):
 		Panel.__init__(self, rect)
-		self.thisShip = thisShip
+		self.player = player
 		self.keyboardRect = Rect(self.rect.left + 2, self.rect.height - 204, \
 							self.rect.width - 4, 202)
 		self.functions = FunctionSelecter(\
 					Rect(self.rect.width / 2 + self.rect.left,\
 					self.rect.top, self.rect.width / 4 - 4,\
-					self.rect.height - self.keyboardRect.height - 26), thisShip)
+					self.rect.height - self.keyboardRect.height - 26), player)
 		self.addPanel(self.functions)
 		self.bindings = BindingSelecter( \
 					Rect(self.rect.width * 3 / 4 + self.rect.left,\
 					self.rect.top, self.rect.width / 4 - 4,\
-					self.rect.height - self.keyboardRect.height - 26), thisShip)
+					self.rect.height - self.keyboardRect.height - 26), player)
 		self.addPanel(self.bindings)
 		buttonTop = self.rect.height - self.keyboardRect.height - 24
 		self.addPanel(Button(Rect(self.rect.width - 204, buttonTop, 100, 20), \
@@ -449,15 +456,15 @@ class Keys(Panel):
 		self.addPanel(PartFunctionsPanel(Rect(self.rect.left + 2, \
 					self.rect.top + 2, 	self.rect.width / 2 - 4, \
 					self.rect.height - self.keyboardRect.height - 2), self, \
-					thisShip))
+					player))
 		self.toggleMouseButton = Button(Rect(self.rect.left, self.rect.bottom - 20, 
 								200,20), self.toggleMouse, "Turn Mouse Off")
 		self.addPanel(self.toggleMouseButton)
 		
 
 	def toggleMouse(self):
-		self.thisShip.game.mouseControl = not self.thisShip.game.mouseControl
-		if self.thisShip.game.mouseControl:
+		self.player.game.mouseControl = not self.player.game.mouseControl
+		if self.player.game.mouseControl:
 			self.toggleMouseButton.image = FONT.render('Turn Mouse Off',\
 						True, self.color)
 		else: 
@@ -467,7 +474,7 @@ class Keys(Panel):
 	def unbind(self):
 		"""Removes the currently selected binding."""
 		if self.bindings.selected:
-			self.thisShip.script.unbind(self.bindings.selected.keyNum, \
+			self.player.script.unbind(self.bindings.selected.keyNum, \
 						self.bindings.selected.function)
 			self.bindings.reset()
 				
@@ -475,13 +482,13 @@ class Keys(Panel):
 		"""binds the current function to a key it captures"""
 		if self.functions.selected and isinstance(self.functions.selected, \
 												FunctionSelectable):
-			screen = self.thisShip.game.screen
+			screen = self.player.game.screen
 			screen.blit(self.bindingMessage, (screen.get_width() / 2  \
 								- self.bindingMessage.get_width() / 2, \
 								screen.get_height() / 2))
 			pygame.display.flip()
 			key = self.captureKey()
-			self.thisShip.script.bind(key, self.functions.selected.function)
+			self.player.script.bind(key, self.functions.selected.function)
 			self.bindings.reset()
 		
 	def captureKey(self):
@@ -506,7 +513,7 @@ class PartFunctionsPanel(ShipPanel):
 		for panel in self.labels:
 			self.removePanel(panel)
 		self.labels = []
-		for part in self.thisShip.parts:
+		for part in self.player.parts:
 			pos = part.offset[0] + self.rect.centerx - 100, \
 					part.offset[1] + self.rect.centery
 			self.labels.append(Label(Rect(pos,(20,20)), str(part.number), \
@@ -518,14 +525,14 @@ class FunctionSelecter(Selecter):
 	def __init__(self, rect, ship):
 		Selecter.__init__(self, rect)
 		self.partsList = ship.parts
-		self.thisShip = ship
+		self.player = ship
 		self.reset()
 	
 	def reset(self):
 		self.selectables = []
 		self.addSelectable(PresetSelectable("ship-wide presets", \
 					Rect(0, 0, self.rect.width, 16)))
-		for function in self.thisShip.functions:
+		for function in self.player.functions:
 			self.addSelectable(FunctionSelectable(function, \
 						Rect(20, 0, self.rect.width, 16)))
 					
@@ -598,15 +605,15 @@ class BindingSelectable(Selectable):
 					str(self.function.__name__), color = (200,100,100)))	
 		
 class Skills(Panel):
-	def __init__(self, rect, thisShip):
+	def __init__(self, rect, player):
 		Panel.__init__(self, rect)
 		self.addPanel(Label(Rect(self.rect.width / 2 - 60, 2, 0, 0),\
 			"Skills", BIG_FONT))
 		rect = Rect(100,0,300,100)
-		for skill in thisShip.skills:
+		for skill in player.skills:
 			rect = Rect(rect)
 			rect.y += 150
-			self.addPanel(SkillTile(rect, self, skill, thisShip))
+			self.addPanel(SkillTile(rect, self, skill, player))
 		
 	
 	def skill(self, skillName):
@@ -644,8 +651,8 @@ class SkillTile(Button):
 			self.addPanel(self.levelLabel)
 	
 class Store(Panel):
-	def __init__(self, rect, thisShip):
-		self.thisShip = thisShip
+	def __init__(self, rect, player):
+		self.player = player
 		Panel.__init__(self, rect)
 		self.addPanel(Label(Rect(self.rect.width / 2 - 60, 2, 0, 0),\
 			"Store", BIG_FONT))

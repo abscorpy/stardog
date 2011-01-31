@@ -444,7 +444,7 @@ class Player(Ship):
 	def xpDestroy(self, target):
 		self.xp += 2. * target.level / self.level
 	def update(self):
-		if stardog.debug: print 'xp:',self.xp
+		if self.game.debug: print 'xp:',self.xp
 		if self.xp >= self.next():
 			self.level += 1
 			self.developmentPoints += 1
@@ -452,6 +452,7 @@ class Player(Ship):
 		if self.landed \
 		and dist2(self, self.landed) > (self.landed.radius * 2) ** 2:
 			self.landed = False
+			self.game.menu.parts.reset()
 		Ship.update(self)
 	
 	def next(self):
