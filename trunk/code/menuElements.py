@@ -8,7 +8,7 @@ from pygame.locals import *
 class Panel:
 	"""Panel(mouse, rect) -> new Panel. 
 	The basic building block of the menu system. """
-	color = (100, 200, 100, 100)
+	color = (100, 200, 100)
 	image = None
 	drawBorder = True
 	bgColor = None
@@ -112,7 +112,7 @@ class TopLevelPanel(Panel):
 	Like a panel, but has a handleEvent() method and draws subpanels to a 
 	buffer.  Must be the ultimate parent of any panel that responds to events,
 	and events should all be passed to .handleEvent(event)."""
-	bgColor = 20,40,100
+	bgColor = 15,31,78
 	dragged = None
 	dragSource = None
 	internalPos = None
@@ -164,8 +164,10 @@ class TopLevelPanel(Panel):
 		surface."""
 		rect = Rect(0,0, self.rect.width, self.rect.height)
 		self.image.fill((0, 0, 0, 0))
-		pygame.draw.rect(self.image, self.bgColor, rect)
-		pygame.draw.rect(self.image, self.color, rect, 1)
+		if self.bgColor:
+			pygame.draw.rect(self.image, self.bgColor, rect)
+		if self.drawBorder:
+			pygame.draw.rect(self.image, self.color, rect, 1)
 		for panel in self.panels:
 			panel.draw(self.image, rect)
 		if self.dragged and self.dragged != 1:

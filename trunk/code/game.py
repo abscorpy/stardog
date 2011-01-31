@@ -55,6 +55,7 @@ class Game:
 			# game setup:
 			intro = IntroMenu(self, Rect(100, 100, self.width - 200,\
 						self.height - 200))
+			self.messenger.empty()
 			while self.running and intro.running:
 				#event polling:
 				for event in pygame.event.get():

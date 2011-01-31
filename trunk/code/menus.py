@@ -52,8 +52,8 @@ class Menu(TopLevelPanel):
 			self.activeMenu.update()
 
 class PartsPanel(Panel):
-	baseImage = loadImage('res/partsmenubg.bmp')
-	tradeImage = loadImage('res/partstrademenubg.bmp')
+	baseImage = loadImage('res/menus/partsmenubg.bmp')
+	tradeImage = loadImage('res/menus/partstrademenubg.bmp')
 	def __init__(self, rect, player):
 		Panel.__init__(self, rect)
 		self.player = player
@@ -108,7 +108,9 @@ class PartsPanel(Panel):
 			
 	def remove(self):
 		"""removes the selected part from the ship and updates menus"""
-		if self.shipPanel.selected and self.shipPanel.selected.part:
+		selected = self.shipPanel.selected
+		if selected and selected.part \
+		and selected.part.parent != selected.part.ship: #not cockpit
 			self.descriptionInventory.setPart(self.shipPanel.selected.part)
 			self.descriptionShip.setPart(None)
 			self.shipPanel.selected.part.unequip()
@@ -143,7 +145,7 @@ class ShipPanel(Selecter):
 	text = None
 	drawBorder = False
 	
-	def __init__(self, rect, parent, player):
+	def __init__(self, rect, parent, player, descriptionPanel = None):
 		Selecter.__init__(self, rect)
 		self.player = player
 		self.parent = parent
@@ -319,6 +321,7 @@ class ShipPartPanel(DragableSelectable):
 				self.part.unequip()
 			self.port.addPart(dropped.part)
 			self.parent.reset()
+			
 			self.parent.parent.inventoryPanel.reset()
 			return 1
 		
@@ -431,7 +434,7 @@ class InventoryPanel(Selecter):
 		self.parent.selected = None
 			
 class Keys(Panel):
-	bindingMessage = pygame.image.load("res/keybind.gif")
+	bindingMessage = pygame.image.load("res/menus/keybind.gif")
 	"""the Keys panel of the menu."""
 	def __init__(self, rect, player):
 		Panel.__init__(self, rect)
@@ -453,10 +456,10 @@ class Keys(Panel):
 					self.bind, "Bind"))
 		self.addPanel(Button(Rect(self.rect.width - 106, buttonTop, 100, 20), \
 					self.unbind, "Unbind"))
-		self.addPanel(PartFunctionsPanel(Rect(self.rect.left + 2, \
-					self.rect.top + 2, 	self.rect.width / 2 - 4, \
-					self.rect.height - self.keyboardRect.height - 2), self, \
-					player))
+		# self.addPanel(PartFunctionsPanel(Rect(self.rect.left + 2, \
+					# self.rect.top + 2, 	self.rect.width / 2 - 4, \
+					# self.rect.height - self.keyboardRect.height - 2), self, \
+					# player))
 		self.toggleMouseButton = Button(Rect(self.rect.left, self.rect.bottom - 20, 
 								200,20), self.toggleMouse, "Turn Mouse Off")
 		self.addPanel(self.toggleMouseButton)

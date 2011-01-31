@@ -20,7 +20,7 @@ class SolarSystem:
 		self.specialOperations = []
 		self.onScreen = []
 		self.bg = BG(self.game) # the background layer
-		pygame.mixer.music.load("res/space music.ogg")
+		pygame.mixer.music.load("res/sound/space music.ogg")
 		pygame.mixer.music.play(-1)
 		
 	def update(self):
@@ -100,7 +100,7 @@ class SolarA1(SolarSystem):
 	fightersPerMinute = 2
 	def __init__(self, game, player, numPlanets = 10):
 		SolarSystem.__init__(self, game)
-		self.sun = (Planet( game, 0, 0, radius = 2000, mass = 180000, \
+		self.sun = (Sun( game, 0, 0, radius = 2000, mass = 180000, \
 					color = (255, 255, 255), image = None)) # the star
 		#place player:
 		angle = randint(0,360)
@@ -128,7 +128,7 @@ class SolarA1(SolarSystem):
 			planet.ships = pygame.sprite.Group()
 			planet.respawn = 30
 			self.add(planet)
-		self.fighterTimer = 2
+		self.fighterTimer = 60
 			
 	def update(self):
 		SolarSystem.update(self)

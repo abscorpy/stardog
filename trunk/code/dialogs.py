@@ -61,7 +61,7 @@ class ColorButton(Button):
 		
 class TypeButton(Button):
 	def __init__(self, parent, rect, type):
-		self.image = colorShift(loadImage('res/'+type+'.bmp', None),
+		self.image = colorShift(loadImage('res/menus/'+type+'.bmp', None),
 						parent.game.playerColor,None)
 		self.parent = parent
 		self.type = type
@@ -97,7 +97,8 @@ class Messenger:
 			messageSound.play()
 		
 	def update(self):
-		if self.queue and self.game.timer > self.queue[0][1] or len(self.queue) > self.maxMessages:
+		if self.queue and self.game.timer > self.queue[0][1] \
+		or len(self.queue) > self.maxMessages:
 			self.queue.popleft()
 		
 	def draw(self, surface):
@@ -107,6 +108,9 @@ class Messenger:
 			self.image.blit(message[0], (0,0))
 			surface.blit(self.image, (self.topleft[0], y))
 			y += self.font.get_linesize() * self.dir
+			
+	def empty(self):
+		self.queue = deque()
 		
 class Trigger:
 	def __init__(self, game, conditions, actions, repeat = False):
@@ -146,7 +150,7 @@ def seeShipCondition(game):
 	from spaceship import Ship
 	def see():
 		for floater in game.curSystem.onScreen:
-			if isinstance(floater,Ship):
+			if isinstance(floater,Ship) and floater != game.player:
 				return True
 		return False
 	return see
