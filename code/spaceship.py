@@ -452,7 +452,6 @@ class Player(Ship):
 		if self.landed \
 		and dist2(self, self.landed) > (self.landed.radius * 2) ** 2:
 			self.landed = False
-			self.game.menu.parts.reset()
 		Ship.update(self)
 	
 	def next(self):

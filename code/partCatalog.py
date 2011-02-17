@@ -32,4 +32,7 @@ class FighterShield(Shield):
 	mass = 4;	shieldhp = .6;	shieldRegen = .1;	energyCost = .5
 	name = 'Fighter Shield'
 
+generalSellable = [LeftFlakCannon, MachineGun, LeftLaser, LeftCannon, 
+	StrafebatCannon, FighterShield, MissileLauncher, Engine, Generator,
+	Gyro, Battery, Shield, ]
 	

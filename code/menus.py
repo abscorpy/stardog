@@ -5,8 +5,7 @@ import stardog
 from parts import Dummy, PART_OVERLAP, DEFAULT_IMAGE, FlippablePart
 from spaceship import Ship
 
-DEFAULT_SELECTED_IMAGE = pygame.image.load("res/defaultselected" + ext).convert()
-DEFAULT_SELECTED_IMAGE.set_colorkey((0,0,0))
+DEFAULT_SELECTED_IMAGE = loadImage("res/defaultselected" + ext)
 
 class Menu(TopLevelPanel):
 	"""The top level menu object. Menu(mouse, rect) -> new Menu"""
@@ -20,7 +19,6 @@ class Menu(TopLevelPanel):
 		self.parts = PartsPanel(subFrameRect, player)
 		self.keys = Keys(subFrameRect, player)
 		self.skills = Skills(subFrameRect, player)
-		self.store = Store(subFrameRect, player)
 		x = 2
 		y = 2
 		h = 24
@@ -35,8 +33,6 @@ class Menu(TopLevelPanel):
 		self.panels.append(Button(Rect(x,y,w,h), \
 				lambda : self.setActiveMenu(self.skills), "Skills", BIG_FONT))
 		y += h + 2
-		self.panels.append(Button(Rect(x,y,w,h), \
-				lambda : self.setActiveMenu(self.store), "Store", BIG_FONT))
 		y += h + 2
 		self.setActiveMenu(self.parts)
 
@@ -54,23 +50,25 @@ class Menu(TopLevelPanel):
 class PartsPanel(Panel):
 	baseImage = loadImage('res/menus/partsmenubg.bmp')
 	tradeImage = loadImage('res/menus/partstrademenubg.bmp')
+	dirtyParts = False
 	def __init__(self, rect, player):
 		Panel.__init__(self, rect)
 		self.player = player
 		inventoryColor = (20,50,35)
 		shipColor = (50,20,70)
-		flip = Button(Rect(100, 300, 100, 20), self.flip, " FLIP")
-		remove = Button(Rect(200, 300, 100, 20), self.remove, " REMOVE")
-		add = Button(Rect(300, 300, 100, 20), self.add, " ADD/SWAP")
-		paint = Button(Rect(400, 300, 100, 20), self.paint, " PAINT PART")
+		flip = Button(Rect(115, 300, 75, 16), self.flip, " FLIP")
+		remove = Button(Rect(195, 300, 75, 16), self.remove, " REMOVE")
+		add = Button(Rect(335, 520, 75, 16), self.attach, " ATTACH")
+		paint = Button(Rect(415, 520, 75, 16), self.paint, " PAINT")
 		self.inventoryPanel = InventoryPanel(
-				Rect(500, 30, 300, 570), 
+				Rect(500, 30, 130, 570), 
 				self, self.player.inventory)
+		self.tradePanel = None
 		self.shipPanel = ShipPanel(Rect(100, 0, 401, 300), self, self.player)
 		self.descriptionShip = PartDescriptionPanel(
-					Rect(100, 320, 201, 500), self.shipPanel)
+					Rect(105, 320, 201, 500), self.shipPanel)
 		self.descriptionInventory = PartDescriptionPanel(
-					Rect(300, 320, 201, 500), self.inventoryPanel)
+					Rect(330, 320, 201, 500), self.inventoryPanel)
 		self.addPanel(self.descriptionShip)
 		self.addPanel(self.descriptionInventory)
 		self.addPanel(self.shipPanel)
@@ -81,18 +79,26 @@ class PartsPanel(Panel):
 		self.addPanel(paint)
 	
 	def update(self):
-		if self.shipPanel.selected \
-		and self.shipPanel.selected.part != self.descriptionShip.part:
-			self.descriptionShip.setPart(self.shipPanel.selected.part)
-		if self.inventoryPanel.selected \
-		and self.inventoryPanel.selected.part != self.descriptionInventory.part:
-			self.descriptionInventory.setPart(self.inventoryPanel.selected.part)
+		Panel.update(self)
+		if (self.tradePanel and not self.player.landed
+		or self.player.landed and not self.tradePanel):
+			self.dirtyParts = True
+		if self.dirtyParts:
+			self.dirtyParts = False
+			self.reset()
 			
 	def reset(self):
-		if self.player.landed:
+		if self.player.landed and not self.tradePanel:
 			self.image = self.tradeImage
-		else:
+			self.tradePanel = InventoryPanel(Rect(660, 30, 130, 570), 
+								self, self.player.landed.inventory)
+			self.addPanel(self.tradePanel)
+		elif not self.player.landed:
 			self.image = self.baseImage
+			self.removePanel(self.tradePanel)
+			self.tradePanel = None
+		Panel.reset(self)
+		
 			
 	def flip(self):
 		"""flips the selected part if it is a FlippablePart."""
@@ -103,7 +109,6 @@ class PartsPanel(Panel):
 				part.unequip()
 				self.shipPanel.selected.port.addPart(part)
 				self.descriptionShip.setPart(self.shipPanel.selected.part)
-				
 				self.shipPanel.reset()
 			
 	def remove(self):
@@ -117,7 +122,7 @@ class PartsPanel(Panel):
 			self.shipPanel.reset()
 			self.inventoryPanel.reset()
 
-	def add(self):
+	def attach(self):
 		"""adds the selected part to the ship and updates menus"""
 		if self.shipPanel.selected and self.inventoryPanel.selected:
 			self.player.inventory.remove(self.inventoryPanel.selected.part)
@@ -153,8 +158,7 @@ class ShipPanel(Selecter):
 					
 	def reset(self):
 		s = self.player
-		self.selected = None
-		self.addPanel(self.text)
+		self.setSelected(None)
 		self.player.reset()
 		self.panels = []
 		self.selectables = []
@@ -185,15 +189,14 @@ class ShipPanel(Selecter):
 					self.selectables[-1].port = port
 		#update ship stats display:
 			#tabs not displaying correctly, so using spaces.
-		text = ("Parts: %i/%i\nEfficiency: %s\nMass: %i KG\n" +
+		text = ("Parts: %i/%i\nEfficiency: %3d\nMass: %i KG\n" +
 			"Forward Thrust: %i KN\nMoment: %i KG m\nTorque: %i KN m\n" +
 			"Max DPS: %2d\nEnergy: %i/%i\nShields: %i/%i")
 		values = (s.numParts, s.partLimit, s.efficiency, s.mass,
 				s.forwardThrust/1000, s.moment, s.torque/1000, 
 				s.dps, s.energy, s.maxEnergy, s.hp, s.maxhp)
-		self.removePanel(self.text)
-		self.text = (TextBlock(Rect(0,0,400,100), text%values, 
-					color = (100,200,0)))
+		self.text = (TextBlock(Rect(20,30,400,100), text%values, 
+					color = (100,200,0), font = SMALL_FONT))
 		self.addPanel(self.text)
 		Panel.reset(self) 
 		#not Selectable.reset(), because that rearranges the selectables.
@@ -242,8 +245,12 @@ class PartDescriptionPanel(Panel):
 		self.addPanel(self.text)
 	
 	def update(self):
-		if self.selecter and self.selecter.selected.part != self.part:
+		if (self.selecter 
+		and self.selecter.selected
+		and self.selecter.selected.part != self.part):
 			self.setPart(self.selecter.selected.part)
+		elif self.selecter and self.selecter.selected is None:
+			self.setPart(None)
 		Panel.update(self)
 	
 	def reset(self):
@@ -304,7 +311,7 @@ class ShipPartPanel(DragableSelectable):
 			return None
 		if not self.selected:
 			self.select()
-			self.parent.selected = self
+			self.parent.setSelected(self)
 		return (PartTile(self.part, Rect(0, 0, PartTile.width, PartTile.height),
 				self), self)
 
@@ -312,23 +319,25 @@ class ShipPartPanel(DragableSelectable):
 		if isinstance(dropped, PartTile):
 			if self.part and self.port.parent == self.part.ship:
 				return #do not allow Cockpits to be swapped!
-			s = self.port.parent.ship
-			dropped.part.unequip()
-			if not self.port.parent in s.parts:
+			if self.part and dropped.part == self.part:
+				return #dropped on self: do nothing.
+			if self.part and self.checkParent(self.part,dropped.part):
+				return #trying to drop a part on it's parent.  Do nothing.
+			dropped.part.unequip(toInventory = False)
+			if not self.port.parent in self.ship.parts:
 				#unequiping dropped messed up this node!
 				return
-			if self.part:
-				self.part.unequip()
 			self.port.addPart(dropped.part)
-			self.parent.reset()
-			
-			self.parent.parent.inventoryPanel.reset()
-			return 1
-		
-	def endDrag(self, pos, result):
+			self.parent.parent.dirtyParts = True
+			return 3
+
+	def endDrag(self, dropped, result):
+		if result == 1:
+			dropped.part.unequip(toInventory = False)
 		if result:
-			self.parent.reset()
-		self.parent.selected = None
+			#if child parts were removed, need to reset inventory panel:
+			self.parent.parent.dirtyParts = True
+		self.parent.setSelected(None)
 						
 	def checkParent(self, thisPart, partToMatch):
 		"""recursive helper to check if a part is thisPart's parent."""
@@ -340,40 +349,17 @@ class ShipPartPanel(DragableSelectable):
 		if thisPart is None or isinstance(thisPart.parent, Ship):
 			return False
 		return self.checkParent(thisPart.parent, partToMatch)
-
-	def equip(self, part):
-		if part:
-			self.descriptionInventory.setPart(self.shipPanel.selected.part)
-			self.remove()
-			self.shipPanel.selected.port.addPart(\
-						self.inventoryPanel.selected.part)
-			self.descriptionShip.setPart(self.inventoryPanel.selected.part)
-			self.player.reset()
-			self.shipPanel.reset()
-			self.inventoryPanel.reset()
-			self.inventoryPanel.selected = None
-			self.shipPanel.selected = None
-		
-	def unequip(self, part):
-		"""unequip(part): a recursive helper method for endDrag.
-		Should be followed by ship.reset()."""
-		if not part: return
-		self.ship.inventory.append(part)
-		for recursivePort in part.ports:
-			self.unequip(recursivePort.part)
-			recursivePort.part = None
-		part.parent = None
 	
 class PartTile(DragableSelectable):
 	drawBorder = False
-	width = 300
+	width = 130
 	height = 50
 	partImageOffset = 0,12
 	drawBorderDragging = False
 	selectedColor = (255,200,200)
 	bgInactive = None
-	bgActive = (80, 80, 75)
-	bgSelected = (80, 50, 75)
+	bgActive = (110, 110, 75)
+	bgSelected = (80, 50, 110)
 	def __init__(self, part, rect, parent):
 		"""PartTile(part, rect) -> new PartTile.
 		The menu interface for a part. Display it like a button!"""
@@ -381,6 +367,8 @@ class PartTile(DragableSelectable):
 		self.part = part
 		bigImage = pygame.transform.scale2x(self.part.image)
 		bigImage.set_colorkey((255,255,255)) # idk why this one's white.
+		self.hotSpot = (self.partImageOffset[0] + self.part.width, 
+						self.partImageOffset[1] + self.part.height)
 		self.image.blit(bigImage, PartTile.partImageOffset)
 		#add text labels:
 		rect = Rect(rect)
@@ -409,9 +397,11 @@ class InventoryPanel(Selecter):
 		Selecter.__init__(self, rect, vertical = True)
 		self.partList = partList
 		self.parent = parent
-		self.reset()
+		self.parent.dirtyParts = True
 
 	def reset(self):
+		self.setSelected(None)
+		
 		self.selectables = []
 		for part in self.partList:
 			self.addSelectable(PartTile(part, \
@@ -422,16 +412,28 @@ class InventoryPanel(Selecter):
 		result = Selecter.drop(self, pos, dropped)
 		if result: return result
 		if isinstance(dropped, PartTile):
-			if dropped in self.selectables:
+			if dropped.part in self.partList: 
+				#from here to here: ignore
 				return
-			dropped.part.unequip()
-			self.reset()
+			#add dropped part to partList:
+			if not dropped.part in self.partList:
+				self.partList.append(dropped.part)
+				self.parent.dirtyParts = True
+			#select it:
+			for partTile in self.selectables:
+				if partTile.part == dropped.part:
+					self.setSelected(partTile)
+					break
 			return 1
+		return None
 			
-	def endDrag(self, pos, result):
-		if result:
-			self.reset()
-		self.parent.selected = None
+	def endDrag(self, dropped, result):
+		if result == 1 or result == 3:
+			#it went somewhere else.  Remove from here:
+			while dropped.part in self.partList:
+				self.partList.remove(dropped.part)
+			self.setSelected(None)
+			self.parent.dirtyParts = True
 			
 class Keys(Panel):
 	bindingMessage = pygame.image.load("res/menus/keybind.gif")
@@ -498,7 +500,7 @@ class Keys(Panel):
 		"""Warning: Enters a loop for upto five seconds!
 		captures the first pressed key and returns its number.""" 
 		start = pygame.time.get_ticks()
-		print 'cap key'
+		print 'capturing key'
 		while pygame.time.get_ticks() < start + 5000:
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:

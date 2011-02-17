@@ -58,13 +58,13 @@ class Part(Floater):
 		radius = max(self.baseImage.get_height() / 2,
 					self.baseImage.get_width() / 2)
 		Floater.__init__(self, game, 0, 0, dir = 270, radius = radius)
-		self.image = self.baseImage.copy()
+		self.image = colorShift(self.baseImage.copy(), self.color)
 		self.width = self.image.get_width() - 4
 		self.height = self.image.get_height() - 4
 		#the length of this list is the number of connections.
 		 #each element is the part there, (x,y,dir) position of the connection.
 		 #the example is at the bottom of the part, pointed down.
-		self.ports = [Port((-self.width / 2 + 2, 0), 0, self)]
+		self.ports = [Port((-self.width / 2, 0), 0, self)]
 	
 	def stats(self):
 		stats = (self.hp, self.maxhp, self.mass, len(self.ports))
@@ -87,7 +87,7 @@ class Part(Floater):
 				
 		#detach old part, if any:
 		if port.part:
-			port.part.parent = None
+			port.part.unequip()
 		port.part = part
 		part.parent = self
 		part.ship = self.ship
@@ -108,9 +108,6 @@ class Part(Floater):
 		if part.animatedBaseImage:
 			part.animatedImage = colorShift(part.animatedBaseImage, part.color)
 			part.animatedImage.set_colorkey((0,0,0))
-		#ensure that there is not a reference to it in the ship's inventory:
-		while part in self.ship.inventory:
-			self.ship.inventory.remove(part)
 		#unequip the part if it collides with others, except parent(self).
 		# for other in self.ship.parts:
 			# if other is not self and other is not part:
@@ -185,7 +182,7 @@ class Part(Floater):
 		self.dy = ship.dy + rand() * sign(self.offset[1]) * DETACH_SPEED
 		self.game.curSystem.add(self)
 		
-	def unequip(self):
+	def unequip(self, toInventory = True):
 		"""move a part from on a ship to a ship's inventory"""
 		#recurse to children first:
 		if not self.ship:
@@ -201,7 +198,7 @@ class Part(Floater):
 			self.ship.parts.remove(self)
 		self.ship.reset()
 		self.parent = None
-		if not self in self.ship.inventory:
+		if toInventory == True and not self in self.ship.inventory:
 			self.ship.inventory.append(self)
 		self.ship.reset()
 		
@@ -577,9 +574,9 @@ class Gyro(Part):
 	energyCost = .8
 	def __init__(self, game):
 		Part.__init__(self, game)
-		self.ports = [Port((0, self.height / 2 - 2), 270, self), \
-				Port((-self.width / 2 + 2, 0), 0, self), \
-				Port((0, -self.height / 2 + 2), 90, self)]
+		self.ports = [Port((0, self.height / 2 ), 270, self), \
+				Port((-self.width / 2 , 0), 0, self), \
+				Port((0, -self.height / 2 ), 90, self)]
 		self.functions.extend([self.turnLeft,self.turnRight])
 		self.functionDescriptions.extend(\
 				[self.turnLeft.__doc__,self.turnRight.__doc__])
@@ -680,7 +677,7 @@ class Shield(Part):
 	def stats(self):
 		stats = (self.shieldhp, self.shieldRegen, self.energyCost)
 		statString = ("\nMax Shield: %2d \nRegeneration Rate: %2d/sec"
-				"nCost: %2d energy/sec of regen")
+				"\nCost: %2d energy/sec of regen")
 		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
@@ -731,7 +728,7 @@ class Interceptor(Cockpit):#move to config
 	mass = 20
 	hp = 15
 	baseImage = loadImage("res/parts/interceptor.bmp")
-	name = 'interceptor cockpit'
+	name = 'Interceptor Cockpit'
 	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
@@ -748,7 +745,7 @@ class Destroyer(Cockpit):#move to config
 	hp = 30
 	energyCost = .6
 	baseImage = loadImage("res/parts/destroyer.bmp")
-	name = 'destroyer cockpit'
+	name = 'Destroyer Cockpit'
 	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
@@ -768,7 +765,7 @@ class Fighter(Cockpit):#move to config
 	rate = 1.5
 	capacity = 5
 	baseImage = loadImage("res/parts/fighter.bmp")
-	name = 'destroyer cockpit'
+	name = 'Fighter Cockpit'
 	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
