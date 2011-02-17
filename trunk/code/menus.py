@@ -191,7 +191,7 @@ class ShipPanel(Selecter):
 			#tabs not displaying correctly, so using spaces.
 		text = ("Parts: %i/%i\nEfficiency: %3d\nMass: %i KG\n" +
 			"Forward Thrust: %i KN\nMoment: %i KG m\nTorque: %i KN m\n" +
-			"Max DPS: %2d\nEnergy: %i/%i\nShields: %i/%i")
+			"Max DPS: %.2f\nEnergy: %i/%i\nShields: %i/%i")
 		values = (s.numParts, s.partLimit, s.efficiency, s.mass,
 				s.forwardThrust/1000, s.moment, s.torque/1000, 
 				s.dps, s.energy, s.maxEnergy, s.hp, s.maxhp)
@@ -372,13 +372,12 @@ class PartTile(DragableSelectable):
 		self.image.blit(bigImage, PartTile.partImageOffset)
 		#add text labels:
 		rect = Rect(rect)
-		rect.x += 30
-		self.addPanel(Label(rect, part.name))
+		self.addPanel(Label(rect, part.name, font = SMALL_FONT))
 		self.panels[-1].rect.width = self.rect.width
 		string = part.shortStats()
 		i = string.find('\n')
 		rect = Rect(rect)
-		rect.x += 8; rect.y += 14
+		rect.x += 38; rect.y += 14
 		self.addPanel(Label(rect, string[:i], color = (200,0,0),
 					font = SMALL_FONT))
 		self.panels[-1].rect.width = self.rect.width
