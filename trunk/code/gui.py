@@ -20,9 +20,11 @@ class HUD:
 							flags = (SRCALPHA)).convert_alpha()
 		self.keys = game.keys
 		self.center = (game.width - radarRadius, radarRadius)
-		self.radarImage = pygame.image.load("res/radar small.png").convert_alpha()
+		self.radarImage = pygame.image.load(
+					"res/radar small.png").convert_alpha()
 		self.radarImage.set_colorkey((0,0,0))
-		self.radarImageBig = pygame.image.load("res/radar large.png").convert_alpha()
+		self.radarImageBig = pygame.image.load(
+					"res/radar large.png").convert_alpha()
 		self.radarImageBig.set_colorkey((0,0,0))
 
 	def draw(self, surface, thisShip):
@@ -30,7 +32,7 @@ class HUD:
 		self.image.fill((0, 0, 0, 0))
 		#TODO: don't hard-code this key:
 		self.drawRadar(surface, thisShip, self.game.keys[K_TAB])
-					
+
 		# energy:
 		x = self.game.width - 25
 		y = self.game.height - 20 - self.game.height / 6

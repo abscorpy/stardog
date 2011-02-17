@@ -39,8 +39,8 @@ class Panel:
 		#pass the click on to first colliding child:
 		for panel in self.panels:
 			if panel.rect.collidepoint(pos):
-				panel.click(button, pos)
-				break
+				if panel.click(button, pos):
+					return True
 	
 	def move(self, pos, rel):
 		"""called when the mouse moves to or from this panel."""
@@ -60,7 +60,8 @@ class Panel:
 		"""drag(start): 
 		The mouse has started dragging at start.  This should be passed down to
 		any colliding subpanels.  If all subpanels return None, this should 
-		return a Dragable object at start, or None if there isn't any."""
+		return None if self is not draggable, and return (self, self.parent) 
+		if self is draggable."""
 		for panel in self.panels:
 			if panel.rect.collidepoint(start):
 				dragged = panel.drag(start)
@@ -175,7 +176,7 @@ class TopLevelPanel(Panel):
 		surface.blit(self.image, self.rect)
 			
 class Dragable(Panel):
-	dragOffset = 0,0
+	hotSpot = 0,0 # move this point under the mouse hotspot.
 	drawBorderDragging = True
 	def __init__(self, rect, parent):
 		Panel.__init__(self, rect)
@@ -186,13 +187,12 @@ class Dragable(Panel):
 	def drag(self, start):
 		drag = Panel.drag(self, start)
 		if drag: return drag
-		self.dragOffset =  start[0] - self.rect.left, start[1] - self.rect.top
 		return self, self.parent
 			
 	def draggingDraw(self, topLevelPanel):
 		surface = topLevelPanel.image
-		pos = topLevelPanel.internalPos[0] - self.dragOffset[0], \
-				topLevelPanel.internalPos[1] - self.dragOffset[1]
+		pos = topLevelPanel.internalPos[0] - self.hotSpot[0], \
+				topLevelPanel.internalPos[1] - self.hotSpot[1]
 		#draw self (floating):
 		surface.blit(self.image, pos)
 		if self.drawBorderDragging:
@@ -225,7 +225,8 @@ class Button(Panel):
 		"""called when this panel is clicked on."""
 		if button == 1:
 			self.function()
-		Panel.click(self, button, pos)
+			return True
+		return Panel.click(self, button, pos)
 	
 	def move(self, pos, rel):
 		"""called when the mouse moves to or from this panel."""
@@ -326,39 +327,35 @@ class ScrollPanel(Panel):
 		if button == 4:
 			if self.image.get_height() > self.rect.height:  #vertical
 				self.scroll(0, -ScrollPanel.scrollRate)
-				return 1
+				return True
 			elif self.image.get_width() > self.rect.width:  #horizontal
 				self.scroll(-ScrollPanel.scrollRate, 0)
-				return 1
+				return True
 		elif button == 5:
 			if self.image.get_height() > self.rect.height:  #vertical
 				self.scroll(0, ScrollPanel.scrollRate)
-				return 1
+				return True
 			elif self.image.get_width() > self.rect.width:  #horizontal
 				self.scroll(ScrollPanel.scrollRate, 0)
-				return 1
+				return True
 		# click the scroll buttons if the image is larger than the visibleRect:
 		if self.image.get_height() > self.rect.height:
 			if self.up.rect.collidepoint(pos):
-				self.up.click(button, pos)
-				return 1
+				return self.up.click(button, pos)
 			if self.down.rect.collidepoint(pos):
-				self.down.click(button, pos)
-				return 1
+				return self.down.click(button, pos)
 		if self.image.get_width() > self.rect.width:
 			if self.left.rect.collidepoint(pos):
-				self.left.click(button, pos)
-				return 1
+				return self.left.click(button, pos)
 			if self.right.rect.collidepoint(pos):
-				self.right.click(button, pos)
-				return 1
+				return self.right.click(button, pos)
 		#pass the click on to first colliding child:	
 		pos = pos[0] - self.rect.left + self.visibleRect.left, \
 				pos[1] - self.rect.top + self.visibleRect.top
 		for panel in self.panels:
 			if panel.rect.collidepoint(pos):
-				panel.click(button, pos)
-				return 1
+				if panel.click(button, pos):
+					return True
 	
 	def move(self, pos, rel):
 		"""called when the mouse moves to or from this panel."""
@@ -480,7 +477,8 @@ class Selecter(ScrollPanel):
 		if self.selected:
 			self.selected.unselect()
 		self.selected = selectable
-		self.selected.select()
+		if self.selected:
+			self.selected.select()
 		
 	def drag(self, start):
 		result = ScrollPanel.drag(self, start)
@@ -512,12 +510,15 @@ class Selecter(ScrollPanel):
 
 	def click(self, button, pos):
 		if ScrollPanel.click(self, button, pos):
-			return	1#returns 1 if something has been clicked.
+			returnTrue
 		posNew = pos[0] - self.rect.left + self.visibleRect.left, \
 				pos[1] - self.rect.top + self.visibleRect.top
+		new = False
 		for selectable in self.selectables:
 			if selectable.rect.collidepoint(posNew) and button == 1:
 				self.setSelected(selectable)
+				new = True
+		return new
 		
 	def addSelectable(self, selectable):
 		"""Adds a new selectable to this selecter.  Sets the selectable's rect
@@ -526,7 +527,7 @@ class Selecter(ScrollPanel):
 		if self.vertical:
 			y = 2
 			for panel in self.selectables:
-				y += panel.rect.height + 2
+				y += panel.rect.height + 2 #might have different heights.
 			offset = y - selectable.rect.top
 			selectable.rect.top = y
 			for panel in selectable.panels:
@@ -551,7 +552,8 @@ class Selecter(ScrollPanel):
 		
 	def removeSelectable(self, selectable):
 		"""removes a selectable and calls reset."""
-		self.selectables.remove(selectable)
+		if selectable in self.selectables:
+			self.selectables.remove(selectable)
 		self.reset()
 		
 	def reset(self):
@@ -665,23 +667,22 @@ class TextBlock(Panel):
 	"""TextBlock(self,  rect, text, font = FONT) 
 	A panel with multi-line text. rect height is reset based on font and 
 	number of lines in text."""
+	image = None
 	def __init__(self, rect, text, font = FONT, color = (0,0,0), width = 200):
 		self.text = text.split("\n")
 		if not fontModule:
 			Panel.__init__(self, rect)
 			return
 		self.color = color
-		lineHeight = font.render(self.text[0], True, self.color).get_height()
-		self.image = pygame.Surface((rect.width, lineHeight * len(self.text)),\
+		lineHeight = font.get_height()
+		self.image = pygame.Surface((rect.width, lineHeight * len(self.text)),
 				hardwareFlag | SRCALPHA).convert_alpha()
-		self.image.set_colorkey((0,0,0))
 		y = 0
 		for line in self.text:
 			self.image.blit(font.render(line, True, self.color), (0, y))
 			y += lineHeight
-		self.rect = Rect(rect.top, rect.left, self.image.get_width(),\
-				self.image.get_height())
-		Panel.__init__(self, rect)
+		self.rect = Rect(rect.topleft, self.image.get_size())
+		Panel.__init__(self, self.rect)
 
 		
 		

@@ -13,18 +13,20 @@ class Planet(Floater):
 	g = 5000 # the gravitational constant.
 	
 	def __init__(self, game, x, y, radius = 100, mass = 10000, \
-					color = (100,200,50), image = None):
+					color = (100,200,50), image = None, race = None):
 		Floater.__init__(self, game, x, y, radius = radius, image = image)
-		self.mass = mass
-		self.hp = 100
+		self.mass = mass #determines gravity.
 		self.color = color
-		self.damage = {}
+		self.damage = {}	
+		#damage[ships] = amount of damage ship will take. 
+		#see solarSystem.planet_ship_collision
+		self.race = None #race that owns this planet
 		if image == None:
 			self.image = None
 		self.inventory = []
+		self.inventory.append(parts.Shield(game))
 	
 	def update(self):
-		self.hp = 100
 		for other in self.game.curSystem.floaters.sprites():
 			if  not isinstance(other, Planet) \
 			and not collisionTest(self, other) \
@@ -38,18 +40,18 @@ class Planet(Floater):
 	
 	def draw(self, surface, offset = (0,0)):
 		if self.image:
-			pos = int(self.x - self.image.get_width()  / 2 - offset[0]), \
-				  int(self.y - self.image.get_height() / 2 - offset[1])
+			pos = (int(self.x - self.image.get_width()  / 2 - offset[0]), 
+				  int(self.y - self.image.get_height() / 2 - offset[1]))
 			surface.blit(self.image, pos)
-				  
+		
 		else:
 			pos = int(self.x - offset[0]), \
 				  int(self.y - offset[1])
 			pygame.draw.circle(surface, self.color, pos, int(self.radius))
-		
+	
 	def takeDamage(self, damage, other):
 		pass
-		
+	
 class Sun(Planet):
 	PLANET_DAMAGE = 300
-	LANDING_SPEED = -999
+	LANDING_SPEED = -999 #no landing on the sun.

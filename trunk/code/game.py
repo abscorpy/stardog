@@ -31,6 +31,7 @@ class Game:
 		self.height = screen.get_height()
 		self.mouseControl = True
 		self.timer = 0
+		self.systems = []
 		self.triggers = []
 		#messenger, with controls as first message:
 		self.messenger = Messenger(self)
@@ -53,8 +54,9 @@ class Game:
 		self.running = True
 		while self.running:
 			# game setup:
-			intro = IntroMenu(self, Rect(100, 100, self.width - 200,\
-						self.height - 200))
+			intro = IntroMenu(self, Rect((self.width - 800) / 2,
+										(self.height - 600) / 2,
+										800, 600))
 			self.messenger.empty()
 			while self.running and intro.running:
 				#event polling:
@@ -72,6 +74,7 @@ class Game:
 			self.player = playerShip(self, 0,0, script = self.playerScript,
 							color = self.playerColor, type = self.playerType)
 			self.curSystem = SolarA1(self, self.player)
+			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
 			
 			self.menu = Menu(self, Rect((self.width - 800) / 2,
