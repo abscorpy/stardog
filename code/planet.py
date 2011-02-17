@@ -2,7 +2,8 @@
 
 
 from utils import *
-from floaters import *
+from floaters import Floater
+from adjectives import randItem
 import parts
 import stardog
 
@@ -24,7 +25,8 @@ class Planet(Floater):
 		if image == None:
 			self.image = None
 		self.inventory = []
-		self.inventory.append(parts.Shield(game))
+		for x in range(randint(1,4)):
+			self.inventory.append(randItem(game, 1))
 	
 	def update(self):
 		for other in self.game.curSystem.floaters.sprites():

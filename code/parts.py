@@ -676,13 +676,13 @@ class Shield(Part):
 	
 	def stats(self):
 		stats = (self.shieldhp, self.shieldRegen, self.energyCost)
-		statString = ("\nMax Shield: %2d \nRegeneration Rate: %2d/sec"
-				"\nCost: %2d energy/sec of regen")
+		statString = ("\nMax Shield: %.2f \nRegeneration Rate: %.2f/sec"
+				"\nCost: %.2f energy/sec of regen")
 		return Part.stats(self) + statString % stats
 		
 	def shortStats(self):
 		stats = (self.shieldhp, self.shieldRegen)
-		statString = """\n%2d max \n%2d regen"""
+		statString = """\n%.2f max \n%.2f regen"""
 		return Part.shortStats(self) + statString % stats
 		
 	def attach(self):
