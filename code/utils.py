@@ -69,6 +69,7 @@ try:
 	#SHADOW_FONT = pygame.font.SysFont(name = None, size = 20, bold = True)     
 	SMALL_FONT = pygame.font.SysFont(name = None, size = 16)    
 	FONT = pygame.font.SysFont(name = None, size = 20)
+	MED_FONT = pygame.font.SysFont(name = None, size = 28)
 	BIG_FONT = pygame.font.SysFont(name = None, size = 36)
 	fontModule = True
 except:
@@ -82,7 +83,7 @@ try:
 	pygame.mixer.init(44100)
 	shootSound = pygame.mixer.Sound("res/sound/lazer.ogg")
 	hitSound = pygame.mixer.Sound("res/se_sdest.wav")
-	explodeSound = pygame.mixer.Sound("res/se_explode03.wav")
+	explodeSound = pygame.mixer.Sound("res/sound/ship explosion 1.ogg.wav")
 	missileSound =  pygame.mixer.Sound("res/se_explode02.wav")
 	messageSound =  pygame.mixer.Sound("res/sound/message pip.ogg")
 	soundModule = True

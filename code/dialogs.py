@@ -74,25 +74,27 @@ class Messenger:
 	queue = deque() #not capitalized in stand lib
 	speed = 40 #characters per second
 	messageDelay = 9 #seconds after each message
-	maxChars = 250 #line width
-	font = FONT
+	maxChars = 120 #line width
+	font = MED_FONT
 	topleft = 2,2
 	maxMessages = 8
 	def __init__(self, game, font = FONT, dir = 1):
 		self.dir = dir# -1 means the messages stack upward.
 		self.game = game
-		self.image = pygame.Surface((game.width - 202, self.font.get_linesize()))
-		self.image.set_alpha(200)
+		self.image = pygame.Surface((game.width - 202,
+								self.font.get_linesize()))
+		self.image.set_alpha(230)
 	
-	def message(self, text, color = (250,250,250)):
+	def message(self, text, color = (255,255,0)):
 		"""message(text,color) -> add a message to the Messenger."""
 		text = '   ' + text
-		if len(text) > self.maxChars: #line length limit
-			self.message(text[:maxChars], color)
-			self.message(text[maxChars:], color)
+		if len(text) > self.maxChars + 3: #line length limit + indent above.
+			self.message(text[:self.maxChars - 3], color)
+			self.message(text[self.maxChars - 3:], color)
 			return
-		self.queue.append((self.font.render(text, True, color),
-				self.game.timer + 1. * len(text) / self.speed + self.messageDelay))
+		image = self.font.render(text, True, color)
+		self.queue.append((image, self.game.timer + 
+						1. * len(text) / self.speed + self.messageDelay))
 		if soundModule:
 			messageSound.play()
 		
