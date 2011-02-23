@@ -121,7 +121,7 @@ class TopLevelPanel(Panel):
 		Panel.__init__(self, rect)
 		self.image = pygame.Surface(rect.size, \
 							flags = (hardwareFlag)).convert()
-		self.image.set_alpha(200)
+		self.image.set_alpha(220)
 							
 	def handleEvent(self, event):
 		"""Examines the event and passes it down to children as appropriate."""
