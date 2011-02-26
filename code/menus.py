@@ -5,7 +5,7 @@ import stardog
 from parts import Dummy, PART_OVERLAP, DEFAULT_IMAGE, FlippablePart
 from spaceship import Ship
 
-DEFAULT_SELECTED_IMAGE = loadImage("res/defaultselected" + ext)
+DEFAULT_SELECTED_IMAGE = loadImage("res/defaultselected.bmp")
 
 class Menu(TopLevelPanel):
 	"""The top level menu object. Menu(mouse, rect) -> new Menu"""
@@ -280,18 +280,19 @@ class ShipPartPanel(DragableSelectable):
 		self.image.set_colorkey((0,0,0)) 
 		
 	def select(self):
+		pygame.draw.ellipse(self.image, (1, 1, 1), self.image.get_rect())
+		pygame.draw.ellipse(self.image, (255, 0, 0), self.image.get_rect(), 1)
 		if self.part:
 			color = self.part.color
 			color = color[0] // 4 + 192, color[1] // 2 + 128, color[2] // 2 + 128
-			self.image = colorShift(pygame.transform.scale2x(\
+			color = 250, 0, 200
+			self.image.blit(colorShift(pygame.transform.scale2x(\
 					pygame.transform.rotate(self.part.baseImage, -self.part.dir)), \
-					color).convert()
-			self.image.set_colorkey((0,0,0)) 
+					color), (0,0))
 		else:
 			dir = self.port.dir + self.port.parent.dir
-			self.image = pygame.transform.scale2x(\
-					pygame.transform.rotate(DEFAULT_SELECTED_IMAGE, -dir)).convert()
-			self.image.set_colorkey((0,0,0)) 
+			self.image.blit(pygame.transform.scale2x(pygame.transform.rotate(
+									DEFAULT_SELECTED_IMAGE, -dir)), (0,0))
 		
 	def unselect(self):
 		if self.part:
@@ -376,14 +377,25 @@ class PartTile(DragableSelectable):
 		self.panels[-1].rect.width = self.rect.width
 		string = part.shortStats()
 		i = string.find('\n')
+		valueString = string[:i]
+		string = string[i+1:]
+		i = string.find('\n')
+		hpString = string[:i]
+		statString = string[i+1:]
 		rect = Rect(rect)
 		rect.x += 38; rect.y += 14
-		self.addPanel(Label(rect, string[:i], color = (200,0,0),
+		self.addPanel(Label(rect, valueString, color = (200,200,0),
 					font = SMALL_FONT))
-		self.panels[-1].rect.width = self.rect.width
+		self.panels[-1].rect.width = 30
 		rect = Rect(rect)
+		rect.x += 50
+		self.addPanel(Label(rect, hpString, color = (200,0,0),
+					font = SMALL_FONT))
+		self.panels[-1].rect.width = self.rect.width - 88
+		rect = Rect(rect)
+		rect.x -= 50
 		rect.y += 12
-		self.addPanel(TextBlock(rect, string[i+1:], color = (0, 150, 0),
+		self.addPanel(TextBlock(rect, statString, color = (0, 150, 0),
 					font = SMALL_FONT))
 
 		

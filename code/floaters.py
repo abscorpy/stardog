@@ -17,7 +17,7 @@ def setVolume(channel, floater1, floater2):
 
 BULLET_IMAGE = loadImage("res/shot.bmp")
 MISSILE_IMAGE = loadImage("res/missile" + ext)
-DEFAULT_IMAGE = loadImage("res/default" + ext)
+DEFAULT_IMAGE = loadImage("res/default.bmp")
 
 
 		
@@ -76,7 +76,9 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 		surface.blit(self.image, pos)
 
 class Bullet(Floater):
-	def __init__(self, game, gun, damage, speed, range, image = None):
+	def __init__(self, game, gun, damage, speed, range, image = None,
+						color = (200,200,0)):
+		self.color = color
 		dir = gun.dir + gun.ship.dir
 		cost = cos(dir) #cost is short for cos(theta)
 		sint = sin(dir)

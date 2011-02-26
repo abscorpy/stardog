@@ -85,7 +85,7 @@ class Messenger:
 								self.font.get_linesize()))
 		self.image.set_alpha(230)
 	
-	def message(self, text, color = (255,255,0)):
+	def message(self, text, color = (255,255,200)):
 		"""message(text,color) -> add a message to the Messenger."""
 		text = '   ' + text
 		if len(text) > self.maxChars + 3: #line length limit + indent above.
@@ -157,8 +157,27 @@ def seeShipCondition(game):
 		return False
 	return see
 	
-def messageAction(game, text, color = (200,200,100)):
+def notCondition(game, condition):
+	return lambda: not condition()
+	
+def messageAction(game, text, color = (255,255,10)):
 	return lambda: game.messenger.message(text, color)
 	
-
+class Holder:
+	pass
+	
+def musicTrigger(game):
+	holder = Holder()
+	def calmAction():
+		game.curSystem.playMusic(alert = False)
+		game.triggers.append(Trigger(game, [seeShipCondition(game)], 
+									[holder.scary]))
+	
+	def scaryAction():
+		game.curSystem.playMusic(alert = True)
+		game.triggers.append(Trigger(game, [timerCondition(game, 10)], 
+									[holder.calm]))
+	holder.calm = calmAction
+	holder.scary = scaryAction
+	return Trigger(game, [seeShipCondition(game)], [calmAction])
 		

@@ -3,7 +3,7 @@
 import pygame
 from pygame.locals import *
 
-pygame.mixer.pre_init(frequency = 44100, buffer = 1028 * 8)
+pygame.mixer.pre_init(frequency = 44100, buffer = 1024 * 8)
 pygame.init()
 display =  pygame.display.set_mode((600,400))
 running = True

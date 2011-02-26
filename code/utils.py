@@ -83,7 +83,7 @@ try:
 	pygame.mixer.init(44100)
 	shootSound = pygame.mixer.Sound("res/sound/lazer.ogg")
 	hitSound = pygame.mixer.Sound("res/se_sdest.wav")
-	explodeSound = pygame.mixer.Sound("res/sound/ship explosion 1.ogg.wav")
+	explodeSound = pygame.mixer.Sound("res/sound/ship explosion.ogg")
 	missileSound =  pygame.mixer.Sound("res/se_explode02.wav")
 	messageSound =  pygame.mixer.Sound("res/sound/message pip.ogg")
 	soundModule = True
@@ -105,7 +105,7 @@ def loadImage(filename, colorkey=(0,0,0)):
 		image = pygame.image.load(filename).convert()
 		image.set_colorkey(colorkey)
 	except pygame.error:
-		image = pygame.image.load("res/default" + ext).convert()
+		image = pygame.image.load("res/default.bmp").convert()
 		image.set_colorkey((255,255,255))
 	return image
 	

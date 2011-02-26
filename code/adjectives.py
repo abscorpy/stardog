@@ -21,6 +21,7 @@ def addAdjective(part, level = 1):
 				adj.effect(part)
 				part.name = choice.__name__ + ' ' + part.name
 				part.adjectives.append(adj)
+				part.value *= 1 + (adj.level) / 4.
 				return part
 	#TODO: make a better data structure for these.
 	#for now, if this adjective doesn't fit, pick another at random.
@@ -54,7 +55,7 @@ class Solid(Adjective):
 		
 class Fragile(Adjective):
 	"""HP * .4"""
-	level = 0
+	level = -1
 	def effect(self, part):
 		part.maxhp *= .4
 		part.hp *= .4
@@ -237,7 +238,7 @@ class Miserly(Adjective):
 		
 class Leaky(Adjective):
 	"""-.5 energy per second"""
-	level = 0
+	level = -1
 	types = ENERGY_USING
 	def effect(self, part):
 		from effects import leak
@@ -245,14 +246,14 @@ class Leaky(Adjective):
 		
 class Inefficient(Adjective):
 	"""Cost *= 2.5"""
-	level = 0
+	level = -1
 	types = ENERGY_USING
 	def effect(self, part):
 		part.energyCost *= 2.5
 		
 class Obsolete(Adjective):
 	"""Cost *= 2, Mass *= 2"""
-	level = 0
+	level = -1
 	types = ENERGY_USING
 	def effect(self, part):
 		part.energyCost *= 2
@@ -260,14 +261,14 @@ class Obsolete(Adjective):
 		
 class Heavy(Adjective):
 	"""Mass *= 2.5"""
-	level = 0
+	level = -1
 	types = ENERGY_USING
 	def effect(self, part):
 		part.mass *= 2.5
 		
 class Damaged(Adjective):
 	"""Starting HP / 2"""
-	level = 0
+	level = -1
 	def effect(self, part):
 		part.hp = part.hp / 2
 	

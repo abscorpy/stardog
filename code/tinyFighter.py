@@ -14,7 +14,7 @@ class TinyFighter(Ship):
 	stage = 0
 	timeOut = 30
 	level = .5
-	def __init__(self, game, x, y, dx = 0, dy = 0, color = (70, 180,0)):
+	def __init__(self, game, x, y, dx = 0, dy = 0, color = (120, 180, 120)):
 		self.target = game.player
 		self.circling = False
 		Ship.__init__(self, game, x, y, dx, dy, 

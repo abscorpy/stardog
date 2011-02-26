@@ -9,6 +9,7 @@ from planet import *
 from spaceship import *
 from strafebat import *
 from dialogs import *
+from races import *
 import plot
 # import yaml
 # import yamlpygame
@@ -36,6 +37,9 @@ class Game:
 		#messenger, with controls as first message:
 		self.messenger = Messenger(self)
 		
+		self.race1 = Race(self, "onesies", (255,0,0))
+		self.race2 = Race(self, "Duo!!", (200,0,250))
+		self.races  = [self.race1, self.race2]
 		#key polling:
 		self.keys = []
 		for _i in range (322):
@@ -133,6 +137,8 @@ class Game:
 					for trigger in self.triggers:
 						trigger.update()
 					self.curSystem.update()
+					for race in self.races:
+						race.update()
 					self.top_left = self.player.x - self.width / 2, \
 							self.player.y - self.height / 2
 					self.messenger.update()
