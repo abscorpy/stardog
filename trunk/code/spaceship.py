@@ -23,10 +23,6 @@ def makeFighter(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	engine = Engine(game)
 	shield = FighterShield(game)
 	for part in [cockpit, gun, engine, shield]:
-		if rand() > .8:
-			addAdjective(part)
-			if rand() > .6:
-				addAdjective(part)
 		part.color = color
 	ship.addPart(cockpit)
 	cockpit.addPart(engine, 3)
@@ -34,6 +30,7 @@ def makeFighter(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	cockpit.addPart(shield, 2)
 	ship.reset()
 	ship.energy = ship.maxEnergy * .8
+	ship.inventory.append(EmergencyEngine(game))
 	return ship
 	
 def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
@@ -53,10 +50,6 @@ def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	engine = Engine(game)
 	shield = Shield(game)
 	for part in [gyro, generator, battery, cockpit, gun, engine, shield]:
-		if rand() > .8:
-			addAdjective(part)
-			if rand() > .6:
-				addAdjective(part)
 		part.color = color
 	ship.addPart(cockpit)
 	cockpit.addPart(gun, 2)
@@ -67,6 +60,7 @@ def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	gyro.addPart(engine, 1)
 	ship.reset()
 	ship.energy = ship.maxEnergy * .8
+	ship.inventory.append(EmergencyEngine(game))
 	return ship	
 	
 def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
@@ -89,10 +83,6 @@ def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	engine2 = Engine(game)
 	for part in [gyro, generator, battery, cockpit, gun, gun2, engine, engine2,
 				missile]:
-		if rand() > .8:
-			addAdjective(part)
-			if rand() > .6:
-				addAdjective(part)
 		part.color = color
 	ship.addPart(cockpit)
 	cockpit.addPart(missile, 0)
@@ -105,6 +95,7 @@ def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	gyro.addPart(engine2, 1)
 	ship.reset()
 	ship.energy = ship.maxEnergy * .8
+	ship.inventory.append(EmergencyEngine(game))
 	return ship
 	
 def playerShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
@@ -163,10 +154,11 @@ class Ship(Floater):
 	name = 'Ship'
 	skills = []
 	level = 1
+	value = 0
+	
 	partEffects = []
 	effects = []
 	skillEffects = []
-	
 	partLimit = 8
 	penalty = .1
 	bonus = .05
@@ -186,13 +178,14 @@ class Ship(Floater):
 
 	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255)):
+				color = (255, 255, 255), race = None):
 		Floater.__init__(self, game, x, y, dx, dy, dir, 1)
 		self.inventory = []
 		self.ports = [Port((0,0), 0, self)]
 		self.energy = 0
 		self.maxEnergy = 0
 		self.color = color
+		self.race = race
 		self.part = None
 		self.__dict__.update(self.baseBonuses)
 		if script: self.script = script
@@ -241,7 +234,6 @@ class Ship(Floater):
 		#TODO: ? make the center of the ship the center of mass instead of the 
 		#center of the radii. 
 		for part in self.parts:
-			if isinstance(part, Dummy): continue
 			minX = min(part.offset[0] - part.radius, minX)
 			minY = min(part.offset[1] - part.radius, minY)
 			maxX = max(part.offset[0] + part.radius, maxX)
@@ -256,13 +248,14 @@ class Ship(Floater):
 		self.maxEnergy = 1
 		self.maxhp = 0
 		partNum = 1
+		self.value = 0
 		for part in self.parts:
-			if not isinstance(part, Dummy):
-				part.number = partNum
-				partNum += 1
-				part.offset = 	part.offset[0] - xCorrection, \
-								part.offset[1] - yCorrection
-				part.attach()
+			part.number = partNum
+			self.value += part.value
+			partNum += 1
+			part.offset = 	part.offset[0] - xCorrection, \
+							part.offset[1] - yCorrection
+			part.attach()
 		partNum -= 1
 		if partNum > self.partLimit:
 			self.efficiency = (1 - self.penalty) ** (partNum - self.partLimit)
@@ -351,6 +344,10 @@ class Ship(Floater):
 		#check if dead:
 		if not self.parts or self.parts[0].hp <= 0:
 			self.kill()
+		
+		#allow race to update:
+		if self.race:
+			self.race.updateShip(self)
 
 		#run script, get choices.
 		self.script.update(self)
@@ -419,8 +416,7 @@ class Ship(Floater):
 
 	def kill(self):
 		"""play explosion effect than call Floater.kill(self)"""
-		if soundModule:
-			setVolume(explodeSound.play(), self, self.game.player)
+		setVolume(explodeSound.play(), self, self.game.player)
 		for part in self.inventory:
 			part.scatter(self)
 		Floater.kill(self)

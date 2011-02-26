@@ -13,17 +13,31 @@ class SolarSystem:
 	"""A SolarSystem holds ships and other floaters."""
 	boundries = ((-30000, 30000), (-30000, 30000))
 	drawEdgeWarning = False
+	calmMusic = "res/sound/music simple.ogg"
+	alertMusic = "res/sound/music alert.ogg"
+	musicDuration = 98716
+	musicPos = 0
 	def __init__(self, game):
 		self.game = game
 		self.floaters = pygame.sprite.Group()
 		self.ships = pygame.sprite.Group()
+		self.planets = pygame.sprite.Group()
 		self.specialOperations = []
 		self.onScreen = []
 		self.bg = BG(self.game) # the background layer
-		pygame.mixer.music.load("res/sound/space music.ogg")
-		pygame.mixer.music.play(-1)
-		pygame.mixer.music.set_volume(.15)
+		self.playMusic(False)
 		
+	def playMusic(self, alert = False):
+		self.musicPos = ((self.musicPos + pygame.mixer.music.get_pos()) 
+							% self.musicDuration)
+		pygame.mixer.music.stop()
+		if alert:
+			pygame.mixer.music.load(self.alertMusic)
+		else: 
+			pygame.mixer.music.load(self.calmMusic)
+		pygame.mixer.music.play(-1, self.musicPos / 1000.)
+		pygame.mixer.music.set_volume(.15)
+			
 		
 	def update(self):
 		"""Runs the game."""
@@ -90,6 +104,8 @@ class SolarSystem:
 		self.floaters.add(floater)
 		if isinstance(floater, Ship):
 			self.ships.add(floater)
+		if isinstance(floater, Planet):
+			self.planets.add(floater)
 		
 	def empty(self):
 		self.ships.empty()
@@ -109,49 +125,34 @@ class SolarA1(SolarSystem):
 		distanceFromSun = randint(8000, 18000)
 		player.x = distanceFromSun * cos(angle)
 		player.y = distanceFromSun * sin(angle)
+		race1 = game.race1
+		race2 = game.race2
 		self.add(self.sun)
-		self.planets = []
+		self.fighterTimer = 40
 		#add planets:
-		d = 5000
-		for i in range(numPlanets):
-			angle = randint(0,360)
-			distanceFromSun = randint(d, d + 1200)
-			color = randint(40,255),randint(40,255),randint(40,255)
-			radius = randint(100,500)
-			mass = randnorm(radius * 10, 800)
-			self.planets.append(Planet(game, distanceFromSun * cos(angle), \
-				distanceFromSun * sin(angle), radius = radius, mass = mass, \
-				color = color))
-			self.add(self.planets[i])
-			d+= 1200
-				
-		for planet in self.planets:
-			planet.numShips = 0
-			planet.ships = pygame.sprite.Group()
-			planet.respawn = 30
-			self.add(planet)
-		self.fighterTimer = 60
-			
+		planets = [
+			Planet(game, -3889, -935, 60, 600, (220,50,0), race = race1,
+					life = .3, resources = 1.8, name = 'a'),
+			Planet(game, 6385, 2868, 200, 2000, (220,50,0), race = race2,
+					life = 1.5, resources = 1.0, name = 'b'),
+			Planet(game, -4000, 6379, 280, 2800, (220,50,0), race = race1,
+					life = 1.5, resources = 1.0, name = 'c'),
+			Planet(game, 9942, -1072, 300, 3000, (220,50,0), race =  race1,
+					life = 2.0, resources = .8, name = 'd'),
+			Planet(game, 6696, 12294, 200, 2000, (220,50,0), race = race2,
+					life = 1.0, resources = .6, name = 'e'),
+			Planet(game, -16528, -3975, 500, 5000, (220,50,0), race = race1,
+					life = .1, resources = .5, name = 'f'),
+			Planet(game, -14689, 12050, 350, 3500, (220,50,0), race = race2,
+					life = .6, resources = 1.4, name = 'g'),
+			Planet(game, 2585, 24865, 100, 1000, (220,50,0), race = race2,
+					life = .8, resources = .8, name = 'h'),
+			]
+		for p in planets:
+			self.add(p)
 	def update(self):
 		SolarSystem.update(self)
-		#enemy respawning:
-		for planet in self.planets:
-			if not planet.ships.sprites():
-				if planet.respawn > 0:#countdown the timer
-					planet.respawn -= 1. / self.game.fps
-					continue
-				else:
-					#respawn now!
-					planet.respawn = self.respawnTime #reset respawn timer
-					planet.numShips += 1
-					for i in range(planet.numShips):
-						angle = randint(0, 360)
-						x = planet.x + cos(angle) * (planet.radius + 300)
-						y = planet.y + sin(angle) * (planet.radius + 300)
-						ship = Strafebat(self.game, x, y, color = planet.color)
-						planet.ships.add(ship)
-						self.add(ship)
-						ship.planet = planet
+		
 		#tiny fighters
 		if self.fighterTimer <= 0 and len(self.tinyFighters) < self.maxFighters:
 			numSpawn = randint(1,3)

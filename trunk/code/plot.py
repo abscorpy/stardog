@@ -1,5 +1,8 @@
 #plot.py
 from dialogs import *
+
+
+
 def newGameTriggers(game):
 	triggers = [
 		Trigger(game, timerCondition(game, 5), 
@@ -14,5 +17,6 @@ def newGameTriggers(game):
 		Trigger(game, seeShipCondition(game), 
 			messageAction(game, 
 			"You: Look!  Other ships!  I wonder if they'll be my friend!")),
+		musicTrigger(game),
 		]
 	return triggers

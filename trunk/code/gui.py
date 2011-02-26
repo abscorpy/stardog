@@ -5,26 +5,28 @@ from pygame.locals import *
 from utils import *
 import stardog
 from spaceship import Ship
-from planet import Planet
+from planet import Planet, Sun
 
 radarRadius = 100
 radarScale = 200.0 # 1 radar pixel = radarScale space pixels
 radarRadiusBig = 400
-radarScaleBig = 200.0 # 1 radar pixel = radarScale space pixels
+radarScaleBig = 100.0 # 1 radar pixel = radarScale space pixels
 edgeWarning = loadImage('res/edgeofsystem.bmp')
 class HUD:
 
 	def __init__(self, game):
 		self.game = game
 		self.image = pygame.Surface((self.game.width, self.game.height), \
-							flags = (SRCALPHA)).convert_alpha()
+							flags = hardwareFlag)
+		self.image.set_alpha(170)
+		self.image.set_colorkey((0,0,0))
 		self.keys = game.keys
 		self.center = (game.width - radarRadius, radarRadius)
 		self.radarImage = pygame.image.load(
-					"res/radar small.png").convert_alpha()
+					"res/radar small.png").convert()
 		self.radarImage.set_colorkey((0,0,0))
 		self.radarImageBig = pygame.image.load(
-					"res/radar large.png").convert_alpha()
+					"res/radar large.png").convert()
 		self.radarImageBig.set_colorkey((0,0,0))
 
 	def draw(self, surface, thisShip):
@@ -86,17 +88,30 @@ class HUD:
 					int(center[1] + limit(-radius, \
 					(floater.y - thisShip.y) / scale, radius))
 			if isinstance(floater, Ship):
-				pygame.draw.circle(self.image, (250, 250, 0), dotPos, 2)
 				color = floater.color
-				r = 1
-				pygame.draw.rect(self.image, color, (dotPos[0]-1,dotPos[1]-1,2,2))
-			elif isinstance(floater, Planet):
+				pygame.draw.rect(self.image, (0,0,0), 
+						(dotPos[0] - 1, dotPos[1] - 1, 3,3))
+				pygame.draw.line(self.image, color, 
+						(dotPos[0] - 1, dotPos[1]), (dotPos[0] + 1, dotPos[1]))
+				pygame.draw.line(self.image, color, 
+						(dotPos[0], dotPos[1] - 1), (dotPos[0], dotPos[1] + 1))
+				
+			elif isinstance(floater, Sun):
 				r = int(floater.radius / radarScale + 2)
-				color = floater.color
+				pygame.draw.circle(self.image, (255,255,50), dotPos, r)
+				pygame.draw.circle(self.image, (255,200,50), dotPos, 3 * r / 4)
+				pygame.draw.circle(self.image, (255,150,0), dotPos, r / 2)
+				pygame.draw.circle(self.image, (255,100,0), dotPos, r / 4)
+			elif isinstance(floater, Planet):
+				if floater.race:
+					color = floater.race.color
+				else:
+					color = (100,100,100)
+				r = int(floater.radius / radarScale + 2)
 				pygame.draw.circle(self.image, color, dotPos, r)
 			else:
-				color = (150,40,0)
-				pygame.draw.rect(self.image, color, (dotPos[0],dotPos[1],2,2))
+				color = floater.color
+				pygame.draw.circle(self.image, color, (dotPos[0],dotPos[1]), 0)
 
 
 numStars = 300

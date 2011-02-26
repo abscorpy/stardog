@@ -23,13 +23,15 @@ class Port:
 
 class Part(Floater):
 	"""A part of a ship."""
-	baseImage = loadImage("res/default.gif", (255,255,255))
+	baseImage = loadImage("res/default.bmp", (255,255,255))
 	image = None
 	height, width = 9, 3
 	parent = None
 	dir = 270
 	mass = 10
+	hp = 10
 	ship = None
+	value = 1 #the value of a ship is the sum of it's parts.
 	# position in relation to the center of the ship
 	#and the center of this part:
 	offset = 0, 0
@@ -53,8 +55,7 @@ class Part(Floater):
 		self.functions = []
 		self.functionDescriptions = []
 		self.adjectives = []
-		self.maxhp = 10
-		self.hp = 10
+		self.maxhp = self.hp
 		radius = max(self.baseImage.get_height() / 2,
 					self.baseImage.get_width() / 2)
 		Floater.__init__(self, game, 0, 0, dir = 270, radius = radius)
@@ -67,13 +68,13 @@ class Part(Floater):
 		self.ports = [Port((-self.width / 2, 0), 0, self)]
 	
 	def stats(self):
-		stats = (self.hp, self.maxhp, self.mass, len(self.ports))
-		statString = """HP: %i/%i \nMass: %i KG\nPorts: %i"""
+		stats = (self.value, self.hp, self.maxhp, self.mass, len(self.ports))
+		statString = """Val$: %.1f\nHP: %i/%i \nMass: %i KG\nPorts: %i"""
 		return statString % stats
 	
 	def shortStats(self):
-		stats = (self.hp, self.maxhp)
-		statString = """%i/%i"""
+		stats = (self.value, self.hp, self.maxhp)
+		statString = """$%.1f\n%i/%i"""
 		return statString % stats
 		
 	def addPart(self, part, port):
@@ -322,7 +323,7 @@ class FlippablePart(Part):
 			self.name = self.name[:i] + 'Right' + self.name[i+4:]
 					
 class Gun(Part):
-	baseImage = loadImage("res/default" + ext)
+	baseImage = loadImage("res/default.bmp")
 	image = None
 	damage = 2
 	range = 4
@@ -394,8 +395,9 @@ class Cannon(Gun):
 			self.game.curSystem.add( 
 					Bullet(self.game, self, 
 					self.damage * s.efficiency * s.damageBonus * s.cannonBonus, 
-					self.speed * s.cannonSpeedBonus,
-					self.range * s.cannonRangeBonus, image = self.bulletImage))
+					self.speed * s.cannonSpeedBonus, 
+					self.range * s.cannonRangeBonus, image = self.bulletImage,
+					color = self.ship.color))
 
 class MissileLauncher(Gun):
 	baseImage = loadImage("res/parts/missilelauncher" + ext)
@@ -411,6 +413,7 @@ class MissileLauncher(Gun):
 	explosionTime = .6
 	force = 6000
 	name = 'Missile Launcher'
+	value = 1.5
 	
 	def init(self, game):
 		if self.missileImage == None:
@@ -444,7 +447,7 @@ class Laser(Gun):
 	range = 300
 	name = "Laser"
 	reloadTime = .8 #in seconds
-	energyCost = 8
+	energyCost = 24
 	beamWidth = 1
 	imageDuration = .08
 	
@@ -669,7 +672,9 @@ class Shield(Part):
 	name = "Shield"
 	shieldhp = 10
 	shieldRegen = .30
-	energyCost = 1.5
+	energyCost = 3
+	value = 2
+	
 	def __init__(self, game): 
 		Part.__init__(self, game)
 		self.ports = []
@@ -729,6 +734,7 @@ class Interceptor(Cockpit):#move to config
 	hp = 15
 	baseImage = loadImage("res/parts/interceptor.bmp")
 	name = 'Interceptor Cockpit'
+	value = 2
 	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
@@ -746,6 +752,7 @@ class Destroyer(Cockpit):#move to config
 	energyCost = .6
 	baseImage = loadImage("res/parts/destroyer.bmp")
 	name = 'Destroyer Cockpit'
+	value = 2
 	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
@@ -766,6 +773,7 @@ class Fighter(Cockpit):#move to config
 	capacity = 5
 	baseImage = loadImage("res/parts/fighter.bmp")
 	name = 'Fighter Cockpit'
+	value = 2
 	
 	def __init__(self, game):
 		Cockpit.__init__(self, game)
@@ -806,6 +814,8 @@ class Drone(Cockpit, Engine, Cannon):
 	def __init__(self,  game):
 		if Drone.animatedImage == None:
 			Drone.animatedImage = loadImage("res/shipThrusting" + ext)
+		if self.bulletImage == None:
+			self.bulletImage = BULLET_IMAGE.copy()
 		self.baseAnimatedImage = Drone.animatedImage
 		self.animated = True
 		Part.__init__(self, game)
@@ -835,6 +845,7 @@ class Drone(Cockpit, Engine, Cannon):
 	def attach(self):
 		#battery:
 		self.ship.maxEnergy += self.capacity
+		self.bulletImage = colorShift(BULLET_IMAGE, self.ship.color)
 		Part.attach(self)
 		
 	def shoot(self):
@@ -853,7 +864,8 @@ class Drone(Cockpit, Engine, Cannon):
 					Bullet(self.game, self, 
 					self.damage * s.efficiency * s.damageBonus * s.cannonBonus,
 					self.speed * s.cannonSpeedBonus,
-					self.range * s.cannonRangeBonus, image = self.bulletImage))
+					self.range * s.cannonRangeBonus, image = self.bulletImage,
+					color = self.ship.color))
 			if self.burst <= 0:
 				self.reloadBurst = self.reloadBurstTime
 				

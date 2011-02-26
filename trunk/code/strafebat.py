@@ -11,12 +11,12 @@ class Strafebat(Ship):
 	strafeRadius = 100
 	planet = None
 	level = 3
-	def __init__(self, game, x, y, color = (200,100,0)):
+	def __init__(self, game, x, y, color = (200,100,0), race = None):
 		roll = rand()
 		self.target = game.player
 		self.circling = False
 		Ship.__init__(self, game, x, y, script = StrafebatScript(game), 
-						color = color)
+						color = color, race = race)
 		self.baseBonuses['damageBonus'] = .5
 		cockpit =StrafebatCockpit(game)
 		gyro = Gyro(game)
