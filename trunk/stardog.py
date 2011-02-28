@@ -3,6 +3,8 @@
 import pygame
 from pygame.locals import *
 import sys
+from code.utils import *
+
 try:
 	import psyco
 	psyco.full()
@@ -11,7 +13,6 @@ except ImportError:
 	
 FULL = False; RESOLUTION = 1024, 800 #test
 #FULL = True; RESOLUTION = None #play
-hardwareFlag = pygame.HWSURFACE
 
 
 if __name__=="__main__":

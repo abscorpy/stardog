@@ -11,8 +11,6 @@ from strafebat import *
 from dialogs import *
 from races import *
 import plot
-# import yaml
-# import yamlpygame
 
 FPS = 300
 
@@ -76,8 +74,10 @@ class Game:
 			#setup initial state:
 			self.playerScript = InputScript(self)
 			self.player = playerShip(self, 0,0, script = self.playerScript,
-							color = self.playerColor, type = self.playerType)
+							color = self.playerColor, type = self.playerType,
+							system = 'fake')
 			self.curSystem = SolarA1(self, self.player)
+			self.player.system = self.curSystem
 			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
 			

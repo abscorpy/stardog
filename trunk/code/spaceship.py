@@ -10,14 +10,14 @@ from adjectives import addAdjective
 from skills import *
 
 def makeFighter(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255), player = False):
+				color = (255, 255, 255), player = False, system = None):
 	"""starterShip(x,y) -> default starting ship at x,y."""
 	if player:
 		ship = Player(game, x, y, dx = dx, dy = dy, dir = dir, \
-				script = script, color = color)
+				script = script, color = color, system = system)
 	else:
 		ship = Ship(game, x, y, dx = dx, dy = dy, dir = dir, \
-				script = script, color = color)
+				script = script, color = color, system = system)
 	cockpit = Fighter(game)
 	gun = MachineGun(game)
 	engine = Engine(game)
@@ -34,14 +34,14 @@ def makeFighter(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	return ship
 	
 def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255), player = False):
+				color = (255, 255, 255), player = False, system = None):
 	"""starterShip(x,y) -> default starting ship at x,y."""
 	if player:
 		ship = Player(game, x, y, dx = dx, dy = dy, dir = dir, \
-				script = script, color = color)
+				script = script, color = color, system = system)
 	else:
 		ship = Ship(game, x, y, dx = dx, dy = dy, dir = dir, \
-				script = script, color = color)
+				script = script, color = color, system = system)
 	gyro = Gyro(game)
 	generator = Generator(game)
 	battery = Battery(game)
@@ -64,14 +64,14 @@ def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	return ship	
 	
 def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255), player = False):
+				color = (255, 255, 255), player = False, system = None):
 	"""starterShip(x,y) -> default starting ship at x,y."""
 	if player:
 		ship = Player(game, x, y, dx = dx, dy = dy, dir = dir, \
-				script = script, color = color)
+				script = script, color = color, system = system)
 	else:
 		ship = Ship(game, x, y, dx = dx, dy = dy, dir = dir, \
-				script = script, color = color)
+				script = script, color = color, system = system)
 	cockpit = Interceptor(game)
 	gyro = Gyro(game)
 	generator = Generator(game)
@@ -99,17 +99,17 @@ def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	return ship
 	
 def playerShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255), type = 'fighter'):
+				color = (255, 255, 255), type = 'fighter', system = None):
 	"""starterShip(x,y) -> default starting ship at x,y."""
 	if type == 'destroyer':
 		ship = makeDestroyer(game, x, y, dx, dy, dir, 
-				script, color, player=True)
+				script, color, player=True, system = system)
 	elif type == 'interceptor':
 		ship = makeInterceptor(game, x, y, dx, dy, dir, 
-				script, color, player=True)
+				script, color, player=True, system = system)
 	else:
 		ship = makeFighter(game, x, y, dx, dy, dir, 
-				script, color, player=True)
+				script, color, player=True, system = system)
 	#default controls:
 	script.bind(K_DOWN, ship.reverse)
 	script.bind(K_UP, ship.forward)
@@ -178,7 +178,7 @@ class Ship(Floater):
 
 	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255), race = None):
+				color = (255, 255, 255), race = None, system = None):
 		Floater.__init__(self, game, x, y, dx, dy, dir, 1)
 		self.inventory = []
 		self.ports = [Port((0,0), 0, self)]
@@ -190,6 +190,8 @@ class Ship(Floater):
 		self.__dict__.update(self.baseBonuses)
 		if script: self.script = script
 		else: self.script = Script(game)
+		if system: self.system = system
+		else: self.system = game.curSystem
 		self.baseImage = pygame.Surface((200, 200), hardwareFlag | SRCALPHA).convert_alpha()
 		self.baseImage.set_colorkey((0,0,0))
 		self.functions = [self.forward, self.reverse, self.left, self.right, \
@@ -426,8 +428,9 @@ class Player(Ship):
 	developmentPoints = 2
 	landed = False
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
-				color = (255, 255, 255)):
-		Ship.__init__(self, game, x, y, dx, dy, dir, script, color)
+				color = (255, 255, 255), system = None):
+		Ship.__init__(self, game, x, y, dx, dy, dir, script, color,
+						 system = system)
 		self.skills = [Modularity(self), Agility(self), Composure(self)]
 	def xpQuest(self, xp):
 		self.xp += xp
