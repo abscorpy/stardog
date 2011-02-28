@@ -82,10 +82,10 @@ class SolarSystem:
 				self.game.player.y - self.game.height / 2)
 		for floater in self.floaters:
 			r = floater.radius
-			if (r + floater.x > offset[0] \
-				and floater.x - r < offset[0] + self.game.width)\
-			and (r + floater.y > offset[1] \
-				and floater.y - r < offset[1] + self.game.height):
+			if (floater.x + r > offset[0] 
+			and floater.x - r < offset[0] + self.game.width
+			and floater.y + r > offset[1]
+			and floater.y - r < offset[1] + self.game.height):
 					self.onScreen.append(floater)
 					
 		#do any special actions that don't fit elsewhere:
@@ -123,8 +123,8 @@ class SolarA1(SolarSystem):
 		#place player:
 		angle = randint(0,360)
 		distanceFromSun = randint(8000, 18000)
-		player.x = distanceFromSun * cos(angle)
-		player.y = distanceFromSun * sin(angle)
+		player.x = 20000
+		player.y = 4000
 		race1 = game.race1
 		race2 = game.race2
 		self.add(self.sun)
@@ -137,11 +137,11 @@ class SolarA1(SolarSystem):
 					life = 1.5, resources = 1.0, name = 'b'),
 			Planet(game, -4000, 6379, 280, 2800, (220,50,0), race = race1,
 					life = 1.5, resources = 1.0, name = 'c'),
-			Planet(game, 9942, -1072, 300, 3000, (220,50,0), race =  race1,
+			Planet(game, 9942, -3072, 300, 3000, (220,50,0), race =  race1,
 					life = 2.0, resources = .8, name = 'd'),
 			Planet(game, 6696, 12294, 200, 2000, (220,50,0), race = race2,
 					life = 1.0, resources = .6, name = 'e'),
-			Planet(game, -16528, -3975, 500, 5000, (220,50,0), race = race1,
+			Planet(game, -16528, -13975, 500, 5000, (220,50,0), race = race1,
 					life = .1, resources = .5, name = 'f'),
 			Planet(game, -14689, 12050, 350, 3500, (220,50,0), race = race2,
 					life = .6, resources = 1.4, name = 'g'),
@@ -168,7 +168,6 @@ class SolarA1(SolarSystem):
 				self.fighterTimer = 60 / self.fightersPerMinute
 		else:
 			self.fighterTimer -= 1. / self.game.fps
-		
 	
 def collide(a, b):
 	"""test and act on spatial collision of Floaters a and b"""
