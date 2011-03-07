@@ -106,18 +106,27 @@ class AIScript(Script):
 		
 	def avoidPlanet(self, ship):
 		for planet in ship.system.planets:
-			if (abs(planet.x - ship.x) < 1000 
-			and abs(planet.y - ship.y) < 1000
-			and dist2(planet, ship) < 1000000):
+			if (abs(planet.x - ship.x) < planet.radius * 3 
+			and abs(planet.y - ship.y) < planet.radius * 3 
+			and dist2(planet, ship) < (planet.radius* 3) ** 2 ):
 				planetDir = atan2(planet.y - ship.y, planet.x - ship.x)
-				motionDir = atan2(ship.dx, ship.dy)
-				# if traveling towards the planet, move away!
-				if not 90 < (planetDir - motionDir) % 360 < 270:
-					if 90 < (planetDir - ship.dir) % 360 < 270:
+				#if totally still, leave planet:
+				if ship.dx == 0 and ship.dy == 0:
+					if self.turn(ship, planetDir + 180):
 						ship.forward()
-					else:
-						self.turn(ship, planetAngle + 180)
-			return True
+					return True
+						
+				motionDir = atan2(ship.dy, ship.dx)
+				relativeMotionDir = angleNorm(planetDir - motionDir)
+				# if traveling towards the planet, move away!
+				if -45 < relativeMotionDir <= 45:
+					if relativeMotionDir < 0 and -45 > angleNorm(ship.dir - planetDir):
+						ship.turnLeft()
+					elif relativeMotionDir > 0 and 45 < angleNorm(ship.dir - planetDir):
+						ship.turnRight()
+					if -120 < angleNorm(ship.dir - ship.planet.dir) < 120:
+						ship.forward()
+					return True
 		return False
 						
 	def turn(self, ship, angle):

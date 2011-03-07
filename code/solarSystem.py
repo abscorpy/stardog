@@ -51,7 +51,7 @@ class SolarSystem:
 				collide(floaters[i], floaters[j])
 				#see collide() at bottom of this module.
 				
-		#keep ships in system for now:
+		#keep ships inside system boundries for now:
 		edge = self.boundries
 		if self.drawEdgeWarning:
 			self.drawEdgeWarning -= 1. / self.game.fps
@@ -75,7 +75,7 @@ class SolarSystem:
 						self.drawEdgeWarning = self.game.fps
 				else:
 					floater.kill()
-					
+		
 		#list floaters that are on screen now:
 		self.onScreen = []
 		offset = (self.game.player.x - self.game.width / 2, 
@@ -131,21 +131,21 @@ class SolarA1(SolarSystem):
 		self.fighterTimer = 40
 		#add planets:
 		planets = [
-			Planet(game, -3889, -935, 60, 600, (220,50,0), race = race1,
+			Planet(game, -935, -3889, 60, 600, (220,50,0), race = race1,
 					life = .3, resources = 1.8, name = 'a'),
-			Planet(game, 6385, 2868, 200, 2000, (220,50,0), race = race2,
+			Planet(game, 2868, 6385, 200, 2000, (220,50,0), race = race2,
 					life = 1.5, resources = 1.0, name = 'b'),
-			Planet(game, -4000, 6379, 280, 2800, (220,50,0), race = race1,
+			Planet(game, -6379, 4000, 280, 2800, (220,50,0), race = race1,
 					life = 1.5, resources = 1.0, name = 'c'),
-			Planet(game, 9942, -3072, 300, 3000, (220,50,0), race =  race1,
+			Planet(game, 6072, -9942, 300, 3000, (220,50,0), race =  race1,
 					life = 2.0, resources = .8, name = 'd'),
-			Planet(game, 6696, 12294, 200, 2000, (220,50,0), race = race2,
+			Planet(game, 12294, 9696, 200, 2000, (220,50,0), race = race2,
 					life = 1.0, resources = .6, name = 'e'),
 			Planet(game, -16528, -13975, 500, 5000, (220,50,0), race = race1,
 					life = .1, resources = .5, name = 'f'),
-			Planet(game, -14689, 12050, 350, 3500, (220,50,0), race = race2,
+			Planet(game, -3689, 19050, 350, 3500, (220,50,0), race = race2,
 					life = .6, resources = 1.4, name = 'g'),
-			Planet(game, 2585, 24865, 100, 1000, (220,50,0), race = race2,
+			Planet(game, 24865, -2585, 100, 1000, (220,50,0), race = race2,
 					life = .8, resources = .8, name = 'h'),
 			]
 		for p in planets:

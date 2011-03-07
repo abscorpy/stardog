@@ -5,6 +5,7 @@ from pygame.locals import *
 from utils import *
 import stardog
 from spaceship import Ship
+from strafebat import Strafebat
 from planet import Planet, Sun
 
 radarRadius = 100
@@ -13,7 +14,7 @@ radarRadiusBig = 400
 radarScaleBig = 100.0 # 1 radar pixel = radarScale space pixels
 edgeWarning = loadImage('res/edgeofsystem.bmp')
 class HUD:
-
+	debugging = False
 	def __init__(self, game):
 		self.game = game
 		self.image = pygame.Surface((self.game.width, self.game.height), \
@@ -31,6 +32,9 @@ class HUD:
 
 	def draw(self, surface, thisShip):
 		"""updates the HUD and draws it."""
+		if self.game.debug:
+			self.debugging = not self.debugging
+			print "gui debugging %s"%(self.debugging,)
 		self.image.fill((0, 0, 0, 0))
 		#TODO: don't hard-code this key:
 		self.drawRadar(surface, thisShip, self.game.keys[K_TAB])
@@ -95,9 +99,25 @@ class HUD:
 						(dotPos[0] - 1, dotPos[1]), (dotPos[0] + 1, dotPos[1]))
 				pygame.draw.line(self.image, color, 
 						(dotPos[0], dotPos[1] - 1), (dotPos[0], dotPos[1] + 1))
-				
+				if self.debugging:
+					if isinstance(floater, Strafebat):
+						if floater.target:
+							p2 = (int(center[0] + limit(-radius, 
+								(floater.target.x - thisShip.x) / scale, radius)), 
+								int(center[1] + limit(-radius, 
+								(floater.target.y - thisShip.y) / scale, radius)))
+						else:
+							p2 = (int(center[0] + limit(-radius, 
+								(floater.planet.x - thisShip.x) / scale, radius)), 
+								int(center[1] + limit(-radius, 
+								(floater.planet.y - thisShip.y) / scale, radius)))	
+						pygame.draw.line(self.image, color, dotPos, p2)			
+					if isinstance(floater, Ship):
+						p2 = (dotPos[0] + 3 * cos(floater.dir), 
+								dotPos[1] + 3 * sin(floater.dir))
+						pygame.draw.line(self.image, (200,200,0), dotPos, p2)
 			elif isinstance(floater, Sun):
-				r = int(floater.radius / radarScale + 2)
+				r = int(floater.radius / scale)
 				pygame.draw.circle(self.image, (255,255,50), dotPos, r)
 				pygame.draw.circle(self.image, (255,200,50), dotPos, 3 * r / 4)
 				pygame.draw.circle(self.image, (255,150,0), dotPos, r / 2)

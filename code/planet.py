@@ -29,7 +29,7 @@ class Planet(Floater):
 		self.population = population
 		self.life = life #growth rate depends on value.
 		self.resources = resources #build rate depends on resources and pop.
-		self.buildProgress = 4
+		self.buildProgress = 100
 		self.name = name
 		if image == None:
 			self.image = None
