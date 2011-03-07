@@ -13,6 +13,7 @@ def cos(theta):
 	return math.cos(math.radians(theta))
 	
 def atan2(rise, run):
+	"""slope to angle, takes signed rise and run to get correct quadrant."""
 	return math.degrees(math.atan2(rise, run))
 
 def angleNorm(angle):
@@ -28,11 +29,13 @@ def rotate(x, y, angle):
 	return (newx, newy)
 	
 def dist(x1, y1, x2, y2):
+	"""dist(x1, y1, x2, y2) -> the distance from (x1, y1) to (x2, y2)"""
 	return math.sqrt( (x1 - x2) ** 2 + (y1 - y2) ** 2)
 
 def dist2(floater1, floater2):
 	"""returns the squared distance between two floaters (center to center)."""
-	return (floater1.x - floater2.x) ** 2 + (floater1.y - floater2.y) ** 2
+	return ((floater1.x - floater2.x) * (floater1.x - floater2.x) +
+			(floater1.y - floater2.y) * (floater1.y - floater2.y))
 
 def sign(num):
 	"""returns the sign of the number, -1, 0, or 1."""

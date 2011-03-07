@@ -56,30 +56,43 @@ class StrafebatScript(AIScript):
 	interceptSpeed = 100.
 	returnSpeed = 50.
 	acceptableError = 2
-	sensorRange = 10000
+	sensorRange = 3
 	shootingRange = 400
 	def update(self, ship):
 		# if too close to planet
 		if self.avoidPlanet(ship):
-			print 'avoid planet!!!', self
+			ship.color = (255,255,255)
 			return
-				
+		ship.color = ship.race.color
 		# find closest ship:
 		ships = ship.game.curSystem.ships.sprites()
-		target, distance2 = self.closestShip(ship, ships)
+		ship.target, distance2 = self.closestEnemyShip(ship, ships)
 		if distance2 > self.sensorRange ** 2:
-			target = None
+			ship.target = None
 		
-		if not target:# no target
+		if not ship.target:# no target
 			self.intercept(ship, ship.planet, self.returnSpeed)
+			ship.target = ship.planet
 			return
 		
 		if distance2 < self.shootingRange ** 2 \
-		and ship.guns: # within range.
-			self.interceptShot(ship, target)
+		and ship.guns: # within range. Shoot at it.
+			self.interceptShot(ship, ship.target)
 			return
 			
-		self.intercept(ship, target, self.interceptSpeed)
+		#see it, but not in range. move towards it.
+		self.intercept(ship, ship.target, self.interceptSpeed)
 			
+	def closestEnemyShip(self, ship, ships):
+		"""finds the closest ship not-friendly to this one."""
+		target = None
+		distance2 = self.sensorRange ** 2
+		for ship2 in ships:
+			tmp = dist2(ship2, ship)
+			if (tmp < distance2 and ship2 != ship and ship2.race != ship.race):
+				distance2 = tmp
+				target = ship2
+		return target, distance2
+		
 class StrafebatCockpit(Cockpit):
 	pass
