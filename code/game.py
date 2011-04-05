@@ -24,6 +24,7 @@ class Game:
 		self.debug = False
 		self.pause = False
 		self.fps = FPS
+		self.dt = .001
 		self.screen = screen
 		self.top_left = 0, 0
 		self.width = screen.get_width()
@@ -156,7 +157,7 @@ class Game:
 					
 				#frame maintainance:
 				pygame.display.flip()
-				self.clock.tick(FPS)#aim for FPS but adjust vars for self.fps.
+				self.dt = self.clock.tick(FPS)#aim for FPS but adjust vars for self.fps.
 				self.fps = max(1, int(self.clock.get_fps()))
 				self.timer += 1. / self.fps
 			#end round loop (until gameover)

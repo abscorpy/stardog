@@ -37,8 +37,9 @@ CHANGES:
 		New music, also by Ben Shea.
 		HUD more efficient- should make minor difference for all gameplay.
 		There are now two alien races fighting for the solar system.
-		Planets grow in population while a race owns them, which is visible
+		Planets grow in population while a race owns them.
 		More populous planets produce ships faster. 
+		Adds some planets graphics.
 
 	since 0.2011.01.18:
 		Adds stores to planets.  When landed on a planet, you can trade with it.  Each planet starts with a few random parts, and keeps any parts that fall into it from space.  Currently, there is no money, so "trading" is more like giving and taking.

@@ -144,9 +144,9 @@ class Part(Floater):
 		cost = cos(self.ship.dir) #cost is short for cos(theta)
 		sint = sin(self.ship.dir)
 		self.x = self.ship.x + DETACH_SPACE * self.offset[0] * cost \
-				- DETACH_SPACE * self.offset[1] * sint
+							- DETACH_SPACE * self.offset[1] * sint
 		self.y = self.ship.y + DETACH_SPACE * self.offset[0] * sint \
-				+ DETACH_SPACE * self.offset[1] * cost
+							+ DETACH_SPACE * self.offset[1] * cost
 		self.dx = self.ship.dx \
 				+ rand() * sign(self.offset[0]) * cost * DETACH_SPEED\
 				- rand() * sign(self.offset[1]) * sint * DETACH_SPEED
@@ -245,23 +245,23 @@ class Part(Floater):
 		animated elements of this part to surface. 
 		This should circumvent the ship surface and draw directly onto space."""
 		if self.animated and self.animatedImage and self.ship:
-			image = pygame.transform.rotate(self.animatedImage, \
-								- self.dir - self.ship.dir).convert_alpha()
+			image = (pygame.transform.rotate(self.animatedImage, 
+								- self.dir - self.ship.dir).convert_alpha())
 			image.set_colorkey((0,0,0))
-			pos = self.x - image.get_width() / 2 - offset[0], \
-				  self.y - image.get_height() / 2 - offset[1]
+			pos = (self.x - image.get_width() / 2 - offset[0], 
+				  self.y - image.get_height() / 2 - offset[1])
 			surface.blit(image, pos)
 		#hp rings:
-		pos = 	int(self.x - offset[0] - self.radius), \
-				int(self.y - offset[1] - self.radius)
+		pos = 	(int(self.x - offset[0] - self.radius), 
+				int(self.y - offset[1] - self.radius))
 		if self.hp / self.maxhp < .9:
 			#color fades green to red as hp decreases.
-			color = limit(0, int((1 - self.hp * 1. / self.maxhp ) * 255),255), \
-					limit(0, int(1. * self.hp / self.maxhp * 255), 255), 0, 100 
+			color = (limit(0, int((1 - self.hp * 1. / self.maxhp ) * 255),255), 
+					limit(0, int(1. * self.hp / self.maxhp * 255), 255), 0, 100)
 			rect = (0,0, self.radius * 2, self.radius * 2)
 			#arc from - hp/maxhp*360 to -90:
-			pygame.draw.arc(self.buffer, color, rect, \
-					math.pi/2 - math.pi * 2 * (1 - 1. * self.hp / self.maxhp),\
+			pygame.draw.arc(self.buffer, color, rect, 
+					math.pi/2 - math.pi * 2 * (1 - 1. * self.hp / self.maxhp),
 					math.pi/2, 2)
 			surface.blit(self.buffer, pos)
 			self.buffer.fill((0,0,0,0))
@@ -272,9 +272,9 @@ class Part(Floater):
 		if isinstance(other, Bullet) and other.ship == self.game.player:
 			hitByPlayer = True
 			self.game.player.xpDamage(self, damage)
-		if self.parent and self.parent != self.ship \
-		and not isinstance(self.ship, Player) \
-		and rand() <  1. * damage / (self.hp + 1):
+		if (self.parent and self.parent != self.ship 
+		and not isinstance(self.ship, Player) 
+		and rand() <  1. * damage / (self.hp + 1)):
 			self.detach()
 		self.hp -= damage
 		if self.hp <= 0:
@@ -286,8 +286,8 @@ class Part(Floater):
 				self.detach()
 			self.kill()
 			#if dead, make an explosion here.
-			self.game.curSystem.add(Explosion(self.game, self.x, self.y, \
-						self.dx, self.dy, radius = self.radius * 4,\
+			self.game.curSystem.add(Explosion(self.game, self.x, self.y, 
+						self.dx, self.dy, radius = self.radius * 4,
 						time = self.maxhp / 5))
 
 class Dummy(Part):
@@ -342,7 +342,7 @@ class Gun(Part):
 		self.ports = []
 	
 	def stats(self):
-		stats = (self.damage, 60. / self.reloadTime, self.energyCost, \
+		stats = (self.damage, 60. / self.reloadTime, self.energyCost, 
 				self.range, self.shootDir)
 		statString = ("\nDamage: %s \nRate: %s/minute \nCost: %s "
 		"energy/shot \nRange: %s \nFiring angle:"
@@ -464,17 +464,17 @@ class Laser(Gun):
 			self.ship.energy -= self.energyCost
 			if soundModule:
 				setVolume(shootSound.play(), self, self.game.player)
-			self.game.curSystem.add( \
-					LaserBeam(self.game, self, \
-					self.damage * s.efficiency * s.damageBonus * s.laserBonus, \
+			self.game.curSystem.add( 
+					LaserBeam(self.game, self, 
+					self.damage * s.efficiency * s.damageBonus * s.laserBonus, 
 					self.range * s.laserRangeBonus))
 	
 class FlakCannon(Cannon):
 	spread = 50
 	damage = 1
-	energyCost = 3
-	reloadTime = .08
-	burstSize = 5
+	energyCost = 1
+	reloadTime = .05
+	burstSize = 8
 	reloadBurstTime = 3
 	range = 6
 	speed = 150
@@ -561,13 +561,15 @@ class Engine(Part):
 		if self.acted: return
 		self.acted = True
 		if self.ship and self.ship.energy >= self.energyCost:
-			accel = self.ship.efficiency * self.ship.thrustBonus \
-					* self.force / self.ship.mass / self.game.fps
+			accel = (self.ship.efficiency * self.ship.thrustBonus 
+					* self.force / self.ship.mass / self.game.fps)
 			dir = self.dir + self.ship.dir
 			self.ship.dx += cos(dir) * accel
 			self.ship.dy += sin(dir) * accel
 			self.ship.energy -= self.energyCost / self.game.fps
 			self.thrusting = True
+			self.ship.thrusting = True
+			
 
 class Gyro(Part):
 	baseImage = loadImage("res/parts/gyro" + ext)
@@ -577,11 +579,11 @@ class Gyro(Part):
 	energyCost = .8
 	def __init__(self, game):
 		Part.__init__(self, game)
-		self.ports = [Port((0, self.height / 2 ), 270, self), \
-				Port((-self.width / 2 , 0), 0, self), \
+		self.ports = [Port((0, self.height / 2 ), 270, self), 
+				Port((-self.width / 2 , 0), 0, self), 
 				Port((0, -self.height / 2 ), 90, self)]
 		self.functions.extend([self.turnLeft,self.turnRight])
-		self.functionDescriptions.extend(\
+		self.functionDescriptions.extend(
 				[self.turnLeft.__doc__,self.turnRight.__doc__])
 				
 	def stats(self):
@@ -600,11 +602,11 @@ class Gyro(Part):
 		if self.acted or angle and abs(angle) < 1: return
 		self.acted = True
 		if angle:
-			angle = max(- self.torque / self.ship.moment / self.ship.game.fps \
+			angle = max(- self.torque / self.ship.moment / self.ship.game.fps 
 					* self.ship.efficiency * self.ship.torqueBonus, -abs(angle) )
 		else:
-			angle = - self.torque / self.ship.moment / self.ship.game.fps \
-					* self.ship.efficiency * self.ship.torqueBonus
+			angle = (- self.torque / self.ship.moment / self.ship.game.fps 
+					* self.ship.efficiency * self.ship.torqueBonus)
 		if self.ship and self.ship.energy >= self.energyCost:
 			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.energyCost / self.game.fps
@@ -614,11 +616,11 @@ class Gyro(Part):
 		if self.acted: return
 		self.acted = True
 		if angle:
-			angle = min(self.torque / self.ship.moment / self.ship.game.fps \
+			angle = min(self.torque / self.ship.moment / self.ship.game.fps 
 					* self.ship.efficiency * self.ship.torqueBonus, abs(angle) )
 		else:
-			angle = self.torque / self.ship.moment / self.ship.game.fps \
-					* self.ship.efficiency * self.ship.torqueBonus
+			angle = (self.torque / self.ship.moment / self.ship.game.fps 
+					* self.ship.efficiency * self.ship.torqueBonus)
 		if self.ship and self.ship.energy >= self.energyCost:
 			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.energyCost / self.game.fps
@@ -641,8 +643,8 @@ class Generator(Part):
 		
 	def update(self):
 		if self.ship and self.ship.energy < self.ship.maxEnergy:
-			self.ship.energy = min(self.ship.maxEnergy, \
-					self.ship.energy + self.rate * self.ship.efficiency \
+			self.ship.energy = min(self.ship.maxEnergy, 
+					self.ship.energy + self.rate * self.ship.efficiency 
 					* self.ship.generatorBonus / self.game.fps)
 		Part.update(self)
 	
@@ -695,13 +697,13 @@ class Shield(Part):
 		Part.attach(self)
 		
 	def update(self):
-		if self.ship and self.ship.hp <= self.ship.maxhp\
-		and self.ship.energy > self.energyCost:
+		if (self.ship and self.ship.hp <= self.ship.maxhp
+		and self.ship.energy > self.energyCost):
 			if self.ship.hp == 0:
 				self.ship.hp = .0001
 			else:
-				self.ship.hp = min(self.ship.maxhp, \
-						self.ship.hp + self.shieldRegen \
+				self.ship.hp = min(self.ship.maxhp, 
+						self.ship.hp + self.shieldRegen 
 						* self.ship.shieldRegenBonus/ self.game.fps)
 				self.ship.energy -= self.energyCost / self.game.fps
 		Part.update(self)
@@ -717,9 +719,9 @@ class Cockpit(Battery, Generator, Gyro):
 	
 	def __init__(self, game):
 		Part.__init__(self, game)
-		self.ports = [Port((self.width / 2 - 2, 0), 180, self), \
-					Port((0, self.height / 2 - 2), 270, self), \
-					Port((-self.width / 2 + 2, 0), 0, self), \
+		self.ports = [Port((self.width / 2 - 2, 0), 180, self), 
+					Port((0, self.height / 2 - 2), 270, self), 
+					Port((-self.width / 2 + 2, 0), 0, self), 
 					Port((0, -self.height / 2 + 2), 90, self)]
 
 	def stats(self):
@@ -822,8 +824,8 @@ class Drone(Cockpit, Engine, Cannon):
 		self.reload = 0
 		self.reloadBurst = 0
 		self.burst = self.burstSize
-		self.functions = [self.shoot, self.turnLeft, self.turnRight, \
-		self.thrust]
+		self.functions = [self.shoot, self.turnLeft, self.turnRight, 
+					self.thrust]
 		self.functionDescriptions = ['shoot', 'turn left', 'turn right', 'thrust']
 	
 	def update(self):
@@ -838,7 +840,7 @@ class Drone(Cockpit, Engine, Cannon):
 			self.reloadBurst = self.reloadBurstTime
 		#generator:
 		if self.ship and self.ship.energy < self.ship.maxEnergy:
-			self.ship.energy = min(self.ship.maxEnergy, \
+			self.ship.energy = min(self.ship.maxEnergy, 
 								self.ship.energy + self.rate / self.game.fps)
 		Part.update(self)
 		
@@ -852,9 +854,9 @@ class Drone(Cockpit, Engine, Cannon):
 		"""fires a bullet."""
 		if self.shot: return
 		self.shot = True
-		if self.reload <= 0 \
-		and self.ship.energy > self.shotCost * self.energyCost\
-		and self.burst > 0:
+		if (self.reload <= 0 
+		and self.ship.energy > self.shotCost * self.energyCost
+		and self.burst > 0):
 			self.reload = self.reloadTime
 			self.burst -= 1
 			s = self.ship
@@ -885,11 +887,11 @@ class Drone(Cockpit, Engine, Cannon):
 		if self.turned: return
 		self.turned = True
 		if angle:
-			angle = max(- self.torque / self.ship.moment / self.ship.game.fps \
+			angle = max(- self.torque / self.ship.moment / self.ship.game.fps 
 					* self.ship.efficiency * self.ship.torqueBonus, -abs(angle) )
 		else:
-			angle = - self.torque / self.ship.moment / self.ship.game.fps \
-					* self.ship.efficiency * self.ship.torqueBonus
+			angle = (- self.torque / self.ship.moment / self.ship.game.fps 
+					* self.ship.efficiency * self.ship.torqueBonus)
 		if self.ship and self.ship.energy >= self.turnCost * self.energyCost:
 			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.turnCost / self.game.fps * self.energyCost
@@ -899,11 +901,11 @@ class Drone(Cockpit, Engine, Cannon):
 		if self.turned: return
 		self.turned = True
 		if angle:
-			angle = min(self.torque / self.ship.moment / self.ship.game.fps \
+			angle = min(self.torque / self.ship.moment / self.ship.game.fps 
 					* self.ship.efficiency * self.ship.torqueBonus, abs(angle) )
 		else:
-			angle = self.torque / self.ship.moment / self.ship.game.fps \
-					* self.ship.efficiency * self.ship.torqueBonus
+			angle = (self.torque / self.ship.moment / self.ship.game.fps 
+					* self.ship.efficiency * self.ship.torqueBonus)
 		if self.ship and self.ship.energy >= self.turnCost * self.energyCost:
 			self.ship.dir = angleNorm(self.ship.dir + angle)
 			self.ship.energy -= self.turnCost / self.game.fps * self.energyCost

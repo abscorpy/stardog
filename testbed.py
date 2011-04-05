@@ -25,9 +25,9 @@ def avoidPlanet( ship):
 				print 'avoid!', planetDir + 180
 				return True
 	return False
-	
-	
-	
+
+
+
 class Holder:
 	x = 0
 	y = 0

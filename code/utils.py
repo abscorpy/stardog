@@ -16,6 +16,8 @@ def atan2(rise, run):
 	"""slope to angle, takes signed rise and run to get correct quadrant."""
 	return math.degrees(math.atan2(rise, run))
 
+pi = math.pi
+	
 def angleNorm(angle):
 	"""returns an equivilant angle between -180 and 180."""
 	return (angle + 180) % 360 - 180
@@ -84,11 +86,16 @@ except:
 #setup sounds	
 try:
 	pygame.mixer.init(44100)
+	pygame.mixer.set_num_channels(63)
 	shootSound = pygame.mixer.Sound("res/sound/lazer.ogg")
 	hitSound = pygame.mixer.Sound("res/se_sdest.wav")
 	explodeSound = pygame.mixer.Sound("res/sound/ship explosion.ogg")
 	missileSound =  pygame.mixer.Sound("res/se_explode02.wav")
 	messageSound =  pygame.mixer.Sound("res/sound/message pip.ogg")
+	thrustSound = pygame.mixer.Sound("res/sound/thrust.ogg")
+	pygame.mixer.set_reserved(1)
+	#channel 0: thrust sound
+	pygame.mixer.Channel(0).set_volume(.3)
 	soundModule = True
 except (ImportError, NotImplementedError):
 	soundModule = False
@@ -138,7 +145,7 @@ def colorShift(surface, color, colorkey = (0,0,0)):
 
 def collisionTest(a, b):
 	"""test spatial collision of Floaters a and b"""
-	r = a.radius + b. radius
+	r = a.radius + b.radius
 	return a != b \
 	and a.x < b.x + r \
 	and b.x < a.x + r \
