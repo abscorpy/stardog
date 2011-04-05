@@ -19,7 +19,7 @@ class HUD:
 		self.game = game
 		self.image = pygame.Surface((self.game.width, self.game.height), \
 							flags = hardwareFlag)
-		self.image.set_alpha(170)
+		self.image.set_alpha(200)
 		self.image.set_colorkey((0,0,0))
 		self.keys = game.keys
 		self.center = (game.width - radarRadius, radarRadius)

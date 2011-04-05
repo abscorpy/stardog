@@ -16,10 +16,11 @@ class Planet(Floater):
 	g = 5000 # the gravitational constant.
 	shipInProgress = None
 	shipValue = 0
+	hp = 30000
 	def __init__(self, game, x, y, radius = 100, mass = 1000, 
 					color = (100,200,50), image = None, name = 'planet',
 					race = None, population = 1, life = 1, resources = 1):
-		Floater.__init__(self, game, x, y, radius = radius, image = image)
+		Floater.__init__(self, game, x, y, radius = radius)
 		self.mass = mass #determines gravity.
 		self.color = color
 		self.damage = {}
@@ -33,6 +34,9 @@ class Planet(Floater):
 		self.name = name
 		if image == None:
 			self.image = None
+		else:
+			self.image = pygame.transform.rotate(pygame.transform.scale(
+							image, (radius * 2, radius * 2)), -atan2(y,x))
 		self.inventory = []
 		self.inventory.append(partCatalog.TakeOffEngine(game))
 		for x in range(randint(1,4)):
@@ -71,3 +75,25 @@ class Planet(Floater):
 class Sun(Planet):
 	PLANET_DAMAGE = 300
 	LANDING_SPEED = -999 #no landing on the sun.
+	t = 0
+	
+	def draw(self, surface, offset = (0,0)):
+		if self.image:
+			pos = (int(self.x - self.image.get_width()  / 2 - offset[0]), 
+				  int(self.y - self.image.get_height() / 2 - offset[1]))
+			surface.blit(self.image, pos)
+		
+		else:
+			pos = int(self.x - offset[0]), \
+				  int(self.y - offset[1])
+			for x in range(21):
+				color = (255 , 55 + (200 - (20 - x) * abs(10 - self.t % 20)), 100 / 20 * x)
+				pygame.draw.circle(surface, color, pos, int(self.radius - 20 * x))
+		self.t -= 24. / self.game.fps #speed of throbbing color.
+		
+		
+		
+		
+		
+			
+			

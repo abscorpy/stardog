@@ -138,6 +138,7 @@ class Ship(Floater):
 	forwardEngines = []
 	maxhp = 0
 	hp = 0
+	thrusting = False
 	forwardThrust = 0
 	reverseThrust = 0
 	leftThrust = 0
@@ -351,6 +352,7 @@ class Ship(Floater):
 		if self.race:
 			self.race.updateShip(self)
 
+		self.thrusting = False
 		#run script, get choices.
 		self.script.update(self)
 
@@ -359,6 +361,7 @@ class Ship(Floater):
 		#parts updating:
 		if self.ports[0].part:
 			self.ports[0].part.update()
+		
 		
 		#active effects:
 		for effect in self.effects:
@@ -427,6 +430,7 @@ class Player(Ship):
 	xp = 0
 	developmentPoints = 2
 	landed = False
+	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), system = None):
 		Ship.__init__(self, game, x, y, dx, dy, dir, script, color,
@@ -451,7 +455,19 @@ class Player(Ship):
 		if self.landed \
 		and dist2(self, self.landed) > (self.landed.radius * 2) ** 2:
 			self.landed = False
+			
+		
 		Ship.update(self)
+		self.thrustSoundFX()
+		
+		
+	def thrustSoundFX(self):
+		channel = pygame.mixer.Channel(0)
+		if self.thrusting and not channel.get_busy():
+				channel.play(thrustSound, -1)
+		elif not self.thrusting and channel.get_busy():
+			channel.stop()
+		
 	
 	def next(self):
 		return 1.1 ** self.level * 10
