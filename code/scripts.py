@@ -108,7 +108,7 @@ class AIScript(Script):
 		for planet in ship.system.planets:
 			if (abs(planet.x - ship.x) < planet.radius * 3 
 			and abs(planet.y - ship.y) < planet.radius * 3 
-			and dist2(planet, ship) < (planet.radius* 3) ** 2 ):
+			and dist2(planet, ship) < (planet.radius * 3) ** 2 ):
 				planetDir = atan2(planet.y - ship.y, planet.x - ship.x)
 				#if totally still, leave planet:
 				if ship.dx == 0 and ship.dy == 0:
@@ -124,7 +124,7 @@ class AIScript(Script):
 						ship.turnLeft()
 					elif relativeMotionDir > 0 and 45 < angleNorm(ship.dir - planetDir):
 						ship.turnRight()
-					if -120 < angleNorm(ship.dir - ship.planet.dir) < 120:
+					if not -120 < angleNorm(ship.planet.dir - ship.dir) < 120:
 						ship.forward()
 					return True
 		return False

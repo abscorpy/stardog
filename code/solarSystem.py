@@ -17,6 +17,7 @@ class SolarSystem:
 	alertMusic = "res/sound/music alert.ogg"
 	musicDuration = 98716
 	musicPos = 0
+	sun = None
 	def __init__(self, game):
 		self.game = game
 		self.floaters = pygame.sprite.Group()
@@ -26,6 +27,12 @@ class SolarSystem:
 		self.onScreen = []
 		self.bg = BG(self.game) # the background layer
 		self.playMusic(False)
+		#collisionGrid:
+		self.collisionGrid = []
+		for i in range(100):
+			self.collisionGrid.append([])
+			for j in range(100):
+				self.collisionGrid[-1].append([])
 		
 	def playMusic(self, alert = False):
 		self.musicPos = ((self.musicPos + pygame.mixer.music.get_pos()) 
@@ -42,37 +49,68 @@ class SolarSystem:
 	def update(self):
 		"""Runs the game."""
 		self.floaters.update()
+		# for floater in self.onScreen:
+			# floater.update()
+			
+		# grid = self.collisionGrid
+		# # empty the collisionGrid
+		# for col in grid:
+			# for cell in range(len(col)):
+				# col[cell] = []
+		# #refill the grid:
+		# size = ((self.boundries[0][1] - self.boundries[0][0]) 
+						# / len(grid))
+		# for floater in self.floaters:
+			# x = int(floater.x / size)
+			# y = int(floater.y / size)
+			# grid[x][y].append(floater)
+			# floater.collisionCell = x,y
+		# # collision:
+		# for col in range(len(grid) - 1):
+			# for row in range(len(grid[col]) - 1):
+				# floaters = grid[col][row]
+				# #the cells below, right, and below-right:
+				# others = []
+				# others.extend(grid[col+1][row])
+				# others.extend(grid[col  ][row+1])
+				# others.extend(grid[col+1][row+1])
+				# for i in range(len(floaters)):
+					# #test against others in this cell:
+					# for j in range(i + 1, len(floaters)):
+						# collide(floaters[i], floaters[j])
+					# #test against others in later adjacent cells.
+					# for j in others:
+						# collide(floaters[i], j)
+		# # (don't need to check prior adjacent because the other floater 
+		# # already did.	
+		# # the sun is too big for a grid.  Check it against all:
+		# if self.sun:
+			# for floater in self.floaters:
+				# collide(self.sun, floater)
+		# #see collide() at bottom of this module.
 		
-		#collision:
-		# TODO: sort lists to minimize collision tests.
-		floaters = self.floaters.sprites()
-		for i in range(len(floaters)):
-			for j in range(i + 1, len(floaters)):
-				collide(floaters[i], floaters[j])
-				#see collide() at bottom of this module.
-				
 		#keep ships inside system boundries for now:
 		edge = self.boundries
 		if self.drawEdgeWarning:
-			self.drawEdgeWarning -= 1. / self.game.fps
+			self.drawEdgeWarning -= 1. * self.game.dt
 			if self.drawEdgeWarning <=0:
 				self.drawEdgeWarning = False
-				
+		
 		for floater in self.floaters:
-			if floater.x < edge[0][0] and floater.dx < 0 \
-			or floater.x > edge[0][1] and floater.dx > 0:
+			if (floater.x < edge[0][0] and floater.dx < 0 
+			or floater.x > edge[0][1] and floater.dx > 0):
 				if isinstance(floater, Ship):
 					floater.dx = 0
 					if floater == self.game.player:
-						self.drawEdgeWarning = 1
+						self.drawEdgeWarning = 1.
 				else:
 					floater.kill()
-			if floater.y < edge[1][0] and floater.dy < 0 \
-			or floater.y > edge[1][1] and floater.dy > 0:
+			if (floater.y < edge[1][0] and floater.dy < 0 
+			or floater.y > edge[1][1] and floater.dy > 0):
 				if isinstance(floater, Ship):
 					floater.dy = 0
 					if floater == self.game.player:
-						self.drawEdgeWarning = self.game.fps
+						self.drawEdgeWarning = 1.
 				else:
 					floater.kill()
 		
@@ -124,12 +162,12 @@ class SolarA1(SolarSystem):
 		player.x = 20000
 		player.y = 4000
 		#add asteroids:
-		for i in range(200):
-			x = randint(-30000, 30000)
-			y = randint(-30000, 30000)
+		for i in range(500):
+			x = randint(-30000, 30000) 
+			y = randint(-30000, 30000) 
 			radius = randint(10, 60)
-			dx = randint( -10, 10)
-			dy = randint( -10, 10)
+			dx = randint( -20, 20)
+			dy = randint( -20, 20)
 			self.add(Asteroid(game, x, y, dx, dy, radius))
 		race1 = game.race1
 		race2 = game.race2
@@ -137,9 +175,9 @@ class SolarA1(SolarSystem):
 		self.fighterTimer = 40
 		#add planets:
 		planets = [
-			Planet(game, -935, -3889, 240, 600, (220,50,0), race = race1,
+			Planet(game, -1935, -5889, 240, 600, (220,50,0), race = race1,
 					life = .3, resources = 1.8, name = 'a', image = planetImage),
-			Planet(game, 2868, 6385, 800, 2000, (220,50,0), race = race2,
+			Planet(game, 3868, 7385, 800, 2000, (220,50,0), race = race2,
 					life = 1.5, resources = 1.0, name = 'b'),
 			Planet(game, -6379, 4000, 1120, 2800, (220,50,0), race = race1,
 					life = 1.5, resources = 1.0, name = 'c'),
@@ -174,7 +212,13 @@ class SolarA1(SolarSystem):
 				self.tinyFighters.append(fighter)					
 				self.fighterTimer = 60 / self.fightersPerMinute
 		else:
-			self.fighterTimer -= 1. / self.game.fps
+			self.fighterTimer -= 1. * self.game.dt * 0
+
+class SolarF7(SolarSystem):
+	def __init__(self, game):
+		SolarSystem.__init__(self, game)
+		
+		
 	
 def collide(a, b):
 	"""test and act on spatial collision of Floaters a and b"""
@@ -338,15 +382,15 @@ def explosion_push(explosion, floater):
 			not0(dist2(explosion, floater)) * explosion.radius ** 2)
 	dir = atan2(floater.y - explosion.y, floater.x - explosion.x)
 	accel = force / not0(floater.mass)
-	floater.dx += accel * cos(dir) / explosion.game.fps
-	floater.dy += accel * sin(dir) / explosion.game.fps
+	floater.dx += accel * cos(dir) * explosion.game.dt
+	floater.dy += accel * sin(dir) * explosion.game.dt
 	
 def asteroid_asteroid_collision(a, b):
 	"""merge the two into one new asteroid."""
 	x,y = (a.x + b.x) / 2, (a.y + b.y) / 2
 	dx = (a.dx * a.mass + b.dx * b.mass) / (a.mass + b.mass)
 	dy = (a.dy * a.mass + b.dy * b.mass) / (a.mass + b.mass)
-	radius = sqrt(a.radius ** 2 * pi + b.radius ** 2 * pi) / pi - 1
+	radius = sqrt((a.radius ** 2 * pi + b.radius ** 2 * pi) / pi) - 1
 	if a.radius > b.radius: image = a.image
 	else: image = b.image
 	a.kill()

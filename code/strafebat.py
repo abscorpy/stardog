@@ -62,6 +62,7 @@ class StrafebatScript(AIScript):
 		# if too close to planet
 		if self.avoidPlanet(ship):
 			ship.color = (255,255,255)
+			if ship.thrusting: ship.color = (255,255,0)
 			return
 		ship.color = ship.race.color
 		# find closest ship:

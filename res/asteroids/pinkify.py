@@ -17,3 +17,10 @@ def pinkify(filename, threshold = 10):
 				pa[i][j] = s.map_rgb(newColor)
 	del pa
 	pygame.image.save(s, filename)
+	
+if __name__ == '__main__':
+	import sys
+	if len(sys.argv) !=2:
+		print 'use: pythone pinkify filename threshold'
+		return
+	pinkify(sys.argv[0], sys.argv[1])

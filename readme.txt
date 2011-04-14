@@ -40,6 +40,12 @@ CHANGES:
 		Planets grow in population while a race owns them.
 		More populous planets produce ships faster. 
 		Adds some planets graphics.
+		Adds thrusting sfx.
+		Sun looks better.
+		There are now asteroids.
+		Collision checking now on a grid system.
+		
+		
 
 	since 0.2011.01.18:
 		Adds stores to planets.  When landed on a planet, you can trade with it.  Each planet starts with a few random parts, and keeps any parts that fall into it from space.  Currently, there is no money, so "trading" is more like giving and taking.

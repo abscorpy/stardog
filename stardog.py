@@ -41,6 +41,7 @@ if __name__=="__main__":
 	else:
 		screen = pygame.display.set_mode(RESOLUTION, \
 							hardwareFlag | pygame.SRCALPHA)
+	
 	#cursor:
 	thickarrow_strings = (            #sized 24x16
 	  "X               ",

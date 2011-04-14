@@ -17,6 +17,7 @@ class Planet(Floater):
 	shipInProgress = None
 	shipValue = 0
 	hp = 30000
+	gravitates = False
 	def __init__(self, game, x, y, radius = 100, mass = 1000, 
 					color = (100,200,50), image = None, name = 'planet',
 					race = None, population = 1, life = 1, resources = 1):
@@ -48,15 +49,15 @@ class Planet(Floater):
 			self.race.updatePlanet(self)
 		
 		for other in self.game.curSystem.floaters.sprites():
-			if  (not isinstance(other, Planet) 
+			if  (other.gravitates 
 			and abs(self.x - other.x) < self.maxRadius
 			and abs(self.y - other.y) < self.maxRadius
 			and not collisionTest(self, other) ):
 				#accelerate that floater towards this planet:
 				accel = self.g * (self.mass) / dist2(self, other)
 				angle = atan2(self.y - other.y, self.x - other.x)
-				other.dx += cos(angle) * accel / self.game.fps
-				other.dy += sin(angle) * accel / self.game.fps
+				other.dx += cos(angle) * accel * self.game.dt
+				other.dy += sin(angle) * accel * self.game.dt
 			
 	def draw(self, surface, offset = (0,0)):
 		if self.image:
@@ -89,7 +90,7 @@ class Sun(Planet):
 			for x in range(21):
 				color = (255 , 55 + (200 - (20 - x) * abs(10 - self.t % 20)), 100 / 20 * x)
 				pygame.draw.circle(surface, color, pos, int(self.radius - 20 * x))
-		self.t -= 24. / self.game.fps #speed of throbbing color.
+		self.t -= 24. * self.game.dt #speed of throbbing color.
 		
 		
 		

@@ -366,6 +366,7 @@ class Ship(Floater):
 		#active effects:
 		for effect in self.effects:
 			effect(self)
+			print effect,
 		for effect in self.partEffects:
 			effect(self)
 
@@ -455,7 +456,6 @@ class Player(Ship):
 		if self.landed \
 		and dist2(self, self.landed) > (self.landed.radius * 2) ** 2:
 			self.landed = False
-			
 		
 		Ship.update(self)
 		self.thrustSoundFX()

@@ -63,11 +63,7 @@ class Game:
 			self.messenger.empty()
 			while self.running and intro.running:
 				#event polling:
-				for event in pygame.event.get():
-					if event.type == pygame.QUIT:
-						pygame.quit()
-						return
-					intro.handleEvent(event)
+				self.keyPoll(intro.handleEvent)
 				intro.update()
 				self.screen.fill((0, 0, 0, 0))
 				intro.draw(self.screen)
@@ -78,59 +74,20 @@ class Game:
 							color = self.playerColor, type = self.playerType,
 							system = 'fake')
 			self.curSystem = SolarA1(self, self.player)
-			self.player.system = self.curSystem
+			self.player.system = self.curSystem #replace 'fake'
 			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
 			
 			self.menu = Menu(self, Rect((self.width - 800) / 2,
 										(self.height - 600) / 2,
 										800, 600), self.player)
-			for x in range(10):
-				self.clock.tick()
 			
 			self.triggers = plot.newGameTriggers(self)
-				
+			
 			#The in-round loop (while player is alive):
 			while self.running and self.curSystem.ships.has(self.player):
 				#event polling:
-				for event in pygame.event.get():
-					if event.type == pygame.QUIT:
-						self.running = 0
-					elif event.type == pygame.MOUSEBUTTONDOWN:
-						self.mouse[event.button] = 1
-						self.mouse[0] = event.pos
-					elif event.type == pygame.MOUSEBUTTONUP:
-						self.mouse[event.button] = 0
-						self.mouse[0] = event.pos
-					elif event.type == pygame.MOUSEMOTION:
-						self.mouse[0] = event.pos
-					elif event.type == pygame.KEYDOWN:
-						self.keys[event.key % 322] = 1
-					elif event.type == pygame.KEYUP:
-						self.keys[event.key % 322] = 0
-					if self.pause:
-						self.menu.handleEvent(event)
-						
-				#game-level key input:
-				if self.keys[K_DELETE % 322]:
-					self.keys[K_DELETE % 322] = False
-					self.player.kill() #suicide
-				if self.keys[K_RETURN % 322]:
-					self.pause = not self.pause #pause/menu
-					self.keys[K_RETURN % 322] = False
-					if self.pause:
-						self.menu.reset()
-				self.debug = False
-				if self.keys[K_BACKSPACE % 322]:
-					self.debug = True #print debug information
-					self.keys[K_BACKSPACE % 322] = False
-					print "Debug:"
-				#ctrl+q or alt+F4 quit:
-				if self.keys[K_LALT % 322] and self.keys[K_F4 % 322] \
-				or self.keys[K_RALT % 322] and self.keys[K_F4 % 322] \
-				or self.keys[K_LCTRL % 322] and self.keys[K_q % 322] \
-				or self.keys[K_RCTRL % 322] and self.keys[K_q % 322]:
-					self.running = False
+				self.keyPoll(self.pause and self.menu.handleEvent)
 					
 				#unpaused:
 				if not self.pause:
@@ -157,8 +114,49 @@ class Game:
 					
 				#frame maintainance:
 				pygame.display.flip()
-				self.dt = self.clock.tick(FPS)#aim for FPS but adjust vars for self.fps.
+				self.dt = self.clock.tick(FPS) / 1000.
 				self.fps = max(1, int(self.clock.get_fps()))
 				self.timer += 1. / self.fps
 			#end round loop (until gameover)
 		#end game loop
+		
+	def keyPoll(self, handler = None):
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				self.running = 0
+			elif event.type == pygame.MOUSEBUTTONDOWN:
+				self.mouse[event.button] = 1
+				self.mouse[0] = event.pos
+			elif event.type == pygame.MOUSEBUTTONUP:
+				self.mouse[event.button] = 0
+				self.mouse[0] = event.pos
+			elif event.type == pygame.MOUSEMOTION:
+				self.mouse[0] = event.pos
+			elif event.type == pygame.KEYDOWN:
+				self.keys[event.key % 322] = 1
+			elif event.type == pygame.KEYUP:
+				self.keys[event.key % 322] = 0
+			if handler:
+				handler(event)
+				
+			#game-level key input:
+			if self.keys[K_DELETE % 322]:
+				self.keys[K_DELETE % 322] = False
+				self.player.kill() #suicide
+			if self.keys[K_RETURN % 322]:
+				self.pause = not self.pause #pause/menu
+				self.keys[K_RETURN % 322] = False
+				if self.pause:
+					self.menu.reset()
+			self.debug = False
+			if self.keys[K_BACKSPACE % 322]:
+				self.debug = True #print debug information
+				self.keys[K_BACKSPACE % 322] = False
+				print "Debug:"
+			#ctrl+q or alt+F4 quit:
+			if self.keys[K_LALT % 322] and self.keys[K_F4 % 322] \
+			or self.keys[K_RALT % 322] and self.keys[K_F4 % 322] \
+			or self.keys[K_LCTRL % 322] and self.keys[K_q % 322] \
+			or self.keys[K_RCTRL % 322] and self.keys[K_q % 322]:
+				self.running = False
+		

@@ -6,6 +6,7 @@ from utils import *
 import stardog
 from spaceship import Ship
 from strafebat import Strafebat
+from floaters import Asteroid
 from planet import Planet, Sun
 
 radarRadius = 100
@@ -91,7 +92,7 @@ class HUD:
 					(floater.x - thisShip.x) / scale, radius)), \
 					int(center[1] + limit(-radius, \
 					(floater.y - thisShip.y) / scale, radius))
-			if isinstance(floater, Ship):
+			if isinstance(floater, Ship):	#ship
 				color = floater.color
 				pygame.draw.rect(self.image, (0,0,0), 
 						(dotPos[0] - 1, dotPos[1] - 1, 3,3))
@@ -112,24 +113,26 @@ class HUD:
 								int(center[1] + limit(-radius, 
 								(floater.planet.y - thisShip.y) / scale, radius)))	
 						pygame.draw.line(self.image, color, dotPos, p2)			
-					if isinstance(floater, Ship):
+					if isinstance(floater, Ship):#direction arrow
 						p2 = (dotPos[0] + 3 * cos(floater.dir), 
 								dotPos[1] + 3 * sin(floater.dir))
 						pygame.draw.line(self.image, (200,200,0), dotPos, p2)
-			elif isinstance(floater, Sun):
+			elif isinstance(floater, Sun):		#sun
 				r = int(floater.radius / scale)
 				pygame.draw.circle(self.image, (255,255,50), dotPos, r)
 				pygame.draw.circle(self.image, (255,200,50), dotPos, 3 * r / 4)
 				pygame.draw.circle(self.image, (255,150,0), dotPos, r / 2)
 				pygame.draw.circle(self.image, (255,100,0), dotPos, r / 4)
-			elif isinstance(floater, Planet):
+			elif isinstance(floater, Planet):	#planet
 				if floater.race:
 					color = floater.race.color
 				else:
 					color = (100,100,100)
 				r = int(floater.radius / radarScale + 2)
 				pygame.draw.circle(self.image, color, dotPos, r)
-			else:
+			elif isinstance(floater, Asteroid):	#Asteroid
+				pass #don't draw asteroids.
+			else:								#Other floater
 				color = floater.color
 				pygame.draw.circle(self.image, color, (dotPos[0],dotPos[1]), 0)
 
@@ -151,7 +154,7 @@ class BG:
 				 randint(brightness * 3 / 4, brightness), 
 				 randint(brightness * 3 / 4, brightness))))
 		self.pic = pygame.transform.scale(loadImage('res/Tarantula Nebula.jpg', None), 
-					(game.width,game.height))
+					(game.width,game.height)).convert()
 
 	def draw(self, surface, thisShip):
 		surface.blit(self.pic, (0,0))
