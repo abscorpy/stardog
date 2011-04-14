@@ -51,9 +51,9 @@ class Race:
 			ship.planet = self.targetPlanet
 		
 	def updatePlanet(self, planet):
-		planet.population += (1 * planet.life / self.game.fps)
+		planet.population += (1 * planet.life * self.game.dt)
 		planet.buildProgress += (planet.population / 1000. * planet.resources 
-									/ self.game.fps)
+									* self.game.dt)
 		#print planet.name, planet.population, planet.buildProgress, planet.shipValue
 		#start building new ship:
 		if not planet.shipInProgress:

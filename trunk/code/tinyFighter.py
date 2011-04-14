@@ -46,7 +46,7 @@ class TinyFighterScript(AIScript):
 		if ship.stage == 1:
 			if ship.timeOut <= 0:
 				ship.stage = 0
-			ship.timeOut -= 1. / ship.game.fps
+			ship.timeOut -= ship.game.dt
 			speed = self.relativeSpeed(ship, target)
 			accel = ship.forwardThrust / ship.mass
 			distance = dist(ship.x, ship.y, target.x, target.y) - self.swarmRadius

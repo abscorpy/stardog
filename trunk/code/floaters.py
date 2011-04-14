@@ -3,6 +3,7 @@
 from utils import *
 from pygame.locals import *
 import stardog
+import os
 
 FPS = 200
 MISSILE_RADIUS = 50
@@ -42,6 +43,7 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 	color = (200, 200, 0)
 	mass = 1
 	tangible = True
+	gravitates = True
 
 	def __init__(self, game, x, y, dx = 0., dy = 0., dir = 270, radius = 10, 
 			image = None):
@@ -65,8 +67,8 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 
 	def update(self):
 		"""updates this floater based on its variables"""
-		self.x += self.dx / self.game.fps
-		self.y += self.dy / self.game.fps
+		self.x += self.dx * self.game.dt
+		self.y += self.dy * self.game.dt
 		self.rect.center = (self.x, self.y)
 
 	def takeDamage(self, damage, other):
@@ -88,9 +90,9 @@ class Bullet(Floater):
 		cost = cos(dir) #cost is short for cos(theta)
 		sint = sin(dir)
 		x = gun.x + gun.shootPoint[0] * cost\
-						- gun.shootPoint[1] * sint + gun.ship.dx / game.fps
+						- gun.shootPoint[1] * sint + gun.ship.dx * game.dt
 		y = gun.y + gun.shootPoint[0] * sint\
-						+ gun.shootPoint[1] * cost + gun.ship.dy / game.fps
+						+ gun.shootPoint[1] * cost + gun.ship.dy * game.dt
 		dir += gun.shootDir # not needed for the offset, but needed for the dir.
 		self.speed = speed
 		dx = self.speed * cos(dir) + gun.ship.dx
@@ -108,7 +110,7 @@ class Bullet(Floater):
 			self.target = gun.ship.target
 
 	def update(self):
-		self.life += 1. / self.game.fps
+		self.life += 1. * self.game.dt
 		Floater.update(self)
 		if self.life > self.range:
 			self.kill()
@@ -133,11 +135,11 @@ class Missile(Bullet):
 		self.force = launcher.force
 		
 	def update(self):
-		self.life += 1. / self.game.fps
+		self.life += 1. * self.game.dt
 		self.dir = (self.dir + 180) % 360 - 180
 		Floater.update(self)
-		self.dx += self.acceleration * cos(self.dir) / self.game.fps
-		self.dy += self.acceleration * sin(self.dir) / self.game.fps
+		self.dx += self.acceleration * cos(self.dir) * self.game.dt
+		self.dy += self.acceleration * sin(self.dir) * self.game.dt
 		if self.life > self.range:
 			self.kill()
 
@@ -172,16 +174,16 @@ class Explosion(Floater):
 		self.radius = 0
 		self.time = time
 		self.damage = damage
-		self.hp = damage / (self.time * self.game.fps)
+		self.hp = damage * self.game.dt / self.time
 		if damage == 0:
 			self.tangible = False
 
 	def update(self):
 		Floater.update(self)
-		self.life += 1. / self.game.fps
+		self.life += 1. * self.game.dt
 		if self.life > self.time:
 			Floater.kill(self)
-		self.hp = self.damage / (self.time * self.game.fps)
+		self.hp = self.damage * self.game.dt / self.time
 		#grow or shrink: size peaks at time / 2:
 		if self.life < self.time / 4:
 			self.radius = int(self.maxRadius * self.life * 4 / self.time)
@@ -230,9 +232,9 @@ class LaserBeam(Floater):
 		self.system = laser.system
 		self.firstFrame = True
 		x = laser.x + laser.shootPoint[0] * cost\
-					- laser.shootPoint[1] * sint + laser.ship.dx / game.fps
+					- laser.shootPoint[1] * sint + laser.ship.dx * game.dt
 		y = laser.y + laser.shootPoint[0] * sint\
-					+ laser.shootPoint[1] * cost + laser.ship.dy / game.fps
+					+ laser.shootPoint[1] * cost + laser.ship.dy * game.dt
 		start = x,y
 		dir = laser.dir + laser.ship.dir + laser.shootDir
 		length = range
@@ -304,24 +306,27 @@ class LaserBeam(Floater):
 	def update(self):
 		if self.firstFrame:
 			self.collision()
-		self.life -= 1. / self.game.fps
+		self.life -= 1. * self.game.dt
 		Floater.update(self)
-		self.start = (self.start[0] + self.dx / self.game.fps,
-						self.start[1] + self.dy / self.game.fps)
-		self.stop = (self.stop[0] + self.dx / self.game.fps, 
-						self.stop[1] + self.dy / self.game.fps)
+		self.start = (self.start[0] + self.dx * self.game.dt,
+						self.start[1] + self.dy * self.game.dt)
+		self.stop = (self.stop[0] + self.dx * self.game.dt, 
+						self.stop[1] + self.dy * self.game.dt)
 		if self.life < 0:
 			self.kill()
 	
+		
+asteroidImages = []
+files = os.listdir('res/asteroids/gen')
+for file in files:
+	asteroidImages.append(loadImage('res/asteroids/gen/' + file))
 		
 class Asteroid(Floater):
 	minRadius = 20		#do not split if less than this (just die).
 	hpPerSplit = 1		#splits everytime it takes this much damage.
 	splitSpeed = 20		#speed asteriods move away after splitting.
-	mass = 0
-	images = [loadImage('res/planets/asteroid1.bmp'), 
-			loadImage('res/planets/asteroid2.bmp'), 
-			loadImage('res/planets/asteroid3.bmp')]
+	gravitates = False
+	images = asteroidImages
 	def __init__(self, game, x, y, dx = 0, dy = 0, radius = 25, color = None,
 				image = None):
 		if color:
@@ -330,13 +335,13 @@ class Asteroid(Floater):
 			#asteroids are some mixture of brown and grey. Brown is dark orange.
 			brownness = randint(0, 100)
 			greyness = randint(70, 150)
-			self.color = (brownness + greyness, brownness / 2 + greyness, greyness)
+			self.color = (brownness + greyness, 
+							brownness / 2 + greyness, greyness)
 		#pick an asteroid image at random:
 		image = image or self.images[randint(0, len(self.images) - 1)]
 		#color it in:
-		size = radius * 2
-		image = pygame.transform.scale(
-						colorShift(image.copy(), self.color), (size, size))
+		size = round(radius * 2 / 5) * 5
+		image = pygame.transform.scale(image, (size, size))
 		self.baseImage = image
 		Floater.__init__(self, game, x, y, dx, dy, 0, radius, image)
 		self.ddir = randint(-20, 20) * 1.0
@@ -344,12 +349,12 @@ class Asteroid(Floater):
 		self.hp = self.radius / 2
 		
 	def update(self):
-		self.dir += self.ddir / self.game.fps
+		self.dir += self.ddir * self.game.dt
 		Floater.update(self)
 		
 	def draw(self, surface, offset = None, pos = (0, 0)):
 		self.image = pygame.transform.rotate(self.baseImage, \
-									-self.dir).convert_alpha()
+									-self.dir)
 		self.image.set_colorkey((0,0,0))
 		#imageOffset compensates for the extra padding from the rotation.
 		imageOffset = [- self.image.get_width() / 2,\

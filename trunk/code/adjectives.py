@@ -241,8 +241,8 @@ class Leaky(Adjective):
 	level = -1
 	types = ENERGY_USING
 	def effect(self, part):
-		from effects import leak
-		part.shipEffects.append(leak)
+		import effects
+		part.shipEffects.append(effects.leak)
 		
 class Inefficient(Adjective):
 	"""Cost *= 2.5"""

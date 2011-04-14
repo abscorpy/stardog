@@ -3,7 +3,7 @@ import math
 from pygame.locals import *
 import pygame
 
-hardwareFlag = pygame.HWSURFACE
+hardwareFlag = pygame.HWSURFACE | DOUBLEBUF
 
 #TODO: write fast sloppy trig functions. 
 def sin(theta):
@@ -95,7 +95,7 @@ try:
 	thrustSound = pygame.mixer.Sound("res/sound/thrust.ogg")
 	pygame.mixer.set_reserved(1)
 	#channel 0: thrust sound
-	pygame.mixer.Channel(0).set_volume(.3)
+	pygame.mixer.Channel(0).set_volume(.2)
 	soundModule = True
 except (ImportError, NotImplementedError):
 	soundModule = False
