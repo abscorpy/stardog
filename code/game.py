@@ -55,6 +55,7 @@ class Game:
 		"""Runs the game."""
 		
 		self.running = True
+		last = 0
 		while self.running:
 			# game setup:
 			intro = IntroMenu(self, Rect((self.width - 800) / 2,
@@ -85,23 +86,23 @@ class Game:
 			self.triggers = plot.newGameTriggers(self)
 			
 			#The in-round loop (while player is alive):
-			while self.running and self.curSystem.ships.has(self.player):
+			while self.running and not self.player.dead:
 				#event polling:
 				self.keyPoll(self.pause and self.menu.handleEvent)
-					
 				#unpaused:
 				if not self.pause:
 					#update action:
 					for trigger in self.triggers:
 						trigger.update()
-					self.curSystem.update()
+					self.curSystem.update(self.dt)
 					for race in self.races:
-						race.update()
+						race.update(self.dt)
 					self.top_left = self.player.x - self.width / 2, \
 							self.player.y - self.height / 2
 					self.messenger.update()
+					pass
 							
-				#draw the layers:
+				# draw the layers:
 				self.screen.fill((0, 0, 0, 0))
 				self.curSystem.draw(self.screen, self.top_left)
 				self.hud.draw(self.screen, self.player)
@@ -111,12 +112,14 @@ class Game:
 				if self.pause:
 					self.menu.update()
 					self.menu.draw(self.screen)
-					
 				#frame maintainance:
 				pygame.display.flip()
-				self.dt = self.clock.tick(FPS) / 1000.
+				self.dt = self.clock.tick(300) / 1000.
 				self.fps = max(1, int(self.clock.get_fps()))
 				self.timer += 1. / self.fps
+				if self.timer - last > 1: 
+					pygame.display.set_caption('Stardog FPS:'+str(self.fps))
+					last = self.timer
 			#end round loop (until gameover)
 		#end game loop
 		
@@ -151,7 +154,7 @@ class Game:
 			self.debug = False
 			if self.keys[K_BACKSPACE % 322]:
 				self.debug = True #print debug information
-				self.keys[K_BACKSPACE % 322] = False
+				self.keys[K_BACKSPACE % 322] = 0
 				print "Debug:"
 			#ctrl+q or alt+F4 quit:
 			if self.keys[K_LALT % 322] and self.keys[K_F4 % 322] \

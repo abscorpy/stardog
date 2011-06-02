@@ -3,9 +3,12 @@ import math
 from pygame.locals import *
 import pygame
 
-hardwareFlag = pygame.HWSURFACE | DOUBLEBUF
+hardwareFlag = pygame.HWSURFACE# | DOUBLEBUF
 
-#TODO: write fast sloppy trig functions. 
+#not to do: write fast sloppy trig functions. These would be slower!
+#sinTable = [math.sin(math.radians(x)) for x in range(360)]
+#cosTable = [math.cos(math.radians(x)) for x in range(360)]
+#maybe write them in c?
 def sin(theta):
 	return math.sin(math.radians(theta))
 
@@ -64,6 +67,9 @@ r = random.Random()
 rand = r.random
 randint = r.randint
 randnorm = r.normalvariate
+
+time = pygame.time.get_ticks
+
 def randColor(min, max):
 	return (randint(min[0],max[0]), randint(min[1],max[1]), \
 			randint(min[2],max[2]))

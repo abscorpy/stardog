@@ -58,7 +58,7 @@ class StrafebatScript(AIScript):
 	acceptableError = 2
 	sensorRange = 3
 	shootingRange = 400
-	def update(self, ship):
+	def update(self, ship, dt):
 		# if too close to planet
 		if self.avoidPlanet(ship):
 			ship.color = (255,255,255)
@@ -66,7 +66,7 @@ class StrafebatScript(AIScript):
 			return
 		ship.color = ship.race.color
 		# find closest ship:
-		ships = ship.game.curSystem.ships.sprites()
+		ships = ship.game.curSystem.ships
 		ship.target, distance2 = self.closestEnemyShip(ship, ships)
 		if distance2 > self.sensorRange ** 2:
 			ship.target = None

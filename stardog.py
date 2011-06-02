@@ -65,6 +65,7 @@ if __name__=="__main__":
 									  black='X', white='.', xor='o' )
 	pygame.mouse.set_cursor( (16,16), (0,0), datatuple, masktuple )
 import code.game
+
 if __name__ == '__main__':
 	game = code.game.Game(screen)
 	game.run()

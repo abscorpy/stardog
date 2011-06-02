@@ -22,7 +22,7 @@ class Race:
 		self.color = color
 		self.targetPlanet = None
 		
-	def update(self):
+	def update(self, dt):
 		#find geographic mean of planets in system:
 		x,y = 0,0
 		count = 0
@@ -46,7 +46,7 @@ class Race:
 		self.targetPlanet = min(enemies, key = lambda p: dist(p.x,p.y,x,y))
 		
 	
-	def updateShip(self, ship):
+	def updateShip(self, ship, dt):
 		if self.targetPlanet:
 			ship.planet = self.targetPlanet
 		
