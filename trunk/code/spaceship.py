@@ -279,6 +279,8 @@ class Ship(Floater):
 		self.baseImage.set_colorkey((0,0,0))
 		if self.ports[0].part:
 			self.ports[0].part.draw(self.baseImage)
+		self.buffer = pygame.Surface((self.radius * 2, self.radius * 2),
+					flags = hardwareFlag | SRCALPHA).convert_alpha()
 
 	def partRollCall(self, part):
 		"""adds parts to self.parts recursively."""
@@ -343,24 +345,26 @@ class Ship(Floater):
 			missles.shoot()
 	
 	
-	def update(self):
+	def update(self, dt):
+		self.dt = dt
+	
 		#check if dead:
 		if not self.parts or self.parts[0].hp <= 0:
 			self.kill()
 		
 		#allow race to update:
 		if self.race:
-			self.race.updateShip(self)
-
+			self.race.updateShip(self, dt)
+		
 		self.thrusting = False
 		#run script, get choices.
-		self.script.update(self)
+		self.script.update(self, dt)
 
 		# actual updating:
-		Floater.update(self)
+		Floater.update(self, dt)
 		#parts updating:
 		if self.ports[0].part:
-			self.ports[0].part.update()
+			self.ports[0].part.update(dt)
 		
 		
 		#active effects:
@@ -378,8 +382,7 @@ class Ship(Floater):
 		 and right from pos where pos(0,0) is the topleft of the surface."""
 		#image update:
 		#note: transform is counter-clockwise, opposite of everything else.
-		buffer = pygame.Surface((self.radius * 2, self.radius * 2), \
-				flags = hardwareFlag | SRCALPHA).convert_alpha()
+		buffer = self.buffer
 		buffer.set_colorkey((0,0,0))
 		self.image = pygame.transform.rotate(self.baseImage, \
 									-self.dir).convert_alpha()
@@ -431,23 +434,29 @@ class Player(Ship):
 	xp = 0
 	developmentPoints = 2
 	landed = False
+	frameUpdating = True
 	
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), system = None):
 		Ship.__init__(self, game, x, y, dx, dy, dir, script, color,
 						 system = system)
 		self.skills = [Modularity(self), Agility(self), Composure(self)]
+	
 	def xpQuest(self, xp):
 		self.xp += xp
+	
 	def xpKill(self, ship):
 		self.xp +=  10. * ship.level / self.level
+	
 	def xpDamage(self, target, damage):
 		if isinstance(target, Part) and target.parent:
 			target = target.parent #count the ship, not the part.
 		self.xp += 1. * target.level / self.level * damage
+	
 	def xpDestroy(self, target):
 		self.xp += 2. * target.level / self.level
-	def update(self):
+		
+	def update(self, dt):
 		if self.game.debug: print 'xp:',self.xp
 		if self.xp >= self.next():
 			self.level += 1
@@ -457,7 +466,8 @@ class Player(Ship):
 		and dist2(self, self.landed) > (self.landed.radius * 2) ** 2:
 			self.landed = False
 		
-		Ship.update(self)
+		Ship.update(self, dt)
+		self.frameUpdating = 1
 		self.thrustSoundFX()
 		
 		

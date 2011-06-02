@@ -20,7 +20,7 @@ class HUD:
 		self.game = game
 		self.image = pygame.Surface((self.game.width, self.game.height), \
 							flags = hardwareFlag)
-		self.image.set_alpha(200)
+		self.image.set_alpha(150)
 		self.image.set_colorkey((0,0,0))
 		self.keys = game.keys
 		self.center = (game.width - radarRadius, radarRadius)
@@ -63,10 +63,7 @@ class HUD:
 			self.image.blit(FONT.render(str(thisShip.developmentPoints), \
 						False, (0, 180, 80)), (x, y - 20))
 						
-		#FPS
-		if(fontModule):
-			self.image.blit(FONT.render(str(self.game.fps), \
-						False, (200, 20, 255)), (100, 100))
+		#edge warning:
 		if thisShip.game.curSystem.drawEdgeWarning:
 			self.image.blit(edgeWarning, (20, self.game.height - 100))
 		#blit the HUD to the screen:
@@ -147,20 +144,18 @@ class BG:
 			brightness = int(randint(100, 255))
 			# a position, a color, and a depth.
 			self.stars.append((
-				randint(0, self.game.width), 
-				randint(0, self.game.height),
-				randint(1,20), 
+				randint(0, self.game.width), 	#x
+				randint(0, self.game.height),	#y
+				randint(1,20), 					#depth
 				(randint(brightness * 3 / 4, brightness), 
 				 randint(brightness * 3 / 4, brightness), 
-				 randint(brightness * 3 / 4, brightness))))
+				 randint(brightness * 3 / 4, brightness))))		#color
 		self.pic = pygame.transform.scale(loadImage('res/Tarantula Nebula.jpg', None), 
 					(game.width,game.height)).convert()
 
 	def draw(self, surface, thisShip):
 		surface.blit(self.pic, (0,0))
 		pa = pygame.PixelArray(surface)
-		"""updates the HUD and draws it."""
-		depth = 1.
 		for star in self.stars:
 			x = int(star[0] - thisShip.x / star[2]) % (self.game.width-1)
 			y =	int(star[1] - thisShip.y / star[2]) % (self.game.height-1)

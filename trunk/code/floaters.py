@@ -27,9 +27,8 @@ class Ballistic:
 		self.x, self.y = x, y
 		self.dx, self.dy = dx, dy
 
-
 			
-class Floater(pygame.sprite.Sprite, Ballistic):
+class Floater(object):
 	"""creates a floater with position (x,y) in pixels, speed (dx,dy) 
 	in pixels per second, direction dir 
 	where 0 is pointing right and 270 is pointing up, radius radius 
@@ -44,10 +43,14 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 	mass = 1
 	tangible = True
 	gravitates = True
-
+	dead = False
+	frameUpdating = False
+	__slots__ = ['dx', 'dy', 'radius', 'dir', 'rect', 'image', 'dead', 
+				'frameUpdating', 'tangible', 'gravitates', 'game', 'system', 
+				 'mass', 'hp', 'color', 'baseImage', '__dict__']
+	#"""
 	def __init__(self, game, x, y, dx = 0., dy = 0., dir = 270, radius = 10, 
 			image = None):
-		pygame.sprite.Sprite.__init__(self)
 		self.game = game
 		self.dir = dir
 		self.x = x
@@ -63,13 +66,11 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 		#rotate() takes a counter-clockwise angle. 
 		self.image = pygame.transform.rotate(image, -self.dir).convert()
 		#self.image.set_colorkey((0,0,0))
-		self.rect = self.image.get_rect()
 
-	def update(self):
+	def update(self, dt):
 		"""updates this floater based on its variables"""
-		self.x += self.dx * self.game.dt
-		self.y += self.dy * self.game.dt
-		self.rect.center = (self.x, self.y)
+		self.x += self.dx * dt
+		self.y += self.dy * dt
 
 	def takeDamage(self, damage, other):
 		self.hp -= damage
@@ -81,8 +82,20 @@ class Floater(pygame.sprite.Sprite, Ballistic):
 		pos = (self.x - self.image.get_width()  / 2 - offset[0], 
 			  self.y - self.image.get_height() / 2 - offset[1])
 		surface.blit(self.image, pos)
+		
+	def kill(self):
+		self.dead = True
+		
+	def left(self):
+		return self.x - self.radius
+		
+	def top(self):
+		return self.y - self.radius
 
 class Bullet(Floater):
+	frameUpdating = True
+	tangibleDelay = 32 # pixels
+	tangible = False
 	def __init__(self, game, gun, damage, speed, range, image = None,
 						color = (200,200,0)):
 		self.color = color
@@ -102,6 +115,7 @@ class Bullet(Floater):
 		Floater.__init__(self, game, x, y, dx = dx, dy = dy, 
 							dir = dir, radius = gun.bulletRadius, 
 							image = image)
+		self.timer = self.tangibleDelay / self.speed
 		self.range = range
 		self.hp = damage
 		self.life = 0.
@@ -109,9 +123,13 @@ class Bullet(Floater):
 		if 'target' in gun.ship.__dict__:
 			self.target = gun.ship.target
 
-	def update(self):
-		self.life += 1. * self.game.dt
-		Floater.update(self)
+	def update(self, dt):
+		if not self.tangible:
+			self.timer -= dt
+			if self.timer <=0:
+				self.tangible = 1
+		self.life += 1. * dt
+		Floater.update(self, dt)
 		if self.life > self.range:
 			self.kill()
 
@@ -134,12 +152,12 @@ class Missile(Bullet):
 		self.time = launcher.explosionTime
 		self.force = launcher.force
 		
-	def update(self):
-		self.life += 1. * self.game.dt
+	def update(self, dt):
+		self.life += 1. * dt
 		self.dir = (self.dir + 180) % 360 - 180
-		Floater.update(self)
-		self.dx += self.acceleration * cos(self.dir) * self.game.dt
-		self.dy += self.acceleration * sin(self.dir) * self.game.dt
+		Floater.update(self, dt)
+		self.dx += self.acceleration * cos(self.dir) * dt
+		self.dy += self.acceleration * sin(self.dir) * dt
 		if self.life > self.range:
 			self.kill()
 
@@ -174,16 +192,16 @@ class Explosion(Floater):
 		self.radius = 0
 		self.time = time
 		self.damage = damage
-		self.hp = damage * self.game.dt / self.time
+		self.hp = damage * game.dt / not0(self.time)
 		if damage == 0:
 			self.tangible = False
 
-	def update(self):
-		Floater.update(self)
-		self.life += 1. * self.game.dt
+	def update(self, dt):
+		Floater.update(self, dt)
+		self.life += 1. * dt
 		if self.life > self.time:
 			Floater.kill(self)
-		self.hp = self.damage * self.game.dt / self.time
+		self.hp = self.damage * dt / self.time
 		#grow or shrink: size peaks at time / 2:
 		if self.life < self.time / 4:
 			self.radius = int(self.maxRadius * self.life * 4 / self.time)
@@ -265,7 +283,7 @@ class LaserBeam(Floater):
 		
 	def intersect(self, floater, skipRect = False):
 		#check rect collide:
-		if floater != self and (skipRect or self.rect.colliderect(floater.rect)):
+		if floater != self:
 			#check line-circle collide:
 			dist = linePointDist(self.start, self.stop, (floater.x, floater.y))
 			if dist	< floater.radius:
@@ -276,7 +294,8 @@ class LaserBeam(Floater):
 		self.firstFrame = False
 		colliders = []
 		for floater in self.system.floaters:
-			if floater.tangible and self.intersect(floater):
+			if (floater.tangible and self.intersect(floater) 
+			and floater != self.ship):
 				colliders.append(floater)
 		if colliders:
 			#recurse for parts in a ship:
@@ -303,22 +322,23 @@ class LaserBeam(Floater):
 					break
 				
 					
-	def update(self):
+	def update(self, dt):
 		if self.firstFrame:
 			self.collision()
-		self.life -= 1. * self.game.dt
-		Floater.update(self)
-		self.start = (self.start[0] + self.dx * self.game.dt,
-						self.start[1] + self.dy * self.game.dt)
-		self.stop = (self.stop[0] + self.dx * self.game.dt, 
-						self.stop[1] + self.dy * self.game.dt)
+		self.life -= 1. * dt
+		Floater.update(self, dt)
+		self.start = (self.start[0] + self.dx * dt,
+						self.start[1] + self.dy * dt)
+		self.stop = (self.stop[0] + self.dx * dt, 
+						self.stop[1] + self.dy * dt)
 		if self.life < 0:
 			self.kill()
 	
 		
 asteroidImages = []
-files = os.listdir('res/asteroids/gen')
-for file in files:
+#(skip the .svn dir:)
+files = [f for f in os.listdir('res/asteroids/gen')if f[-4:] == '.bmp'] 
+for file in files: 
 	asteroidImages.append(loadImage('res/asteroids/gen/' + file))
 		
 class Asteroid(Floater):
@@ -327,7 +347,7 @@ class Asteroid(Floater):
 	splitSpeed = 20		#speed asteriods move away after splitting.
 	gravitates = False
 	images = asteroidImages
-	def __init__(self, game, x, y, dx = 0, dy = 0, radius = 25, color = None,
+	def __init__(self, game, x, y, dx = 0, dy = 0, radius = 25., color = None,
 				image = None):
 		if color:
 			self.color = color
@@ -348,9 +368,9 @@ class Asteroid(Floater):
 		self.mass = self.radius ** 2 * pi
 		self.hp = self.radius / 2
 		
-	def update(self):
-		self.dir += self.ddir * self.game.dt
-		Floater.update(self)
+	# def update(self, dt):
+		# self.dir += self.ddir * dt
+		# Floater.update(self, dt)
 		
 	def draw(self, surface, offset = None, pos = (0, 0)):
 		self.image = pygame.transform.rotate(self.baseImage, \

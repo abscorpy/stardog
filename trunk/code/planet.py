@@ -44,11 +44,10 @@ class Planet(Floater):
 			self.inventory.append(randItem(game, 1))
 		self.cities = self.population / 1000
 	
-	def update(self):
+	def update(self, dt):
 		if self.race:
 			self.race.updatePlanet(self)
-		
-		for other in self.game.curSystem.floaters.sprites():
+		for other in self.game.curSystem.floaters:
 			if  (other.gravitates 
 			and abs(self.x - other.x) < self.maxRadius
 			and abs(self.y - other.y) < self.maxRadius
@@ -56,8 +55,8 @@ class Planet(Floater):
 				#accelerate that floater towards this planet:
 				accel = self.g * (self.mass) / dist2(self, other)
 				angle = atan2(self.y - other.y, self.x - other.x)
-				other.dx += cos(angle) * accel * self.game.dt
-				other.dy += sin(angle) * accel * self.game.dt
+				other.dx += cos(angle) * accel * dt
+				other.dy += sin(angle) * accel * dt
 			
 	def draw(self, surface, offset = (0,0)):
 		if self.image:

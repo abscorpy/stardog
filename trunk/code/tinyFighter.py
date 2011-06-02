@@ -32,7 +32,7 @@ class TinyFighterScript(AIScript):
 	acceptableError = 8
 	shootingRange = 280
 	interceptSpeed = 200
-	def update(self, ship):
+	def update(self, ship, dt):
 		target = ship.target
 		if self.game.debug: print ship.stage
 		if ship.stage == 0:

@@ -9,7 +9,7 @@ class Script:
 	def __init__(self, game):
 		self.game = game
 	
-	def update(self, ship):
+	def update(self, ship, dt):
 		pass
 
 	def agent(self, state):
@@ -26,7 +26,7 @@ class InputScript(Script):
 		self.bindings = []
 		self.center =self.game.width / 2, self.game.height / 2
 
-	def update(self, ship):
+	def update(self, ship, dt):
 		"""decides what to do each frame."""
 		for binding in self.bindings:
 			if self.keys[binding[0]]:
@@ -66,7 +66,7 @@ class AIScript(Script):
 	interceptSpeed = 200. / 3
 	acceptableError = 5
 	"""A scripts with basic physics calculation functions.  Virtual."""
-	def update(self, ship):
+	def update(self, ship, dt):
 		# find closest ship:
 		ships = ship.game.curSystem.ships.sprites()
 		target, distance = self.closestShip(ship, ships)
