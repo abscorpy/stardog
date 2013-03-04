@@ -12,28 +12,28 @@ def setVolume(channel, floater1, floater2):
 	"""sets volume for a channel based on the distance between
 	 the player and floater."""
 	if channel and floater1 and floater2:
-		channel.set_volume(.25 / (min(1, 
-						(floater2.x - floater1.x) ** 2 + 
+		channel.set_volume(.25 / (min(1,
+						(floater2.x - floater1.x) ** 2 +
 						(floater2.y - floater1.y) ** 2 + .0001)))
 
 BULLET_IMAGE = loadImage("res/shot.bmp")
 MISSILE_IMAGE = loadImage("res/missile" + ext)
 DEFAULT_IMAGE = loadImage("res/default.bmp")
 
-		
+
 class Ballistic:
 	"""an abstraction of a Floater.  Just has a x,y,dx,dy."""
 	def __init__(self, x, y, dx = 0, dy = 0):
 		self.x, self.y = x, y
 		self.dx, self.dy = dx, dy
 
-			
+
 class Floater(object):
-	"""creates a floater with position (x,y) in pixels, speed (dx,dy) 
-	in pixels per second, direction dir 
-	where 0 is pointing right and 270 is pointing up, radius radius 
-	(for collision testing), and with the image image.  Image should be a 
-	string of a file name without an axtension- there should be both a .gif 
+	"""creates a floater with position (x,y) in pixels, speed (dx,dy)
+	in pixels per second, direction dir
+	where 0 is pointing right and 270 is pointing up, radius radius
+	(for collision testing), and with the image image.  Image should be a
+	string of a file name without an axtension- there should be both a .gif
 	and	a .bmp, which is used depends on the pygame support on the run
 	system."""
 	system = None
@@ -45,11 +45,11 @@ class Floater(object):
 	gravitates = True
 	dead = False
 	frameUpdating = False
-	__slots__ = ['dx', 'dy', 'radius', 'dir', 'rect', 'image', 'dead', 
-				'frameUpdating', 'tangible', 'gravitates', 'game', 'system', 
+	__slots__ = ['dx', 'dy', 'radius', 'dir', 'rect', 'image', 'dead',
+				'frameUpdating', 'tangible', 'gravitates', 'game', 'system',
 				 'mass', 'hp', 'color', 'baseImage', '__dict__']
 	#"""
-	def __init__(self, game, x, y, dx = 0., dy = 0., dir = 270, radius = 10, 
+	def __init__(self, game, x, y, dx = 0., dy = 0., dir = 270, radius = 10,
 			image = None):
 		self.game = game
 		self.dir = dir
@@ -63,7 +63,7 @@ class Floater(object):
 				image = self.baseImage
 			else:
 				image = DEFAULT_IMAGE
-		#rotate() takes a counter-clockwise angle. 
+		#rotate() takes a counter-clockwise angle.
 		self.image = pygame.transform.rotate(image, -self.dir).convert()
 		#self.image.set_colorkey((0,0,0))
 
@@ -79,16 +79,16 @@ class Floater(object):
 
 	def draw(self, surface, offset = (0,0)):
 		"""Blits this floater onto the surface. """
-		pos = (self.x - self.image.get_width()  / 2 - offset[0], 
+		pos = (self.x - self.image.get_width()  / 2 - offset[0],
 			  self.y - self.image.get_height() / 2 - offset[1])
 		surface.blit(self.image, pos)
-		
+
 	def kill(self):
 		self.dead = True
-		
+
 	def left(self):
 		return self.x - self.radius
-		
+
 	def top(self):
 		return self.y - self.radius
 
@@ -112,8 +112,8 @@ class Bullet(Floater):
 		dy = self.speed * sin(dir) + gun.ship.dy
 		if image == None:
 			image = BULLET_IMAGE
-		Floater.__init__(self, game, x, y, dx = dx, dy = dy, 
-							dir = dir, radius = gun.bulletRadius, 
+		Floater.__init__(self, game, x, y, dx = dx, dy = dy,
+							dir = dir, radius = gun.bulletRadius,
 							image = image)
 		self.timer = self.tangibleDelay / self.speed
 		self.range = range
@@ -141,7 +141,7 @@ class Missile(Bullet):
 	impacted = None
 	explode = False
 
-	def __init__(self, game, launcher, damage, speed, acceleration, range, 
+	def __init__(self, game, launcher, damage, speed, acceleration, range,
 				explosionRadius, image = None):
 		Bullet.__init__(self, game, launcher, self.hp, speed, range, image)
 		self.damage = damage
@@ -151,7 +151,7 @@ class Missile(Bullet):
 		self.explosionRadius = explosionRadius
 		self.time = launcher.explosionTime
 		self.force = launcher.force
-		
+
 	def update(self, dt):
 		self.life += 1. * dt
 		self.dir = (self.dir + 180) % 360 - 180
@@ -162,7 +162,7 @@ class Missile(Bullet):
 			self.kill()
 
 	def detonate(self):
-		explosion = Explosion(self.game, self.x, self.y, 
+		explosion = Explosion(self.game, self.x, self.y,
 				self.dx - self.acceleration * self.life * cos(self.dir),
 				self.dy - self.acceleration * self.life * sin(self.dir),
 				self.explosionRadius, self.time, self.damage, self.force)
@@ -177,7 +177,7 @@ class Missile(Bullet):
 	def takeDamage(self, damage, other):
 		self.impacted = other
 		Floater.takeDamage(self, damage, other)
-		
+
 class Explosion(Floater):
 	life = 0
 
@@ -208,7 +208,7 @@ class Explosion(Floater):
 		else:
 			self.radius = int(self.maxRadius * (self.time * 4 / 3 \
 						- self.life * 4 / 3) / self.time)
-		
+
 	def draw(self, surface, offset = (0,0)):
 		self.image.fill((0, 0, 0, 0))
 		for circle in range(min(self.radius / 4, 80)):
@@ -217,32 +217,32 @@ class Explosion(Floater):
 			radius = randint(self.radius / 4, self.radius / 2)
 			r = randint(0, self.radius - radius)
 			theta = randint(0, 360)
-			pos = (int(cos(theta) * r + self.maxRadius), 
+			pos = (int(cos(theta) * r + self.maxRadius),
 					  int(sin(theta) * r + self.maxRadius))
 			pygame.draw.circle(self.image, color, pos, radius)
 		Floater.draw(self, surface, offset)
 
 	def kill(self):
 		pass
-		
+
 	def takeDamage(self, damage, other):
 		pass
-		
-		
+
+
 
 class LaserBeam(Floater):
 	"""LaserBeam(game, laser, damage, range) -> new LaserBeam
 
 	A LaserBeam is the projectile of a Laser.  They are line segments
-	that reach their end point instantly.  A LaserBeam has a different 
-	collision mechanism: they use line/circle collision, and it is checked 
+	that reach their end point instantly.  A LaserBeam has a different
+	collision mechanism: they use line/circle collision, and it is checked
 	during initialization."""
 	life = .5 #seconds
 	hp = 0
 	tangible = False
 	baseImage = loadImage("res/laser.bmp").convert()
 	baseImage.set_colorkey((0,0,0))
-	
+
 	def __init__(self, game, laser, damage, range):
 		dir = laser.dir + laser.ship.dir
 		cost = cos(dir) #cost is short for cos(theta)
@@ -256,7 +256,7 @@ class LaserBeam(Floater):
 		start = x,y
 		dir = laser.dir + laser.ship.dir + laser.shootDir
 		length = range
-		stop = x + range * cos(dir), y + range * sin(dir)		
+		stop = x + range * cos(dir), y + range * sin(dir)
 		x, y = (start[0] + stop[0]) / 2., (start[1] + stop[1]) / 2.
 		Floater.__init__(self, game, x, y, laser.ship.dx, laser.ship.dy, dir,
 						radius = 0)
@@ -280,7 +280,7 @@ class LaserBeam(Floater):
 		if 'target' in laser.ship.__dict__:
 			self.target = laser.ship.target
 
-		
+
 	def intersect(self, floater, skipRect = False):
 		#check rect collide:
 		if floater != self:
@@ -288,13 +288,13 @@ class LaserBeam(Floater):
 			dist = linePointDist(self.start, self.stop, (floater.x, floater.y))
 			if dist	< floater.radius:
 				return dist
-				
+
 	def collision(self):
 		from spaceship import Ship
 		self.firstFrame = False
 		colliders = []
 		for floater in self.system.floaters:
-			if (floater.tangible and self.intersect(floater) 
+			if (floater.tangible and self.intersect(floater)
 			and floater != self.ship):
 				colliders.append(floater)
 		if colliders:
@@ -305,9 +305,9 @@ class LaserBeam(Floater):
 						if self.intersect(part, True):
 							colliders.append(part)
 			#sort so that the nearest gets hit first:
-			dir = sign(self.stop[1] + self.stop[0] * self.slope - 
+			dir = sign(self.stop[1] + self.stop[0] * self.slope -
 					self.start[1] + self.start[0] * self.slope)
-			colliders.sort(key = lambda f: 
+			colliders.sort(key = lambda f:
 					(f.y + f.x * self.slope) * dir - f.radius)
 			#hit until damage is used up
 			for floater in colliders:
@@ -316,12 +316,12 @@ class LaserBeam(Floater):
 				self.damage -= tmp
 				if self.damage < 1: #fudge it for effect: 1 not 0
 					#adjust stop based on last hit target:
-					self.stop = (floater.x, (floater.x - self.start[0]) 
+					self.stop = (floater.x, (floater.x - self.start[0])
 											* self.slope + self.start[1])
 					self.length = dist(self.start[0],self.start[1], self.stop[0], self.stop[1])
 					break
-				
-					
+
+
 	def update(self, dt):
 		if self.firstFrame:
 			self.collision()
@@ -329,23 +329,23 @@ class LaserBeam(Floater):
 		Floater.update(self, dt)
 		self.start = (self.start[0] + self.dx * dt,
 						self.start[1] + self.dy * dt)
-		self.stop = (self.stop[0] + self.dx * dt, 
+		self.stop = (self.stop[0] + self.dx * dt,
 						self.stop[1] + self.dy * dt)
 		if self.life < 0:
 			self.kill()
-	
-		
+
+
 asteroidImages = []
 #(skip the .svn dir:)
-files = [f for f in os.listdir('res/asteroids/gen')if f[-4:] == '.bmp'] 
-for file in files: 
+files = [f for f in os.listdir('res/asteroids/gen')if f[-4:] == '.bmp']
+for file in files:
 	asteroidImages.append(loadImage('res/asteroids/gen/' + file))
-		
+
 class Asteroid(Floater):
 	minRadius = 20		#do not split if less than this (just die).
 	hpPerSplit = 1		#splits everytime it takes this much damage.
 	splitSpeed = 20		#speed asteriods move away after splitting.
-	gravitates = False
+	gravitates = True
 	images = asteroidImages
 	def __init__(self, game, x, y, dx = 0, dy = 0, radius = 25., color = None,
 				image = None):
@@ -355,23 +355,23 @@ class Asteroid(Floater):
 			#asteroids are some mixture of brown and grey. Brown is dark orange.
 			brownness = randint(0, 100)
 			greyness = randint(70, 150)
-			self.color = (brownness + greyness, 
+			self.color = (brownness + greyness,
 							brownness / 2 + greyness, greyness)
 		#pick an asteroid image at random:
 		image = image or self.images[randint(0, len(self.images) - 1)]
 		#color it in:
-		size = round(radius * 2 / 5) * 5
+		size = int(round(radius * 2 / 5) * 5)
 		image = pygame.transform.scale(image, (size, size))
 		self.baseImage = image
 		Floater.__init__(self, game, x, y, dx, dy, 0, radius, image)
 		self.ddir = randint(-20, 20) * 1.0
 		self.mass = self.radius ** 2 * pi
 		self.hp = self.radius / 2
-		
+
 	# def update(self, dt):
 		# self.dir += self.ddir * dt
 		# Floater.update(self, dt)
-		
+
 	def draw(self, surface, offset = None, pos = (0, 0)):
 		self.image = pygame.transform.rotate(self.baseImage, \
 									-self.dir)
@@ -385,7 +385,7 @@ class Asteroid(Floater):
 				  self.y  - offset[1] + pos[1] + imageOffset[1]]
 		#draw to buffer:
 		surface.blit(self.image, pos)
-		
+
 	def takeDamage(self, damage, other):
 		self.hp -= damage
 		if self.hp <= self.radius / 2 - self.hpPerSplit:
@@ -418,11 +418,11 @@ class Asteroid(Floater):
 			self.system.add(
 					Asteroid(self.game, x2, y2, dx2, dy2, size2, self.color))
 			self.kill()
-			
+
 	def kill(self):
 		self.radius = 0
 		self.hp = 0
 		Floater.kill(self)
-							
-							
-							
+
+
+

@@ -31,11 +31,12 @@ class Game:
 		self.height = screen.get_height()
 		self.mouseControl = True
 		self.timer = 0
+		self.playTime = 0.
 		self.systems = []
 		self.triggers = []
 		#messenger, with controls as first message:
 		self.messenger = Messenger(self)
-		
+
 		self.race1 = Race(self, "onesies", (255,0,0))
 		self.race2 = Race(self, "Duo!!", (200,0,250))
 		self.races  = [self.race1, self.race2]
@@ -48,12 +49,12 @@ class Game:
 		self.mouse = [(0, 0), 0, 0, 0, 0, 0, 0]
 		#pygame setup:
 		self.clock = pygame.time.Clock()
-		
+
 		self.hud = HUD(self) # the heads up display
-				
+
 	def run(self):
 		"""Runs the game."""
-		
+
 		self.running = True
 		last = 0
 		while self.running:
@@ -78,13 +79,13 @@ class Game:
 			self.player.system = self.curSystem #replace 'fake'
 			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
-			
+
 			self.menu = Menu(self, Rect((self.width - 800) / 2,
 										(self.height - 600) / 2,
 										800, 600), self.player)
-			
+
 			self.triggers = plot.newGameTriggers(self)
-			
+
 			#The in-round loop (while player is alive):
 			while self.running and not self.player.dead:
 				#event polling:
@@ -100,14 +101,15 @@ class Game:
 					self.top_left = self.player.x - self.width / 2, \
 							self.player.y - self.height / 2
 					self.messenger.update()
+					self.playTime += self.dt
 					pass
-							
+
 				# draw the layers:
 				self.screen.fill((0, 0, 0, 0))
 				self.curSystem.draw(self.screen, self.top_left)
 				self.hud.draw(self.screen, self.player)
 				self.messenger.draw(self.screen)
-				
+
 				#paused:
 				if self.pause:
 					self.menu.update()
@@ -117,12 +119,12 @@ class Game:
 				self.dt = self.clock.tick(300) / 1000.
 				self.fps = max(1, int(self.clock.get_fps()))
 				self.timer += 1. / self.fps
-				if self.timer - last > 1: 
+				if self.timer - last > 1:
 					pygame.display.set_caption('Stardog FPS:'+str(self.fps))
 					last = self.timer
 			#end round loop (until gameover)
 		#end game loop
-		
+
 	def keyPoll(self, handler = None):
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
@@ -141,7 +143,7 @@ class Game:
 				self.keys[event.key % 322] = 0
 			if handler:
 				handler(event)
-				
+
 			#game-level key input:
 			if self.keys[K_DELETE % 322]:
 				self.keys[K_DELETE % 322] = False
@@ -162,4 +164,4 @@ class Game:
 			or self.keys[K_LCTRL % 322] and self.keys[K_q % 322] \
 			or self.keys[K_RCTRL % 322] and self.keys[K_q % 322]:
 				self.running = False
-		
+
