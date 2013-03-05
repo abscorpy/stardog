@@ -361,7 +361,7 @@ class Asteroid(Floater):
 		image = image or self.images[randint(0, len(self.images) - 1)]
 		#color it in:
 		size = int(round(radius * 2 / 5) * 5)
-		image = pygame.transform.scale(image, (size, size))
+		image = pygame.transform.scale(image, (int(size), int(size)))
 		self.baseImage = image
 		Floater.__init__(self, game, x, y, dx, dy, 0, radius, image)
 		self.ddir = randint(-20, 20) * 1.0
