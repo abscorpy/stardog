@@ -14,8 +14,8 @@ except ImportError:
 FULL = False; RESOLUTION = 1024, 800 #test
 #FULL = True; RESOLUTION = None #play
 
-
-if __name__=="__main__":
+def run():
+	global RESOLUTION, FULL, game
 	#command line resolution selection:
 	if len(sys.argv) > 1:
 		try:
@@ -30,6 +30,7 @@ if __name__=="__main__":
 				RESOLUTION = int(sys.argv[2]), int(sys.argv[3])
 		except:
 			print("bad command line arguments.")
+			exit()
 	#set up the disply:
 	pygame.init()
 	#pygame.display.init()
@@ -64,8 +65,11 @@ if __name__=="__main__":
 	datatuple, masktuple = pygame.cursors.compile( thickarrow_strings,
 									  black='X', white='.', xor='o' )
 	pygame.mouse.set_cursor( (16,16), (0,0), datatuple, masktuple )
-import code.game
+	import code.game
 
-if __name__ == '__main__':
 	game = code.game.Game(screen)
 	game.run()
+	
+if __name__ == '__main__':
+	run()
+	
