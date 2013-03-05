@@ -129,21 +129,22 @@ class SolarA1(SolarSystem):
 		SolarSystem.__init__(self, game)
 		self.sun = (Sun( game, radius = 4000, mass = 1000000.,
 					color = (255, 255, 255), image = None)) # the star
-		planetImage = loadImage('res/planets/Rocky 1.bmp')
+		rockyPlanetImage = loadImage('res/planets/Rocky 2.bmp')
+		gasPlanetImage = loadImage('res/planets/Gas Giant 1.bmp')
 		#place player:
 		angle = randint(0,360)
 		distanceFromSun = randint(8000, 18000)
 		player.x = distanceFromSun * cos(angle)
 		player.y = distanceFromSun * sin(angle)
 		#add asteroids:
-		"""for i in range(0):
-			x = randint(15000, 25000)
-			y = randint(0, 10000)
+		for i in range(100):
+			x = randint(-30000, 30000) 
+			y = randint(-30000, 30000) 
 			radius = randint(10, 60)
 			dx = randint( -20, 20)
 			dy = randint( -20, 20)
-			self.add(Asteroid(game, x, y, dx, dy, radius))"""
-
+			self.add(Asteroid(game, x, y, dx, dy, radius))
+		
 		race1 = game.race1
 		race2 = game.race2
 		self.add(self.sun)
@@ -151,21 +152,21 @@ class SolarA1(SolarSystem):
 		#add planets:
 		"""planets = [
 			Planet(game, -1935, -5889, 240, 600, (220,50,0), race = race1,
-					life = .3, resources = 1.8, name = 'a', image = planetImage),
+					life = .3, resources = 1.8, name = 'a', image = rockyPlanetImage),
 			Planet(game, 3868, 7385, 800, 2000, (220,50,0), race = race2,
 					life = 1.5, resources = 1.0, name = 'b'),
 			Planet(game, -6379, 4000, 1120, 2800, (220,50,0), race = race1,
-					life = 1.5, resources = 1.0, name = 'c'),
+					life = 1.5, resources = 1.0, name = 'c', image = gasPlanetImage),
 			Planet(game, 6072, -9942, 1200, 3000, (220,50,0), race =  race1,
-					life = 2.0, resources = .8, name = 'd'),
+					life = 2.0, resources = .8, name = 'd', image = gasPlanetImage),
 			Planet(game, 12294, 9696, 800, 2000, (220,50,0), race = race2,
 					life = 1.0, resources = .6, name = 'e'),
 			Planet(game, -16528, -13975, 2000, 5000, (220,50,0), race = race1,
 					life = .1, resources = .5, name = 'f'),
 			Planet(game, -3689, 19050, 1400, 3500, (220,50,0), race = race2,
-					life = .6, resources = 1.4, name = 'g'),
+					life = .6, resources = 1.4, name = 'g', image = gasPlanetImage),
 			Planet(game, 24865, -2585, 400, 1000, (220,50,0), race = race2,
-					life = .8, resources = .8, name = 'h', image = planetImage),
+					life = .8, resources = .8, name = 'h', image = rockyPlanetImage),
 			]
 		for p in planets:
 			self.add(p)"""
@@ -199,7 +200,7 @@ class SolarA1(SolarSystem):
 				self.tinyFighters.append(fighter)
 				self.fighterTimer = 60 / self.fightersPerMinute
 		else:
-			self.fighterTimer -= 1. * self.game.dt * 0
+			self.fighterTimer -= 1. * self.game.dt
 
 class SolarF7(SolarSystem):
 	def __init__(self, game):
