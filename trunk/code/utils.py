@@ -14,13 +14,13 @@ def sin(theta):
 
 def cos(theta):
 	return math.cos(math.radians(theta))
-	
+
 def atan2(rise, run):
 	"""slope to angle, takes signed rise and run to get correct quadrant."""
 	return math.degrees(math.atan2(rise, run))
 
 pi = math.pi
-	
+
 def angleNorm(angle):
 	"""returns an equivilant angle between -180 and 180."""
 	return (angle + 180) % 360 - 180
@@ -32,7 +32,7 @@ def rotate(x, y, angle):
 	newx = x  * cost - y * sint
 	newy = x  * sint + y * cost
 	return (newx, newy)
-	
+
 def dist(x1, y1, x2, y2):
 	"""dist(x1, y1, x2, y2) -> the distance from (x1, y1) to (x2, y2)"""
 	return math.sqrt( (x1 - x2) ** 2 + (y1 - y2) ** 2)
@@ -47,14 +47,14 @@ def sign(num):
 	if num < 0 : return -1
 	if num > 0 : return 1
 	return 0
-	
+
 def limit(min, num, max):
-	"""Returns num if min < num <max.  
+	"""Returns num if min < num <max.
 	Returns min if num < min or max if num > max."""
 	if num > max: return max
 	if num < min: return min
 	return num
-	
+
 def not0(num):
 	"""if num is 0, returns .001.  To prevent div by 0 errors."""
 	if num:
@@ -67,6 +67,7 @@ r = random.Random()
 rand = r.random
 randint = r.randint
 randnorm = r.normalvariate
+choice = random.choice
 
 time = pygame.time.get_ticks
 
@@ -77,8 +78,8 @@ def randColor(min, max):
 #setup fonts
 try:
 	pygame.font.init()
-	#SHADOW_FONT = pygame.font.SysFont(name = None, size = 20, bold = True)     
-	SMALL_FONT = pygame.font.SysFont(name = None, size = 16)    
+	#SHADOW_FONT = pygame.font.SysFont(name = None, size = 20, bold = True)
+	SMALL_FONT = pygame.font.SysFont(name = None, size = 16)
 	FONT = pygame.font.SysFont(name = None, size = 20)
 	MED_FONT = pygame.font.SysFont(name = None, size = 28)
 	BIG_FONT = pygame.font.SysFont(name = None, size = 36)
@@ -89,7 +90,7 @@ except:
 	fontModule = False
 	print "Font module not found. Text will not be printed."
 
-#setup sounds	
+#setup sounds
 try:
 	pygame.mixer.init(44100)
 	pygame.mixer.set_num_channels(63)
@@ -106,16 +107,16 @@ try:
 except (ImportError, NotImplementedError):
 	soundModule = False
 	print "Sound module not found. Sounds disabled."
-	
+
 #setup images
  #if there is extended image support, load .gifs, otherwise load .bmps.
  #.bmps do not support transparency, so there might be black clipping.
- 
+
 if pygame.image.get_extended():
 	ext = ".gif"
 else:
 	ext = ".bmp"
-	
+
 def loadImage(filename, colorkey=(0,0,0)):
 	try:
 		image = pygame.image.load(filename).convert()
@@ -124,10 +125,10 @@ def loadImage(filename, colorkey=(0,0,0)):
 		image = pygame.image.load("res/default.bmp").convert()
 		image.set_colorkey((255,255,255))
 	return image
-	
+
 def colorShift(surface, color, colorkey = (0,0,0)):
-	"""Converts every pixel with equal red and blue values to a shade of 
-	color.  Attempts to maintain value and saturation of surface. 
+	"""Converts every pixel with equal red and blue values to a shade of
+	color.  Attempts to maintain value and saturation of surface.
 	Returns a new Surface."""
 	s = pygame.Surface(surface.get_size(), flags = hardwareFlag).convert()
 	s.set_colorkey(colorkey)
@@ -168,16 +169,16 @@ def linePointDist(linePoint1, linePoint2, point, infinite = False):
 		closest = linePoint1
 	elif projectionDist > lineDist and not infinite:
 		closest = linePoint2
-	else: 
+	else:
 		ratio = projectionDist / lineDist
 		closest = (line[0] * ratio + linePoint1[0],
 					  line[1] * ratio + linePoint1[1])
 	return dist(closest[0], closest[1], point[0], point[1])
-	
-	
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
+
+
