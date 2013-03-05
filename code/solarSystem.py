@@ -138,13 +138,15 @@ class SolarA1(SolarSystem):
 		player.y = distanceFromSun * sin(angle)
 		#add asteroids:
 		for i in range(100):
-			x = randint(-30000, 30000) 
-			y = randint(-30000, 30000) 
+			x = randint(-30000, 30000)
+			y = randint(-30000, 30000)
 			radius = randint(10, 60)
-			dx = randint( -20, 20)
-			dy = randint( -20, 20)
+			angle = atan2(y, x) + 90
+			vel = sqrt(self.sun.mass * self.sun.g / dist(x, y, self.sun.x, self.sun.y))
+			dx = vel * cos(angle) + randint(-20, 20)
+			dy = vel * sin(angle) + randint(-20, 20)
 			self.add(Asteroid(game, x, y, dx, dy, radius))
-		
+
 		race1 = game.race1
 		race2 = game.race2
 		self.add(self.sun)
@@ -171,6 +173,7 @@ class SolarA1(SolarSystem):
 		for p in planets:
 			self.add(p)"""
 		numPlanets = randint(3,12)
+		planetname = 'abcdefghijklmnopqrstuvwxyz'
 		d = 8000
 		for p in range(numPlanets):
 			angle = randint(1,360)
@@ -179,8 +182,10 @@ class SolarA1(SolarSystem):
 			rad = randint(100,1000)
 			mass = abs(randnorm(rad ** 2.1 / 25, rad ** 1.3))
 			self.add(Planet(game, radius = rad, mass = mass, color = color, \
-				image = None, name = 'planet', Anomaly = angle, SemiMajor = distanceFromSun, \
-				LongPeriapsis = randint(1,360), eccentricity = randint(0,100) / 500.))
+				image = None, name = planetname[p], Anomaly = angle, SemiMajor = distanceFromSun, \
+				LongPeriapsis = randint(1,360), eccentricity = randint(0,100) / 500., \
+				bounce = randint(1,10) / 20., race = choice((race1, race2)), randint(0,5000),\
+				randint(1,20) / 10., randint(1,20) / 10.))
 			d += 4000
 
 	def update(self, dt):
@@ -296,10 +301,18 @@ def collide(a, b):
 	return False
 
 def planet_ship_collision(planet, ship):
-	angle = atan2(planet.y - ship.y, planet.x - ship.x)
-	dx, dy = rotate(ship.dx, ship.dy, angle)
-	speed = sqrt(dx ** 2 + dy ** 2)
-	if speed > planet.LANDING_SPEED:
+	if isinstance(planet, Sun):
+		ship.kill()
+		return
+	orbvel = sqrt(planet.g * planet.game.curSystem.sun.mass * (2/planet.distance-1/planet.SMa))
+	smi = planet.SMa * planet.p
+	vx = orbvel * -planet.SMa * math.sin(planet.EccAn) / sqrt((smi * math.cos(planet.EccAn)) ** 2 \
+	+ (planet.SMa * math.sin(planet.EccAn)) ** 2)
+	vy = orbvel * smi * math.cos(planet.EccAn) / sqrt((smi * math.cos(planet.EccAn)) ** 2 \
+	 + (planet.SMa * math.sin(planet.EccAn)) ** 2)
+	planetvel = rotate(vx, vy, planet.LPe)
+	speed = sqrt((planetvel[0] - ship.dx) ** 2 + (planetvel[1] - ship.dy) ** 2)
+	if speed > planet.LANDING_SPEED and not ship.landed:
 		if planet.damage.has_key(ship):
 			damage = planet.damage[ship]
 		else:
@@ -314,11 +327,11 @@ def planet_ship_collision(planet, ship):
 				damage -= ship.hp
 				if damage <= 0:
 					r = ship.radius + planet.radius
-					temp = (ship.dx * -(ship.x - planet.x) / r
-							+ ship.dy * -(ship.y - planet.y) / r)
-					ship.dy = (ship.dx * (ship.y - planet.y) / r
-							+ ship.dy * -(ship.x - planet.x) / r)
-					ship.dx = temp
+					dx, dy = ship.dx - planetvel[0], ship.dy - planetvel[1]
+					ship.dx = planet.bounciness * (dx * -(ship.x - planet.x) / r
+							+ dy * -(ship.y - planet.y) / r) + planetvel[0]
+					ship.dy = planet.bounciness * (dx * (ship.y - planet.y) / r
+							+ dy * -(ship.x - planet.x) / r) + planetvel[1]
 					if planet.damage.has_key(ship):
 						del planet.damage[ship]
 					return
@@ -342,10 +355,10 @@ def planet_ship_collision(planet, ship):
 	else:
 		#landing:
 		if ship == planet.game.player and not ship.landed:
-			planet.game.pause = True
+			#planet.game.pause = True
 			ship.landed = planet
 			ship.game.menu.parts.reset()
-		ship.dx, ship.dy = planet.dx, planet.dy
+			ship.land = atan2(ship.y - planet.y, ship.x - planet.x)
 
 def planet_freePart_collision(planet, part):
 	part.kill()

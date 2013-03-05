@@ -22,7 +22,7 @@ def Eanomaly(M, e):
 class Planet(Floater):
 	maxRadius = 1000000 # no gravity felt past this (approximation).
 	PLANET_DAMAGE = .0004
-	LANDING_SPEED = 200 #pixels per second. Under this, no damage.
+	LANDING_SPEED = 300 #pixels per second. Under this, no damage.
 	g = 5000 # the gravitational constant.
 	shipInProgress = None
 	shipValue = 0
@@ -31,7 +31,7 @@ class Planet(Floater):
 	def __init__(self, game, radius = 100, mass = 1000,
 					color = (100,200,50), image = None, name = 'planet',
 					Anomaly = 0, SemiMajor= 10000, LongPeriapsis = 0, eccentricity = 0,
-                    period = 0, race = None, population = 1, life = 1, resources = 1):
+                    period = 0, bounce = 0.5, race = None, population = 1, life = 1, resources = 1):
 		#get initial position
 		distance = SemiMajor * (1-eccentricity**2) / (1+eccentricity*cos(Anomaly))
 		pos = rotate(distance * cos(Anomaly), distance * sin(Anomaly), LongPeriapsis)
@@ -51,6 +51,7 @@ class Planet(Floater):
 		self.p = (1-self.e**2) #semi-latus rectum (?)
 		self.mass = mass #determines gravity.
 		self.color = color
+		self.bounciness = bounce
 		self.damage = {}
 		# damage[ship] is the amount of damage a ship has yet to take,
 		# see solarSystem.planet_ship_collision
@@ -85,11 +86,11 @@ class Planet(Floater):
 				other.dx += cos(angle) * accel * dt
 				other.dy += sin(angle) * accel * dt
 		#update orbital position
-		M = self.n * self.game.playTime + self.ano
-		EccAn = Eanomaly(M, self.e)
-		tAnom = 2 * math.atan(self.tAn*math.tan(EccAn/2)) #get true anomaly
-		distance = self.SMa * self.p / (1+self.e*math.cos(tAnom))
-		pos = rotate(distance * math.cos(tAnom), distance * math.sin(tAnom), self.LPe)
+		self.M = self.n * self.game.playTime + self.ano
+		self.EccAn = Eanomaly(self.M, self.e)
+		self.tAnom = 2 * math.atan(self.tAn*math.tan(self.EccAn/2)) #get true anomaly
+		self.distance = self.SMa * self.p / (1+self.e*math.cos(self.tAnom))
+		pos = rotate(self.distance * math.cos(self.tAnom), self.distance * math.sin(self.tAnom), self.LPe)
 		self.x, self.y = pos[0], pos[1]
 
 	def draw(self, surface, offset = (0,0)):
@@ -144,6 +145,7 @@ class Sun(Planet):
 		else:
 			self.image = pygame.transform.rotate(pygame.transform.scale(
 							image, (radius * 2, radius * 2)), -atan2(y,x))
+		self.inventory = []
 	def update(self, dt):
 			for other in self.game.curSystem.floaters:
 				if  (other.gravitates
@@ -156,10 +158,11 @@ class Sun(Planet):
 					other.dx += cos(angle) * accel * dt
 					other.dy += sin(angle) * accel * dt
 			#update orbital position
-			M = self.n * self.game.playTime + self.ano
-			tAnom = 2 * math.atan(self.tAn*math.tan(Eanomaly(M, self.e)/2)) #get true anomaly
-			distance = self.SMa * self.p / (1+self.e*math.cos(tAnom))
-			pos = rotate(distance * math.cos(tAnom), distance * math.sin(tAnom), self.LPe)
+			self.M = self.n * self.game.playTime + self.ano
+			self.EccAn = Eanomaly(self.M, self.e)
+			self.tAnom = 2 * math.atan(self.tAn*math.tan(self.EccAn/2)) #get true anomaly
+			self.distance = self.SMa * self.p / (1+self.e*math.cos(self.tAnom))
+			pos = rotate(self.distance * math.cos(self.tAnom), self.distance * math.sin(self.tAnom), self.LPe)
 			self.x, self.y = pos[0], pos[1]
 
 	def draw(self, surface, offset = (0,0)):

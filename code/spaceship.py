@@ -1,5 +1,5 @@
 #spaceship.py
-	
+
 from utils import *
 from parts import *
 from partCatalog import *
@@ -32,7 +32,7 @@ def makeFighter(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	ship.energy = ship.maxEnergy * .8
 	ship.inventory.append(EmergencyEngine(game))
 	return ship
-	
+
 def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), player = False, system = None):
 	"""starterShip(x,y) -> default starting ship at x,y."""
@@ -61,8 +61,8 @@ def makeDestroyer(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	ship.reset()
 	ship.energy = ship.maxEnergy * .8
 	ship.inventory.append(EmergencyEngine(game))
-	return ship	
-	
+	return ship
+
 def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), player = False, system = None):
 	"""starterShip(x,y) -> default starting ship at x,y."""
@@ -97,18 +97,18 @@ def makeInterceptor(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	ship.energy = ship.maxEnergy * .8
 	ship.inventory.append(EmergencyEngine(game))
 	return ship
-	
+
 def playerShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), type = 'fighter', system = None):
 	"""starterShip(x,y) -> default starting ship at x,y."""
 	if type == 'destroyer':
-		ship = makeDestroyer(game, x, y, dx, dy, dir, 
+		ship = makeDestroyer(game, x, y, dx, dy, dir,
 				script, color, player=True, system = system)
 	elif type == 'interceptor':
-		ship = makeInterceptor(game, x, y, dx, dy, dir, 
+		ship = makeInterceptor(game, x, y, dx, dy, dir,
 				script, color, player=True, system = system)
 	else:
-		ship = makeFighter(game, x, y, dx, dy, dir, 
+		ship = makeFighter(game, x, y, dx, dy, dir,
 				script, color, player=True, system = system)
 	#default controls:
 	script.bind(K_DOWN, ship.reverse)
@@ -124,13 +124,13 @@ def playerShip(game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 	script.bind(K_a, ship.turnLeft)
 	script.bind(K_LCTRL, ship.shoot)
 	script.bind(K_SPACE, ship.launchMissiles)
-	
+
 	return ship
 
 class Ship(Floater):
 	"""Ship(x, y, dx = 0, dy = 0, dir = 270,
-	script = None, color = (255,255,255)) 
-	script should have an update method that 
+	script = None, color = (255,255,255))
+	script should have an update method that
 	returns (moveDir, target, action)."""
 	mass = 0
 	moment = 0
@@ -156,7 +156,7 @@ class Ship(Floater):
 	skills = []
 	level = 1
 	value = 0
-	
+	landed = False
 	partEffects = []
 	effects = []
 	skillEffects = []
@@ -177,7 +177,7 @@ class Ship(Floater):
 	'cannonSpeedBonus' : 1., 'missileSpeedBonus' : 1.\
 	}
 
-	
+
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), race = None, system = None):
 		Floater.__init__(self, game, x, y, dx, dy, dir, 1)
@@ -234,8 +234,8 @@ class Ship(Floater):
 		self.dps = 0
 		self.partRollCall(self.ports[0].part)
 		minX, minY, maxX, maxY = 0, 0, 0, 0
-		#TODO: ? make the center of the ship the center of mass instead of the 
-		#center of the radii. 
+		#TODO: ? make the center of the ship the center of mass instead of the
+		#center of the radii.
 		for part in self.parts:
 			minX = min(part.offset[0] - part.radius, minX)
 			minY = min(part.offset[1] - part.radius, minY)
@@ -272,7 +272,7 @@ class Ship(Floater):
 		#redraw base image:
 		if self.game.pause:
 			size = int(self.radius * 2 + 60)
-		else: 
+		else:
 			size = int(self.radius * 2)
 		self.baseImage = pygame.Surface((size, size), \
 					hardwareFlag | SRCALPHA).convert_alpha()
@@ -311,7 +311,7 @@ class Ship(Floater):
 			for port in part.ports:
 				if port.part:
 					self.partRollCall(port.part)
-				
+
 	def forward(self):
 		"""thrust forward using all forward engines"""
 		for engine in self.forwardEngines:
@@ -343,19 +343,19 @@ class Ship(Floater):
 	def launchMissiles(self):
 		for missles in self.missiles:
 			missles.shoot()
-	
-	
+
+
 	def update(self, dt):
 		self.dt = dt
-	
+
 		#check if dead:
 		if not self.parts or self.parts[0].hp <= 0:
 			self.kill()
-		
+
 		#allow race to update:
 		if self.race:
 			self.race.updateShip(self, dt)
-		
+
 		self.thrusting = False
 		#run script, get choices.
 		self.script.update(self, dt)
@@ -365,8 +365,8 @@ class Ship(Floater):
 		#parts updating:
 		if self.ports[0].part:
 			self.ports[0].part.update(dt)
-		
-		
+
+
 		#active effects:
 		for effect in self.effects:
 			effect(self)
@@ -375,10 +375,10 @@ class Ship(Floater):
 			effect(self)
 
 	def draw(self, surface, offset = None, pos = (0, 0)):
-		"""ship.draw(surface, offset) -> Blits this ship onto the surface. 
+		"""ship.draw(surface, offset) -> Blits this ship onto the surface.
 		 offset is the (x,y) of the topleft of the surface, pos is the
 		 position to draw the ship on the surface, where pos=(0,0) is the
-		 center of the surface. If offset is none, the ship will be drawn down 
+		 center of the surface. If offset is none, the ship will be drawn down
 		 and right from pos where pos(0,0) is the topleft of the surface."""
 		#image update:
 		#note: transform is counter-clockwise, opposite of everything else.
@@ -387,7 +387,7 @@ class Ship(Floater):
 		self.image = pygame.transform.rotate(self.baseImage, \
 									-self.dir).convert_alpha()
 		self.image.set_colorkey((0,0,0))
-		
+
 		#imageOffset compensates for the extra padding from the rotation.
 		imageOffset = [- self.image.get_width() / 2,\
 					   - self.image.get_height() / 2]
@@ -395,12 +395,12 @@ class Ship(Floater):
 		if offset:
 			pos =[self.x  - offset[0] + pos[0] + imageOffset[0], \
 				  self.y  - offset[1] + pos[1] + imageOffset[1]]
-				  
+
 		#draw to buffer:
 		surface.blit(self.image, pos)
 		for part in self.parts:
 			part.redraw(surface, offset)
-		
+
 		#shield:
 		if self.hp > .0002:
 			r = int(self.radius)
@@ -412,12 +412,12 @@ class Ship(Floater):
 			rect = (0,0, r * 2, r * 2)
 			pygame.draw.arc(buffer, (50,50,200,100), rect, + math.pi/2,\
 							math.pi * 2 * self.hp / self.maxhp + math.pi/2, 5)
-							
+
 		#draw to input surface:
 		pos[0] += - imageOffset[0] - self.radius
 		pos[1] += - imageOffset[1] - self.radius
-		surface.blit(buffer, pos) 
-		
+		surface.blit(buffer, pos)
+
 	def takeDamage(self, damage, other):
 		self.hp = max(self.hp - damage, 0)
 		if isinstance(other, Bullet) and other.ship == self.game.player:
@@ -433,57 +433,70 @@ class Ship(Floater):
 class Player(Ship):
 	xp = 0
 	developmentPoints = 2
-	landed = False
 	frameUpdating = True
-	
+
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), system = None):
 		Ship.__init__(self, game, x, y, dx, dy, dir, script, color,
 						 system = system)
 		self.skills = [Modularity(self), Agility(self), Composure(self)]
-	
+
 	def xpQuest(self, xp):
 		self.xp += xp
-	
+
 	def xpKill(self, ship):
 		self.xp +=  10. * ship.level / self.level
-	
+
 	def xpDamage(self, target, damage):
 		if isinstance(target, Part) and target.parent:
 			target = target.parent #count the ship, not the part.
 		self.xp += 1. * target.level / self.level * damage
-	
+
 	def xpDestroy(self, target):
 		self.xp += 2. * target.level / self.level
-		
+
 	def update(self, dt):
 		if self.game.debug: print 'xp:',self.xp
 		if self.xp >= self.next():
 			self.level += 1
 			self.developmentPoints += 1
 			self.xp = 0
-		if self.landed \
-		and dist2(self, self.landed) > (self.landed.radius * 2) ** 2:
-			self.landed = False
-		
+		if self.landed:
+			orbvel = sqrt(self.landed.g * self.game.curSystem.sun.mass * \
+			(2/self.landed.distance - 1/self.landed.SMa))
+			smi = self.landed.SMa * self.landed.p
+			vx = orbvel * -self.landed.SMa * math.sin(self.landed.EccAn) / sqrt((smi * \
+			math.cos(self.landed.EccAn)) ** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
+			vy = orbvel * smi * math.cos(self.landed.EccAn) / sqrt((smi * math.cos(self.landed.EccAn))
+			** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
+			planetvel = rotate(vx, vy, self.landed.LPe)
+			velmod = sqrt(dist2(self,self.game.curSystem.sun)) / self.landed.distance
+			self.dx, self.dy = planetvel[0] * velmod, planetvel[1] * velmod
+			if dist2(self, self.landed) > ((self.landed.radius + self.radius ) ** 2 + 50):
+				self.landed = False
+			elif self.thrusting and abs(self.land - self.dir) < 90:
+				self.landed = False
+			else:
+				self.x = self.landed.x + (self.landed.radius + self.radius) * cos(self.land)
+				self.y = self.landed.y + (self.landed.radius + self.radius) * sin(self.land)
 		Ship.update(self, dt)
 		self.frameUpdating = 1
 		self.thrustSoundFX()
-		
-		
+
+
 	def thrustSoundFX(self):
 		channel = pygame.mixer.Channel(0)
 		if self.thrusting and not channel.get_busy():
 				channel.play(thrustSound, -1)
 		elif not self.thrusting and channel.get_busy():
 			channel.stop()
-		
-	
+
+
 	def next(self):
 		return 1.1 ** self.level * 10
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
