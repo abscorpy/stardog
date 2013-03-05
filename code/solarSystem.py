@@ -184,8 +184,8 @@ class SolarA1(SolarSystem):
 			self.add(Planet(game, radius = rad, mass = mass, color = color, \
 				image = None, name = planetname[p], Anomaly = angle, SemiMajor = distanceFromSun, \
 				LongPeriapsis = randint(1,360), eccentricity = randint(0,100) / 500., \
-				bounce = randint(1,10) / 20., race = choice((race1, race2)), randint(0,5000),\
-				randint(1,20) / 10., randint(1,20) / 10.))
+				bounce = randint(1,10) / 20., race = choice((race1, race2)), population = randint(0,5000),\
+				life = randint(1,20) / 10., resources = randint(1,20) / 10.))
 			d += 4000
 
 	def update(self, dt):
@@ -304,6 +304,7 @@ def planet_ship_collision(planet, ship):
 	if isinstance(planet, Sun):
 		ship.kill()
 		return
+	#get planet velocity to compare with ship's
 	orbvel = sqrt(planet.g * planet.game.curSystem.sun.mass * (2/planet.distance-1/planet.SMa))
 	smi = planet.SMa * planet.p
 	vx = orbvel * -planet.SMa * math.sin(planet.EccAn) / sqrt((smi * math.cos(planet.EccAn)) ** 2 \
