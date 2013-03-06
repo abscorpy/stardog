@@ -13,6 +13,7 @@ indicators:
 	the red ship moves tries to intercept by heading to the red dot.
 	the red ship instead avoids the planet if the thick red line (its inertia)
 		is between the pink lines and longer than half the thin red line.
+SEE "TestAI figures.png"
 """
 
 import pygame
@@ -259,7 +260,7 @@ def ai(ship, enemy, planets):
 	dist = sqrt(dist2)
 	#see if our current trajectory will hit the planet:	
 	missDist = closest.radius + ship.radius + safetyDistance #min safe dist.
-	dangerAngle = atan2((missDist), dist-missDist)	#min angle to miss planet by.
+	dangerAngle = asin((missDist) / max(dist, missDist))	#min angle to miss planet by.
 	planetDir = relativeDir(ship, closest) 		#direction of the planet.
 	currentHeadingAngle = atan2(ship.dy, ship.dx) 	#our inertia vector.
 	speed2 = ship.dx**2 + ship.dy**2 			# our inertia speed squared.
