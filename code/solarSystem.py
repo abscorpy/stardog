@@ -12,7 +12,7 @@ import stardog
 
 class SolarSystem:
 	"""A SolarSystem holds ships and other floaters."""
-	boundries = ((-50000, 50000), (-50000, 50000))
+	boundries = 150000
 	drawEdgeWarning = False
 	calmMusic = "res/sound/music simple.ogg"
 	alertMusic = "res/sound/music alert.ogg"
@@ -57,24 +57,14 @@ class SolarSystem:
 			collide(f1,f2)
 
 		#keep ships inside system boundries for now:
-		edge = self.boundries
 		if self.drawEdgeWarning:
 			self.drawEdgeWarning -= 1. * self.game.dt
 			if self.drawEdgeWarning <=0:
 				self.drawEdgeWarning = False
 		for floater in self.floaters.frame:
-			if (floater.x < edge[0][0] and floater.dx < 0
-			or floater.x > edge[0][1] and floater.dx > 0):
+			if (floater.x ** 2 + floater .y ** 2) > self.boundries ** 2:
 				if isinstance(floater, Ship):
-					floater.dx = 0
-					if floater == self.game.player:
-						self.drawEdgeWarning = 1.
-				else:
-					floater.kill()
-			if (floater.y < edge[1][0] and floater.dy < 0
-			or floater.y > edge[1][1] and floater.dy > 0):
-				if isinstance(floater, Ship):
-					floater.dy = 0
+					floater.dx, floater.dy = 0, 0
 					if floater == self.game.player:
 						self.drawEdgeWarning = 1.
 				else:
@@ -125,15 +115,15 @@ class SolarA1(SolarSystem):
 	maxFighters = 15
 	respawnTime = 30
 	fightersPerMinute = 2
-	def __init__(self, game, player, numPlanets = 10):
+	def __init__(self, game, player):
 		SolarSystem.__init__(self, game)
-		self.sun = (Sun( game, radius = 4000, mass = 1000000.,
+		self.sun = (Sun( game, radius = 4000, mass = 600000.,
 					color = (255, 255, 255), image = None)) # the star
 		rockyPlanetImage = loadImage('res/planets/Rocky 2.bmp')
 		gasPlanetImage = loadImage('res/planets/Gas Giant 1.bmp')
 		#place player:
 		angle = randint(0,360)
-		distanceFromSun = randint(8000, 18000)
+		distanceFromSun = randint(15000, 25000)
 		player.x = distanceFromSun * cos(angle)
 		player.y = distanceFromSun * sin(angle)
 		#add asteroids:
@@ -147,8 +137,6 @@ class SolarA1(SolarSystem):
 			dy = vel * sin(angle) + randint(-20, 20)
 			self.add(Asteroid(game, x, y, dx, dy, radius))
 
-		race1 = game.race1
-		race2 = game.race2
 		self.add(self.sun)
 		self.fighterTimer = 40
 		#add planets:
@@ -172,21 +160,28 @@ class SolarA1(SolarSystem):
 			]
 		for p in planets:
 			self.add(p)"""
-		numPlanets = randint(3,12)
+	def createPlanets(self, game):
 		planetname = 'abcdefghijklmnopqrstuvwxyz'
-		d = 8000
-		for p in range(numPlanets):
-			angle = randint(1,360)
-			distanceFromSun = randint(d, d + 2000)
-			color = randint(40,255),randint(40,255),randint(40,255)
-			rad = randint(100,1000)
+		d = self.sun.radius * 1.1 + randint(0,1000)
+		p = -1
+		while True:
+			p += 1
+			ecc = randint(0,100) / 500.
+			rad = choice((randint(100,1000),randint(100,500)))
 			mass = abs(randnorm(rad ** 2.1 / 25, rad ** 1.3))
-			self.add(Planet(game, radius = rad, mass = mass, color = color, \
-				image = None, name = planetname[p], Anomaly = angle, SemiMajor = distanceFromSun, \
-				LongPeriapsis = randint(1,360), eccentricity = randint(0,100) / 500., \
-				bounce = randint(1,10) / 20., race = choice((race1, race2)), population = randint(0,5000),\
-				life = randint(1,20) / 10., resources = randint(1,20) / 10.))
-			d += 4000
+			grav = (1+ecc) * (sqrt(self.sun.mass*mass) - mass) / (self.sun.mass-mass)
+			distanceFromSun = int(d / (1 - ecc - grav) + randint(0,2000))
+			color = randint(40,255),randint(40,255),randint(40,255)
+			if distanceFromSun * (1+ecc+grav) > self.boundries or rand() < 0.05:
+				break
+			planet = Planet(game, radius = rad, mass = mass, color = color, \
+				image = None, name = planetname[p], Anomaly = randint(1,360), SemiMajor = distanceFromSun, \
+				LongPeriapsis = randint(1,360), eccentricity = ecc, bounce = randint(1,10) / 20., \
+				race = choice((game.race1,game.race2)), population = randint(0,5000),\
+				life = randint(1,20) / 10., resources = randint(1,20) / 10.)
+			self.add(planet)
+			d = distanceFromSun * (1 + ecc + grav)
+
 
 	def update(self, dt):
 		SolarSystem.update(self, dt)
@@ -355,12 +350,12 @@ def planet_ship_collision(planet, ship):
 			planet.damage[ship] = damage
 	else:
 		#landing:
-		if ship == planet.game.player and not ship.landed:
-			#planet.game.pause = True
+		if not ship.landed:
 			ship.landed = planet
 			ship.game.menu.parts.reset()
 			ship.land = atan2(ship.y - planet.y, ship.x - planet.x)
-
+			if ship == planet.game.player:
+				ship.game.pause = True
 def planet_freePart_collision(planet, part):
 	part.kill()
 	planet.inventory.append(part)

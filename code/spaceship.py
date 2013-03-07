@@ -356,6 +356,24 @@ class Ship(Floater):
 		if self.race:
 			self.race.updateShip(self, dt)
 
+		#check if landed:
+		if self.landed:
+			orbvel = sqrt(self.landed.g * self.game.curSystem.sun.mass * \
+			(2/self.landed.distance - 1/self.landed.SMa))
+			smi = self.landed.SMa * self.landed.p
+			vx = orbvel * -self.landed.SMa * math.sin(self.landed.EccAn) / sqrt((smi * \
+			math.cos(self.landed.EccAn)) ** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
+			vy = orbvel * smi * math.cos(self.landed.EccAn) / sqrt((smi * math.cos(self.landed.EccAn))
+			** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
+			planetvel = rotate(vx, vy, self.landed.LPe)
+			velmod = sqrt(dist2(self, self.game.curSystem.sun)) / self.landed.distance
+			self.dx, self.dy = planetvel[0] * velmod, planetvel[1] * velmod
+			if self.thrusting and abs(self.land - self.dir) < 90:
+				self.landed = False
+			else:
+				self.x = self.landed.x + (self.landed.radius + self.radius) * cos(self.land)
+				self.y = self.landed.y + (self.landed.radius + self.radius) * sin(self.land)
+
 		self.thrusting = False
 		#run script, get choices.
 		self.script.update(self, dt)
@@ -461,24 +479,7 @@ class Player(Ship):
 			self.level += 1
 			self.developmentPoints += 1
 			self.xp = 0
-		if self.landed:
-			orbvel = sqrt(self.landed.g * self.game.curSystem.sun.mass * \
-			(2/self.landed.distance - 1/self.landed.SMa))
-			smi = self.landed.SMa * self.landed.p
-			vx = orbvel * -self.landed.SMa * math.sin(self.landed.EccAn) / sqrt((smi * \
-			math.cos(self.landed.EccAn)) ** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
-			vy = orbvel * smi * math.cos(self.landed.EccAn) / sqrt((smi * math.cos(self.landed.EccAn))
-			** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
-			planetvel = rotate(vx, vy, self.landed.LPe)
-			velmod = sqrt(dist2(self,self.game.curSystem.sun)) / self.landed.distance
-			self.dx, self.dy = planetvel[0] * velmod, planetvel[1] * velmod
-			if dist2(self, self.landed) > ((self.landed.radius + self.radius ) ** 2 + 50):
-				self.landed = False
-			elif self.thrusting and abs(self.land - self.dir) < 90:
-				self.landed = False
-			else:
-				self.x = self.landed.x + (self.landed.radius + self.radius) * cos(self.land)
-				self.y = self.landed.y + (self.landed.radius + self.radius) * sin(self.land)
+
 		Ship.update(self, dt)
 		self.frameUpdating = 1
 		self.thrustSoundFX()
