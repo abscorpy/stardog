@@ -9,21 +9,20 @@ import partCatalog
 
 import stardog
 
-def Eanomaly(M, e):
+def Eanomaly(M,e):
 	"""obtains eccentric anomaly for a given mean anomaly (M) and eccentricity (e). Use radians"""
-	E0=0    #first solve the Kepler equation (M=E-e*sin(E)) for E (eccentric anomaly)
+	E0=0    #solve the Kepler equation (M=E-e*sin(E)) for E (eccentric anomaly)
 	E1=M    #the function works with radians to improve computing speed
 	while abs(E1-E0)>.000001: #number of iterations depends strongly on e, and on M in less grade
 		E0=E1               #with e<0.2 it varies between 1 and 10; tipically there are 7 iterations
 		E1=M+e*math.sin(E0)
-	#theta = 2*math.atan(sqrt((1+e)/(1-e))*math.tan(E1/2)) #obtain true anomaly
 	return E1
 
 class Planet(Floater):
 	maxRadius = 1000000 # no gravity felt past this (approximation).
 	PLANET_DAMAGE = .0004
-	LANDING_SPEED = 300 #pixels per second. Under this, no damage.
-	g = 5000 # the gravitational constant.
+	LANDING_SPEED = 200 #pixels per second. Under this, no damage.
+	g = 3000 # the gravitational constant.
 	shipInProgress = None
 	shipValue = 0
 	hp = 30000
@@ -42,7 +41,7 @@ class Planet(Floater):
 		self.LPe = LongPeriapsis #the orientation of the ellipse
 		self.e = eccentricity #defines the shape of the orbit, must be 0<e<1; it can be 0
 		if period == 0: #by default, the period is the one of a classic keplerian orbit
-			self.period = 2 * pi * sqrt(self.SMa ** 3 / (self.g * 1000000))
+			self.period = 2 * pi * sqrt(self.SMa ** 3 / (self.g * self.game.curSystem.sun.mass))
 		else:
 			self.period = period
 		self.ano = math.radians(Anomaly)
