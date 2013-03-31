@@ -526,7 +526,7 @@ class Engine(Part):
 	baseImage = loadImage("res/parts/engine" + ext)
 	image = None
 	name = "Engine"
-	force = 24000
+	force = 12000
 	thrusting = False
 	energyCost = 1.
 	def __init__(self, game):

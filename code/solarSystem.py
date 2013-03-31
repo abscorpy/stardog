@@ -354,8 +354,9 @@ def planet_ship_collision(planet, ship):
 			ship.landed = planet
 			ship.game.menu.parts.reset()
 			ship.land = atan2(ship.y - planet.y, ship.x - planet.x)
-			if ship == planet.game.player:
+			if ship == ship.game.player and ship.thrusting == False:
 				ship.game.pause = True
+
 def planet_freePart_collision(planet, part):
 	part.kill()
 	planet.inventory.append(part)

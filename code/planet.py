@@ -72,8 +72,6 @@ class Planet(Floater):
 		self.cities = self.population / 1000
 
 	def update(self, dt):
-		if self.race:
-			self.race.updatePlanet(self)
 		for other in self.game.curSystem.floaters:
 			if  (other.gravitates
 			and abs(self.x - other.x) < self.maxRadius
@@ -91,6 +89,8 @@ class Planet(Floater):
 		self.distance = self.SMa * self.p / (1+self.e*math.cos(self.tAnom))
 		pos = rotate(self.distance * math.cos(self.tAnom), self.distance * math.sin(self.tAnom), self.LPe)
 		self.x, self.y = pos[0], pos[1]
+		if self.race:
+			self.race.updatePlanet(self)
 
 	def draw(self, surface, offset = (0,0)):
 		if self.image:

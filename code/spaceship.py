@@ -368,7 +368,8 @@ class Ship(Floater):
 			planetvel = rotate(vx, vy, self.landed.LPe)
 			velmod = sqrt(dist2(self, self.game.curSystem.sun)) / self.landed.distance
 			self.dx, self.dy = planetvel[0] * velmod, planetvel[1] * velmod
-			if self.thrusting and abs(self.land - self.dir) < 90:
+			if self.thrusting and abs(self.land - self.dir) < 90 and dist2(self,self.landed) > \
+			self.landed.radius ** 2:
 				self.landed = False
 			else:
 				self.x = self.landed.x + (self.landed.radius + self.radius) * cos(self.land)
