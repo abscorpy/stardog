@@ -187,6 +187,7 @@ class Ship(Floater):
 		self.maxEnergy = 0
 		self.color = color
 		self.race = race
+		if self.race: self.race.ships.append(self)
 		self.part = None
 		self.__dict__.update(self.baseBonuses)
 		if script: self.script = script
@@ -447,6 +448,8 @@ class Ship(Floater):
 		setVolume(explodeSound.play(), self, self.game.player)
 		for part in self.inventory:
 			part.scatter(self)
+		if self.race:
+			self.race.ships.remove(self)
 		Floater.kill(self)
 
 class Player(Ship):
