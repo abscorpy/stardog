@@ -158,7 +158,17 @@ class Game:
 			if self.keys[K_BACKSPACE % 322]:
 				self.debug = True #print debug information
 				self.keys[K_BACKSPACE % 322] = 0
-				print "Debug:"
+				distance = float("inf")
+				for planet in self.curSystem.planets:
+					dis = dist2(self.player,planet)
+					if dis < distance:
+						nearest = planet
+						distance = dis
+				grav = nearest.mass * nearest.g / distance
+				thrust = self.player.efficiency * self.player.thrustBonus *\
+				self.player.forwardThrust / self.player.mass
+				print "Debug:\nlanded:{0} gravity:{1} thrust:{2}".format(self.player.landed!=False,\
+                grav, thrust)
 			#ctrl+q or alt+F4 quit:
 			if self.keys[K_LALT % 322] and self.keys[K_F4 % 322] \
 			or self.keys[K_RALT % 322] and self.keys[K_F4 % 322] \

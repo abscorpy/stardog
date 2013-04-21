@@ -56,13 +56,15 @@ class Race:
 									* self.game.dt)
 		#print planet.name, planet.population, planet.buildProgress, planet.shipValue
 		#start building new ship:
-		if not planet.shipInProgress:
+		if not planet.shipInProgress and len(self.ships)<=30:
 			angle = randint(0, 360)
 			x = planet.x + cos(angle) * (planet.radius + 300)
 			y = planet.y + sin(angle) * (planet.radius + 300)
 			planet.shipInProgress = Strafebat(self.game,
 									x, y, color = self.color, race = self)
 			planet.shipValue = planet.shipInProgress.value
+		elif len(self.ships)>30:
+			planet.shipValue = float("inf") #don't build ships
 		#complete ship construction:
 		if planet.buildProgress >= planet.shipValue:
 			planet.buildProgress = 0
