@@ -242,12 +242,12 @@ def collide(a, b):
 		#shield ship/?:
 		if isinstance(b, Ship) and b.hp > 0: a,b = b,a
 		if isinstance(a, Ship) and a.hp > 0:
-			#shield ship/free part
+			hit = False
+			#shield ship/free part:
 			if isinstance(b, Part) and b.parent == None:
 				ship_freePart_collision(a, b)
 				return True
-			#crash against ship's shields, if any:
-			hit = False
+			#shield/shield or shield/attached part:
 			if (b.hp >= 0 and (sign(b.x - a.x) == - sign(b.dx - a.dx)
 							or sign(b.y - a.y) == - sign(b.dy - a.dy))):
 				# moving into ship, not out of it.
@@ -257,9 +257,9 @@ def collide(a, b):
 				if a.hp <= 0:
 					collide(a, b)
 					return True
-			#shield ship/no shield ship (or less shield than this one)
+			#shield ship/no shield ship (maybe because shields just died):
 			if isinstance(b, Ship) and b.hp <= 0:
-				for part in b.parts:
+				for part in reversed(b.parts[:]):	#reversed so cockpit is last, copied in case damage removes an item from the list.
 					if collide(a, part):
 						#if that returned true, everything
 						#should be done already.
@@ -276,7 +276,7 @@ def collide(a, b):
 
 			#recurse to ship parts
 			hit = False
-			for part in a.parts:
+			for part in reversed(a.parts[:]):	#reversed so cockpit is last, copied in case damage removes an item from the list.
 				if collide(b, part):#works for ship/ship, too.
 					#if that returned true, everything
 					#should be done already.
@@ -331,7 +331,7 @@ def planet_ship_collision(planet, ship):
 					if planet.damage.has_key(ship):
 						del planet.damage[ship]
 					return
-		for part in ship.parts:
+		for part in reversed(ship.parts[:]):	#reversed so cockpit is last, copied in case damage removes an item from the list.
 			if collisionTest(planet, part):
 				temp = part.hp
 				part.takeDamage(damage, planet)
@@ -371,7 +371,7 @@ def ship_freePart_collision(ship, part):
 	part.kill()
 	ship.inventory.append(part)
 	if ship.game.player == ship:
-		ship.game.menu.parts.inventoryPanel.reset() #TODO: make not suck
+		ship.game.menu.parts.inventoryPanel.reset()
 
 def explosion_push(explosion, floater):
 	"""The push of an explosion.  The rest of the effect is handled by the
