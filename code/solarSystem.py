@@ -11,7 +11,8 @@ from updater import Updater
 import stardog
 
 class SolarSystem:
-	"""A SolarSystem holds ships and other floaters."""
+	"""A SolarSystem holds ships and other floaters, music, the background. 
+	It calls update() and draw() on its members and handles collisions.."""
 	boundries = 150000
 	drawEdgeWarning = False
 	calmMusic = "res/sound/music simple.ogg"
@@ -44,19 +45,19 @@ class SolarSystem:
 	def update(self, dt):
 		"""Runs the game."""
 
+		#note that self.floaters is an Updater, which provides optimizations.
 		#update floaters:
 		screen = Rect((self.game.player.x - self.game.width / 2,
 				self.game.player.y - self.game.height / 2),
 				(self.game.width, self.game.height))
 		self.floaters.update(dt, screen)
-		# for f in self.floaters:
-			# f.update(self.game.dt)
+		
 		#check collisions:
 		collisions = self.floaters.collisions()
 		for f1,f2 in collisions:
 			collide(f1,f2)
 
-		#keep ships inside system boundries for now:
+		#keep ships inside system boundaries for now:
 		if self.drawEdgeWarning:
 			self.drawEdgeWarning -= 1. * self.game.dt
 			if self.drawEdgeWarning <=0:
@@ -111,6 +112,9 @@ class SolarSystem:
 		self.planets.empty()
 
 class SolarA1(SolarSystem):
+	"""This is intended to be an instance of a solar system, a data file
+	It should only contain things that will be unique to a particular solar
+	system.  Eventually there will be dozens of these in their own data file."""
 	tinyFighters = []
 	maxFighters = 15
 	respawnTime = 30
@@ -139,49 +143,22 @@ class SolarA1(SolarSystem):
 
 		self.add(self.sun)
 		self.fighterTimer = 40
-		#add planets:
-		"""planets = [
-			Planet(game, -1935, -5889, 240, 600, (220,50,0), race = race1,
-					life = .3, resources = 1.8, name = 'a', image = rockyPlanetImage),
-			Planet(game, 3868, 7385, 800, 2000, (220,50,0), race = race2,
-					life = 1.5, resources = 1.0, name = 'b'),
-			Planet(game, -6379, 4000, 1120, 2800, (220,50,0), race = race1,
-					life = 1.5, resources = 1.0, name = 'c', image = gasPlanetImage),
-			Planet(game, 6072, -9942, 1200, 3000, (220,50,0), race =  race1,
-					life = 2.0, resources = .8, name = 'd', image = gasPlanetImage),
-			Planet(game, 12294, 9696, 800, 2000, (220,50,0), race = race2,
-					life = 1.0, resources = .6, name = 'e'),
-			Planet(game, -16528, -13975, 2000, 5000, (220,50,0), race = race1,
-					life = .1, resources = .5, name = 'f'),
-			Planet(game, -3689, 19050, 1400, 3500, (220,50,0), race = race2,
-					life = .6, resources = 1.4, name = 'g', image = gasPlanetImage),
-			Planet(game, 24865, -2585, 400, 1000, (220,50,0), race = race2,
-					life = .8, resources = .8, name = 'h', image = rockyPlanetImage),
-			]
-		for p in planets:
-			self.add(p)"""
+		self.createPlanets(game)
+		
 	def createPlanets(self, game):
+		"""randomly generates some planets for this system."""
 		planetname = 'abcdefghijklmnopqrstuvwxyz'
-		d = self.sun.radius * 1.1 + randint(0,1000)
-		p = -1
-		while True:
-			p += 1
-			ecc = randint(0,100) / 500.
-			rad = choice((randint(100,1000),randint(100,500)))
-			mass = abs(randnorm(rad ** 2.1 / 25, rad ** 1.3))
-			grav = (1+ecc) * (sqrt(self.sun.mass*mass) - mass) / (self.sun.mass-mass)
-			distanceFromSun = int(d / (1 - ecc - grav) + randint(0,2000))
-			color = randint(40,255),randint(40,255),randint(40,255)
-			if distanceFromSun * (1+ecc+grav) > self.boundries or rand() < 0.05:
-				break
-			planet = Planet(game, radius = rad, mass = mass, color = color, \
-				image = None, name = planetname[p], Anomaly = randint(1,360), SemiMajor = distanceFromSun, \
-				LongPeriapsis = randint(1,360), eccentricity = ecc, bounce = randint(1,10) / 20., \
-				race = choice((game.race1,game.race2)), population = randint(0,5000),\
-				life = randint(1,20) / 10., resources = randint(1,20) / 10.)
+		distance = self.sun.radius * 1.1 + randint(0,1000)
+		p = 0
+		while distance < self.boundries - 3000:
+			distance, planet = planetGenerator(
+									game,
+									planetname[p], 
+									choice((game.race1,game.race2)),
+									self.sun,
+									distance)
 			self.add(planet)
-			d = distanceFromSun * (1 + ecc + grav)
-
+			p += 1
 
 	def update(self, dt):
 		SolarSystem.update(self, dt)
