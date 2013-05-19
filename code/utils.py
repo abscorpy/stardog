@@ -19,7 +19,12 @@ def atan2(rise, run):
 	"""slope to angle, takes signed rise and run to get correct quadrant."""
 	return math.degrees(math.atan2(rise, run))
 
+def asin(x):
+	"""asin, takes a value in [0,1] (opposite/hypotenuse), returns degrees."""
+	return math.degrees(math.asin(x))
+	
 pi = math.pi
+
 
 def angleNorm(angle):
 	"""returns an equivilant angle between -180 and 180."""
@@ -42,6 +47,10 @@ def dist2(floater1, floater2):
 	return ((floater1.x - floater2.x) * (floater1.x - floater2.x) +
 			(floater1.y - floater2.y) * (floater1.y - floater2.y))
 
+def relativeDir(floater1, floater2):
+	"""absolute angle of floater2 treating floater1 as the origin."""
+	return atan2(floater2.y - floater1.y, floater2.x - floater1.x)
+
 def sign(num):
 	"""returns the sign of the number, -1, 0, or 1."""
 	if num < 0 : return -1
@@ -61,6 +70,10 @@ def not0(num):
 		return num
 	return .000001
 
+def getPos(floater):
+	"""object -> (object.x, object.y)"""
+	return floater.x, floater.y
+	
 sqrt = math.sqrt
 #random generators:
 r = random.Random()

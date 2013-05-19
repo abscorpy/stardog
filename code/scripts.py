@@ -63,146 +63,126 @@ class InputScript(Script):
 		self.bindings = [x for x in self.bindings if x[0] != key]
 
 class AIScript(Script):
-	interceptSpeed = 200. / 3
-	acceptableError = 5
-	"""A scripts with basic physics calculation functions.  Virtual."""
+	"""This is the base script for AI ships.  A subclass of this script can 
+	override any subset of its methods to change behavior.
+	
+	The default update() calls, 
+	in order, avoidPlanet(), attack(), pursue(), and idle(), calling the each 
+	option only if the previous returned false.  This way a subclass can 
+	override"""
+	safetyDistance = 20
 	def update(self, ship, dt):
 		# find closest ship:
-		ships = ship.game.curSystem.ships.sprites()
-		target, distance = self.closestShip(ship, ships)
-				
+		enemy = self.game.player#self.findClosestEnemy(ship, ship.system.ships)
+		planet = self.findClosestPlanet(ship, ship.system.planets)
+		
+		if planet and self.avoidPlanet(ship, planet):
+			return
+		elif enemy and self.attack(ship, enemy):
+			return
+		elif enemy and self.pursue(ship, enemy):
+			return
+		elif self.idle(ship):
+			return
+			
+		assert("ship failed to idle?")
+	
+	def attack(self, ship, enemy):
+		"""if within shooting range, turn at enemy and shoot it."""
 		if ship.guns:
 			shootingRange = 400 ** 2
 				#(ship.guns[0].bulletRange * ship.guns[0].speed) ** 2 / 2
-		else: #without guns kamikaze. 
-			if self.turnTowards(ship, target):
-				ship.forward()
-			return
-		if distance < shootingRange:
-			if self.turnTowards(ship, target):
-				ship.shoot()
-			return
-
-		if dist(ship.dx, ship.dy, target.dx, target.dy) < self.interceptSpeed\
-			or sign(ship.dx - target.dx) == sign(ship.x - target.x) \
-			or sign(ship.dy - target.dy) == sign(ship.y - target.y):
-			#speed up:
-			if self.turnTowards(ship, target):
-				ship.forward()
-		else:
-			#slow down:
-			if self.turnTowards(ship, target, 180):
-				ship.forward()
-				
-	def closestShip(self, ship, ships):
-		"""finds the closest ship to this one."""
-		target = ships[0]
-		distance = dist2(ship, target)
-		for s in ships:
-			if dist2(s, ship) < distance and s != ship:
-				distance = dist2(s,ship)
-				target = s
-		return target, distance
+			distance2 = dist2(ship, enemy)
+			if distance2 < shootingRange:
+				if self.turnToTarget(ship, enemy):
+					ship.shoot()
+				return True
+		return False
 		
-	def avoidPlanet(self, ship):
-		for planet in ship.system.planets:
-			if (abs(planet.x - ship.x) < planet.radius * 3 
-			and abs(planet.y - ship.y) < planet.radius * 3 
-			and dist2(planet, ship) < (planet.radius * 3) ** 2 ):
-				planetDir = atan2(planet.y - ship.y, planet.x - ship.x)
-				#if totally still, leave planet:
-				if ship.dx == 0 and ship.dy == 0:
-					if self.turn(ship, planetDir + 180):
-						ship.forward()
-					return True
-						
-				motionDir = atan2(ship.dy, ship.dx)
-				relativeMotionDir = angleNorm(planetDir - motionDir)
-				# if traveling towards the planet, move away!
-				if -45 < relativeMotionDir <= 45:
-					if relativeMotionDir < 0 and -45 > angleNorm(ship.dir - planetDir):
-						ship.turnLeft()
-					elif relativeMotionDir > 0 and 45 < angleNorm(ship.dir - planetDir):
-						ship.turnRight()
-					if not -120 < angleNorm(ship.planet.dir - ship.dir) < 120:
-						ship.forward()
-					return True
+	def pursue(self, ship, enemy):
+		"""Makes a guess where self can intercept enemy, and flies there"""
+		enemyAcceleration = enemy.forwardThrust / enemy.mass
+		if not enemy.thrusting:
+			enemyAcceleration = 0
+			
+		# predicted time in seconds before self can reach enemy is the time it 
+		# would take to accelerate to it:
+		t = sqrt(sqrt(dist2(ship, enemy)) / not0(ship.forwardThrust / ship.mass))
+				
+		# target position is the position the enemy will be at at t if it keeps 
+		# doing what it's doing now:
+		targetX = (enemy.x + t * (enemy.dx - ship.dx) 
+					+ t * t * enemyAcceleration * cos(enemy.dir))
+		targetY = (enemy.y + t * (enemy.dy - ship.dy) 
+					+ t * t * enemyAcceleration * sin(enemy.dir))
+		target = int(targetX), int(targetY)
+		self.flyTowards(ship, (targetX, targetY))
+		ship.goal = target
+		return True
+		
+	def avoidPlanet(self, ship, planet):#find nearest planet:
+		"""if close to a planet and headed closer, thrust perpendicular to it."""
+		distance = sqrt(dist2(ship,planet))
+		#see if our current trajectory will hit the planet:	
+		missDist = planet.radius + ship.radius + self.safetyDistance #min safe distance.
+		dangerAngle = asin((missDist) / max(distance, missDist))	#min angle to miss planet by.
+		planetDir = relativeDir(ship, planet) 		#direction of the planet.
+		currentHeadingAngle = atan2(ship.dy, ship.dx) 	#our inertia vector.
+		speed2 = ship.dx**2 + ship.dy**2 			# our inertia speed squared.
+		
+		if dangerAngle < 0 or dangerAngle > 90:
+			dangerAngle = 90
+
+		#if too close already 
+		#or (heading towards planet 
+		#	 and safe distance < 2 x distance it should take to stop)
+		if (distance < missDist
+		or planetDir - dangerAngle < currentHeadingAngle < planetDir + dangerAngle
+			and (distance - missDist) / 2
+				< speed2 / ((ship.forwardThrust / ship.mass) 
+							 - planet.mass * planet.g / (distance / 2)**2)):
+			#we're headed towards the planet!  Thrust perpendicular to it!
+			if angleNorm(currentHeadingAngle - planetDir) < 0:
+				self.flyAtDir(ship, planetDir - 90)
+			else:
+				self.flyAtDir(ship, planetDir + 90)
+			return True
+		return False
+		
+	def idle(self, ship):
+		self.flyTowards(ship, getPos(ship.planet))
+	
+	def flyTowards(self, ship, point):
+		"""make the ship fly towards an absolute point."""
+		return self.flyAtDir(ship, atan2(point[1] - ship.y, point[0] - ship.x))
+		
+	def flyAtDir(self, ship, dir):
+		"""make the ship fly towards an absolute angle."""
+		if self.turnToDir(ship, dir):
+			ship.forward()
+			return True
 		return False
 						
-	def turn(self, ship, angle):
-		angle = angleNorm(angle - ship.dir)
-		if angle < 0:
-			ship.turnLeft()
-		elif angle > 0:
-			ship.turnRight()
-		return -self.acceptableError < angle < self.acceptableError
+	def turnToDir(self, ship, dir, threshold = 30):
+		"""turn self towards the absolute direction.  Returns true if the 
+		result is within threshold of the goal direction."""
+		dirDif = angleNorm(dir - ship.dir)
+		if dirDif < 0:
+			ship.turnLeft(dirDif)
+		elif dirDif > 0:
+			ship.turnRight(dirDif)
+		if -threshold < dirDif < threshold:
+			return True
+		return False
 		
 	
-	def turnTowards(self, ship, target, angleOffset = 0):
-		"""tells ship to turn toward the target.  Target can be a Floater or
-		point. 
-		returns True if the ship is pointed within self.acceptableError degrees 
-		of the target."""
-		if isinstance(target, Floater):
-			angleToTarget = atan2(target.y - ship.y, target.x - ship.x) - ship.dir
-		else:#target is a point
-			angleToTarget = atan2(target[1] - ship.y, target[0] - ship.x) - ship.dir
-			
-		angleToTarget = (angleToTarget - angleOffset + 180) % 360 - 180
-		if angleToTarget < 0:
-			ship.turnLeft()
-		elif angleToTarget > 0:
-			ship.turnRight()
-		return -self.acceptableError < angleToTarget < self.acceptableError
-	
-	def relativeSpeed(self, ship, target):
-		"""relativeSpeed2(ship, target) -> the relative speed between two 
-		floaters. Note that this is negative if they are getting closer."""
-		#distance next second - distance this second (preserves sign):
-		return sqrt((ship.x + ship.dx - target.x - target.dx)**2 \
-					+ (ship.y + ship.dy - target.y - target.dy)**2) \
-				- sqrt((ship.x - target.x)**2 + (ship.y - target.y)**2)
-	
-	def intercept(self, ship, target, relativeSpeedLimit = 0):
-		"""intercept(ship, target) -> ship moves to intercept target. 
-		Call this every frame to intercept.
-		To almost intercept, monitor distance and 
-		do something else when close."""
-		if relativeSpeedLimit:
-			speed = relativeSpeedLimit
-		else: 
-			#roughly guess speed:
-			accel = ship.forwardThrust / ship.mass
-			speed = sqrt( dist(ship.x, ship.y, target.x, target.y) / not0(accel))
-		time = dist(ship.x, ship.y, target.x, target.y) / not0(speed)
-		if self.game.debug: print time, ship
-		dummy = Ballistic(target.x, target.y, \
-						target.dx - ship.dx, target.dy - ship.dy)
-		pos = self.predictBallistic(dummy, time)
-		angle = atan2(pos[1] - ship.y, pos[0] - ship.x)
-		if self.turn(ship, angle):
-			if not relativeSpeedLimit\
-			or self.relativeSpeed(ship, target) > - relativeSpeedLimit:
-				ship.forward()
-			
-		
-			
-	def straightShot(self, ship, target):
-		if self.turnTowards(ship, target):
-			ship.shoot() #shoot.
-		
-	def interceptShot(self, ship, target):
-		if not ship.guns:
-			return
-		speed = ship.guns[0].speed
-		time = dist(ship.x, ship.y, target.x, target.y) / speed
-		dummy = Ballistic(target.x, target.y, \
-						target.dx - ship.dx, target.dy - ship.dy)
-		pos = self.predictBallistic(dummy, time)
-		angle = atan2(pos[1] - ship.y, pos[0] - ship.x)
-		if self.turn(ship, angle):
-			ship.shoot()
-	
+	def turnToTarget(self, ship, target, offset = 0):
+		"""turn the ship to face a target.  If an offset is given then turn
+		that many degrees past the target.  Returns true if result is within
+		30 degrees of the goal."""
+		return self.turnToDir(ship, 
+						atan2(target.x - ship.y, target.y - ship.x) + offset)
+
 	def predictBallistic(self, floater, time):
 		"""predictBallistic(floater, time) ->
 		the point (x,y) the floater will be in after time seconds if there is 
@@ -210,61 +190,21 @@ class AIScript(Script):
 		return (floater.x + time * floater.dx, \
 				floater.y + time * floater.dy)
 		
-	def predictTimeMin(self, ship, distance):
-		"""predictTimeMin(ship, distance) ->
-		the time it would take this ship to travel distance
-		accelerating the whole way. Assumes there is no starting velocity.
-		Note: this method ends with very high velocity.  
-		See also predictTimeStop()."""
-		if isinstance(point, Floater):
-			point = point.x, point.y
-		accel = ship.forwardThrust / ship.mass
-		return sqrt(distance / accel)
-		
-	def predictTimeStop(self, ship, distance, speed = 0):
-		"""predictTimeStop(ship, distance) ->
-		the time it would take this ship to travel distance
-		accelerating the first half and deccelerating the second half. 
-		Assumes there is no starting velocity."""
-		accel = ship.forwardThrust / ship.mass
-		if accel == 0:
-			return 0
-		if speed == 0:
-			return sqrt(distance / 2 / accel) * 2
-		
-	def goto(self, ship, pos, target = None):
-		"""directs the ship to fly to the position. 
-		If target, pos is a position relative to the target."""
-		accel = ship.forwardThrust / ship.mass
-		time = sqrt(dist(ship.x, ship.y, pos[0], pos[1]) / accel)
-		if not target:
-			dummy = Ballistic(pos[0], pos[1], 0, 0)
-		else:
-			dummy = Ballistic(pos[0] + target.x, pos[1] + target.y,\
-								target.dx, target.dy)
-		
-		turnTime = ship.moment / ship.torque * 180
-		angle = atan2(dummy.y - ship.y, dummy.x - ship.x)
-		distance = dist(dummy.x, dummy.y, ship.x, ship.y)
-		relativeSpeed = self.relativeSpeed(ship, dummy)
-		if - relativeSpeed / not0(accel) + turnTime > distance / abs(not0(relativeSpeed)):
-			#slow down
-			if self.turn(ship, angle + 180):
-				ship.forward()
-		else:
-			self.intercept(ship, dummy, 500)
-		
-
+	def findClosestPlanet(self, ship, planets):
+		closest = None
+		distance2 = float("inf")
+		for planet in planets:
+			if dist2(ship,planet) < distance2:
+				distance2 = dist2(ship,planet)
+				closest = planet
+		return closest
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	def findClosestEnemy(self, ship, ships):
+		"""finds closest ship that is a different race."""
+		closest = None
+		distance2 = float("inf")
+		for enemy in ships:
+			if enemy.race != ship.race and dist2(ship,enemy) < distance2:
+				distance2 = dist2(ship,enemy)
+				closest = enemy
+		return closest
