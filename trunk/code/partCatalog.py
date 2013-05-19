@@ -29,7 +29,7 @@ class StrafebatCannon(Cannon):
 	energyCost = 1;	name = "Fore Gun";	value = .5
 class FighterShield(Shield):
 	baseImage =  loadImage("res/parts/fighter shield.bmp")
-	mass = 4;	shieldhp = .6;	shieldRegen = .1;	energyCost = .5
+	mass = 4;	shieldhp = 1;	shieldRegen = .1;	energyCost = .5
 	name = 'Fighter Shield';	value = 1.4
 class EmergencyEngine(Engine):	
 	name = "Emergency Engine";	force = 2400;	thrusting = False
