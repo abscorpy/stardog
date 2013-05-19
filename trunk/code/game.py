@@ -72,14 +72,16 @@ class Game:
 			self.player = playerShip(self, 0,0, script = self.playerScript,
 							color = self.playerColor, type = self.playerType,
 							system = 'fake')
+							
+			self.race1 = Race(self, "onesies", (255,0,0))
+			self.race2 = Race(self, "Duo!!", (200,0,250))
+			self.races  = [self.race1, self.race2]
+			
 			self.curSystem = SolarA1(self, self.player)
 			self.player.system = self.curSystem #replace 'fake'
 			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
 
-			self.race1 = Race(self, "onesies", (255,0,0))
-			self.race2 = Race(self, "Duo!!", (200,0,250))
-			self.races  = [self.race1, self.race2]
 			
 			self.menu = Menu(self, Rect((self.width - 800) / 2,
 										(self.height - 600) / 2,
