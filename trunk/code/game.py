@@ -37,9 +37,6 @@ class Game:
 		#messenger, with controls as first message:
 		self.messenger = Messenger(self)
 
-		self.race1 = Race(self, "onesies", (255,0,0))
-		self.race2 = Race(self, "Duo!!", (200,0,250))
-		self.races  = [self.race1, self.race2]
 		#key polling:
 		self.keys = []
 		for _i in range (322):
@@ -81,6 +78,10 @@ class Game:
 			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
 
+			self.race1 = Race(self, "onesies", (255,0,0))
+			self.race2 = Race(self, "Duo!!", (200,0,250))
+			self.races  = [self.race1, self.race2]
+			
 			self.menu = Menu(self, Rect((self.width - 800) / 2,
 										(self.height - 600) / 2,
 										800, 600), self.player)
