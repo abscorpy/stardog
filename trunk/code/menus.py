@@ -48,29 +48,31 @@ class Menu(TopLevelPanel):
 			self.activeMenu.update()
 
 class PartsPanel(Panel):
-	baseImage = loadImage('res/menus/partsmenubg.bmp')
-	tradeImage = loadImage('res/menus/partstrademenubg.bmp')
+	image = loadImage('res/menus/partsmenubg.bmp')
+	#tradeImage = loadImage('res/menus/partstrademenubg.bmp')
 	dirtyParts = False
 	def __init__(self, rect, player):
 		Panel.__init__(self, rect)
+		self.addPanel(Label(Rect(self.rect.width / 2 - 60, 2, 0, 0),\
+			"Parts", BIG_FONT))
 		self.player = player
 		inventoryColor = (20,50,35)
 		shipColor = (50,20,70)
-		flip = Button(Rect(115, 300, 75, 16), self.flip, " FLIP")
-		remove = Button(Rect(195, 300, 75, 16), self.remove, " REMOVE")
-		add = Button(Rect(335, 520, 75, 16), self.attach, " ATTACH")
-		paint = Button(Rect(415, 520, 75, 16), self.paint, " PAINT")
+		flip = Button(Rect(506, 572, 62, 14), self.flip, " FLIP")
+		remove = Button(Rect(570, 572, 62, 14), self.remove, " REMOVE")
+		add = Button(Rect(100, 572, 62, 14), self.attach, " ATTACH")
+		paint = Button(Rect(164, 572, 62, 14), self.paint, " PAINT")
 		self.inventoryPanel = InventoryPanel(
-				Rect(500, 30, 130, 570), 
+				Rect(100, 30, 130, 540), 
 				self, self.player.inventory)
 		self.tradePanel = None
-		self.shipPanel = ShipPanel(Rect(100, 0, 401, 300), self, self.player)
+		self.shipPanel = ShipPanel(Rect(232, 30, 400, 300), self, self.player)
 		self.descriptionShip = PartDescriptionPanel(
-					Rect(105, 320, 201, 500), self.shipPanel)
-		self.descriptionInventory = PartDescriptionPanel(
-					Rect(330, 320, 201, 500), self.inventoryPanel)
+					Rect(232, 332, 400, 238), self.shipPanel)
+		#self.descriptionInventory = PartDescriptionPanel(
+		#			Rect(330, 335, 200, 500), self.inventoryPanel)
 		self.addPanel(self.descriptionShip)
-		self.addPanel(self.descriptionInventory)
+		#self.addPanel(self.descriptionInventory)
 		self.addPanel(self.shipPanel)
 		self.addPanel(self.inventoryPanel)
 		self.addPanel(flip)
@@ -89,13 +91,17 @@ class PartsPanel(Panel):
 			
 	def reset(self):
 		if self.player.landed and not self.tradePanel:
-			self.image = self.tradeImage
+			#self.image = self.tradeImage
+			self.removePanel(self.tradePanel)
 			self.tradePanel = InventoryPanel(Rect(660, 30, 130, 570), 
 								self, self.player.landed.inventory)
 			self.addPanel(self.tradePanel)
 		elif not self.player.landed:
-			self.image = self.baseImage
+			#self.image = self.baseImage
 			self.removePanel(self.tradePanel)
+			self.tradePanel = Label(Rect(660, 30, 130, 570), 
+								"Not Docked", FONT)
+			self.addPanel(self.tradePanel)
 			self.tradePanel = None
 		Panel.reset(self)
 		
@@ -148,8 +154,7 @@ class PartsPanel(Panel):
 class ShipPanel(Selecter):
 	selected = None
 	text = None
-	drawBorder = False
-	
+	#drawBorder = False
 	def __init__(self, rect, parent, player, descriptionPanel = None):
 		Selecter.__init__(self, rect)
 		self.player = player
@@ -202,7 +207,7 @@ class ShipPanel(Selecter):
 		#not Selectable.reset(), because that rearranges the selectables.
 		
 class PartDescriptionPanel(Panel):
-	drawBorder = False
+	#drawBorder = False
 	"""displays descriptions of parts."""
 	def __init__(self, rect, selecter = None):
 		Panel.__init__(self, rect)
@@ -400,7 +405,7 @@ class PartTile(DragableSelectable):
 
 		
 class InventoryPanel(Selecter):
-	drawBorder = False
+	#drawBorder = False
 	selected = None
 	def __init__(self, rect, parent, partList):
 		"""InventoryPanel(rect, partList) -> a Selecter that resets to the 
