@@ -131,6 +131,7 @@ class Game:
 				self.screen.blit(BIG_FONT.render('Game Over', False, (220, 0, 0)), 
 								 (self.width / 2 - 60, self.height / 2 - 20))
 				pygame.display.flip()
+				print "game over"
 				#pause for 3 seconds (at 8 fps)
 				for x in range(8*3):
 					self.clock.tick(8)
