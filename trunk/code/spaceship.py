@@ -132,7 +132,7 @@ class Ship(Floater):
 	script = None, color = (255,255,255))
 	script should have an update method that
 	returns (moveDir, target, action)."""
-	mass = 0
+	mass = 1
 	moment = 0
 	parts = []
 	forwardEngines = []
