@@ -65,6 +65,8 @@ class SolarSystem:
 		for floater in self.floaters.frame:
 			if (floater.x ** 2 + floater .y ** 2) > self.boundries ** 2:
 				if isinstance(floater, Ship):
+					floater.x -= floater.dx / 4
+					floater.y -= floater.dy / 4
 					floater.dx, floater.dy = 0, 0
 					if floater == self.game.player:
 						self.drawEdgeWarning = 1.
@@ -117,7 +119,6 @@ class SolarA1(SolarSystem):
 	system.  Eventually there will be dozens of these in their own data file."""
 	tinyFighters = []
 	maxFighters = 15
-	respawnTime = 30
 	fightersPerMinute = 2
 	def __init__(self, game, player):
 		SolarSystem.__init__(self, game)
@@ -142,7 +143,8 @@ class SolarA1(SolarSystem):
 			self.add(Asteroid(game, x, y, dx, dy, radius))
 
 		self.add(self.sun)
-		self.fighterTimer = 40
+		self.tinyFighters = []
+		self.fighterTimer = 30
 		self.createPlanets(game)
 		
 	def createPlanets(self, game):
@@ -175,7 +177,7 @@ class SolarA1(SolarSystem):
 									self.game.player.dy)
 				self.add(fighter)
 				self.tinyFighters.append(fighter)
-				self.fighterTimer = 60 / self.fightersPerMinute
+				self.fighterTimer = 60. / self.fightersPerMinute
 		else:
 			self.fighterTimer -= 1. * self.game.dt
 
@@ -192,7 +194,8 @@ def collide(a, b):
 	#good object-orientation, but when a new subclass is added
 	#code only needs to be added here, instead of in every other
 	#class.
-	if a.tangible and b.tangible:
+	if (a.tangible and b.tangible 
+		and (a.x - b.x) ** 2 + (a.y - b.y) ** 2 < (a.radius + b.radius) ** 2):
 		#planet/?
 		if isinstance(b, Planet): a,b = b,a
 		if isinstance(a, Planet):
