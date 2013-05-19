@@ -70,10 +70,11 @@ class AIScript(Script):
 	in order, avoidPlanet(), attack(), pursue(), and idle(), calling the each 
 	option only if the previous returned false.  This way a subclass can 
 	override"""
+	shootingRange = 400 ** 2
 	safetyDistance = 20
 	def update(self, ship, dt):
 		# find closest ship:
-		enemy = self.game.player#self.findClosestEnemy(ship, ship.system.ships)
+		enemy = self.findClosestEnemy(ship, ship.system.ships)
 		planet = self.findClosestPlanet(ship, ship.system.planets)
 		
 		if planet and self.avoidPlanet(ship, planet):
@@ -89,11 +90,7 @@ class AIScript(Script):
 	
 	def attack(self, ship, enemy):
 		"""if within shooting range, turn at enemy and shoot it."""
-		if ship.guns:
-			shootingRange = 400 ** 2
-				#(ship.guns[0].bulletRange * ship.guns[0].speed) ** 2 / 2
-			distance2 = dist2(ship, enemy)
-			if distance2 < shootingRange:
+		if ship.guns and dist2(ship, enemy) < self.shootingRange ** 2:
 				if self.turnToTarget(ship, enemy):
 					ship.shoot()
 				return True
@@ -181,7 +178,7 @@ class AIScript(Script):
 		that many degrees past the target.  Returns true if result is within
 		30 degrees of the goal."""
 		return self.turnToDir(ship, 
-						atan2(target.x - ship.y, target.y - ship.x) + offset)
+						atan2(target.y - ship.y, target.x - ship.x) + offset)
 
 	def predictBallistic(self, floater, time):
 		"""predictBallistic(floater, time) ->
@@ -189,6 +186,16 @@ class AIScript(Script):
 		no acceleration."""
 		return (floater.x + time * floater.dx, \
 				floater.y + time * floater.dy)
+		
+	def speedTowards(self, ship, target):
+		"""projects your relative speed onto the vector to the target,
+		e.g. how fast you are approaching a thing.  Does not care if you will
+		hit it."""
+		#theta is the angle between relative angle and current velocity vector.
+		theta = (atan2(ship.dy - target.dy, ship.dx - target.dx) 
+				- relativeDir(ship,target))
+		return (  sqrt((ship.dx - target.dx) ** 2 + (ship.dy - target.dy) ** 2) 
+			    * cos(theta))
 		
 	def findClosestPlanet(self, ship, planets):
 		closest = None
