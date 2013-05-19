@@ -176,7 +176,9 @@ class Ship(Floater):
 	'cannonDefenseBonus' : 1., 'laserDefenseBonus' : 1., 'missileDefenseBonus' : 1.,\
 	'cannonSpeedBonus' : 1., 'missileSpeedBonus' : 1.\
 	}
-
+	#used by scripts:
+	target = None
+	destination = None
 
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), race = None, system = None):
@@ -261,15 +263,16 @@ class Ship(Floater):
 							part.offset[1] - yCorrection
 			part.attach()
 		partNum -= 1
-		if partNum > self.partLimit:
-			self.efficiency = (1 - self.penalty) ** (partNum - self.partLimit)
-		else:
-			self.efficiency = 2 - (1 - self.bonus) ** (self.partLimit - partNum)
 		self.numParts = partNum
 		self.energy = min(self.energy, self.maxEnergy)
 		self.hp = min(self.hp, self.maxhp)
 		for skill in self.skills:
 			skill.shipReset()
+			
+		if partNum > self.partLimit:
+			self.efficiency = (1 - self.penalty) ** (partNum - self.partLimit)
+		else:
+			self.efficiency = 2 - (1 - self.bonus) ** (self.partLimit - partNum)
 		#redraw base image:
 		if self.game.pause:
 			size = int(self.radius * 2 + 60)
