@@ -73,7 +73,6 @@ class Game:
 							color = self.playerColor, type = self.playerType,
 							system = 'fake')
 			self.curSystem = SolarA1(self, self.player)
-			self.curSystem.createPlanets(self)
 			self.player.system = self.curSystem #replace 'fake'
 			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
