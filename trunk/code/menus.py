@@ -69,10 +69,10 @@ class PartsPanel(Panel):
 		self.shipPanel = ShipPanel(Rect(232, 30, 400, 300), self, self.player)
 		self.descriptionShip = PartDescriptionPanel(
 					Rect(232, 332, 400, 238), self.shipPanel)
-		#self.descriptionInventory = PartDescriptionPanel(
-		#			Rect(330, 335, 200, 500), self.inventoryPanel)
+		self.descriptionInventory = PartDescriptionPanel(
+					Rect(636, 332, 400, 238), self.inventoryPanel)
 		self.addPanel(self.descriptionShip)
-		#self.addPanel(self.descriptionInventory)
+		self.addPanel(self.descriptionInventory)
 		self.addPanel(self.shipPanel)
 		self.addPanel(self.inventoryPanel)
 		self.addPanel(flip)
@@ -194,7 +194,7 @@ class ShipPanel(Selecter):
 					self.selectables[-1].port = port
 		#update ship stats display:
 			#tabs not displaying correctly, so using spaces.
-		text = ("Parts: %i/%i\nEfficiency: %3d\nMass: %i KG\n" +
+		text = ("Parts: %i/%i\nEfficiency: %.3f\nMass: %i KG\n" +
 			"Forward Thrust: %i KN\nMoment: %i KG m\nTorque: %i KN m\n" +
 			"Max DPS: %.2f\nEnergy: %i/%i\nShields: %i/%i")
 		values = (s.numParts, s.partLimit, s.efficiency, s.mass,
