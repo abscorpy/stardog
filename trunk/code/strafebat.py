@@ -53,47 +53,20 @@ class Strafebat(Ship):
 
 class StrafebatScript(AIScript):
 	"""A scripts with basic physics calculation functions."""
-	interceptSpeed = 100.
-	returnSpeed = 50.
-	acceptableError = 2
-	sensorRange = 3
 	shootingRange = 400
-	def update(self, ship, dt):
-		# if too close to planet
-		if self.avoidPlanet(ship):
-			ship.color = (255,255,255)
-			if ship.thrusting: ship.color = (255,255,0)
-			return
-		ship.color = ship.race.color
-		# find closest ship:
-		ships = ship.game.curSystem.ships
-		ship.target, distance2 = self.closestEnemyShip(ship, ships)
-		if distance2 > self.sensorRange ** 2:
-			ship.target = None
 		
-		if not ship.target:# no target
-			self.intercept(ship, ship.planet, self.returnSpeed)
-			ship.target = ship.planet
-			return
-		
-		if distance2 < self.shootingRange ** 2 \
-		and ship.guns: # within range. Shoot at it.
-			self.interceptShot(ship, ship.target)
-			return
-			
-		#see it, but not in range. move towards it.
-		self.intercept(ship, ship.target, self.interceptSpeed)
-			
-	def closestEnemyShip(self, ship, ships):
-		"""finds the closest ship not-friendly to this one."""
-		target = None
-		distance2 = self.sensorRange ** 2
-		for ship2 in ships:
-			tmp = dist2(ship2, ship)
-			if (tmp < distance2 and ship2 != ship and ship2.race != ship.race):
-				distance2 = tmp
-				target = ship2
-		return target, distance2
-		
+	def attack(self, ship, target):
+		if ship.guns and dist2(ship, target) < self.shootingRange ** 2:
+			speed = ship.guns[0].speed
+			time = dist(ship.x, ship.y, target.x, target.y) / speed
+			dummy = Ballistic(target.x, target.y, \
+											target.dx - ship.dx, target.dy - ship.dy)
+			pos = self.predictBallistic(dummy, time)
+			angle = atan2(pos[1] - ship.y, pos[0] - ship.x)
+			if self.turnToDir(ship, angle):
+					ship.shoot()
+			return True
+		return False
+
 class StrafebatCockpit(Cockpit):
 	pass

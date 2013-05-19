@@ -16,6 +16,9 @@ radarScaleBig = 100.0 # 1 radar pixel = radarScale space pixels
 edgeWarning = loadImage('res/edgeofsystem.bmp')
 class HUD:
 	debugging = False
+	scratch = pygame.Surface((radarRadius,radarRadius))
+	bigScratch = pygame.Surface((radarRadiusBig,radarRadiusBig))
+	
 	def __init__(self, game):
 		self.game = game
 		self.image = pygame.Surface((self.game.width, self.game.height), \
@@ -77,12 +80,14 @@ class HUD:
 			scale = radarScaleBig
 			self.image.blit(self.radarImageBig, \
 				(center[0] - radius, center[1] - radius))
+			scratch = self.scratch
 		else:
 			radius = radarRadius
 			center = self.center
 			scale = radarScale
 			self.image.blit(self.radarImage, \
 				(center[0] - radius, center[1] - radius))
+			scratch = self.bigScratch
 		#draw floating part dots:
 		for floater in self.game.curSystem.floaters:
 			dotPos = int(center[0] + limit(-radius, \
@@ -97,23 +102,17 @@ class HUD:
 						(dotPos[0] - 1, dotPos[1]), (dotPos[0] + 1, dotPos[1]))
 				pygame.draw.line(self.image, color, 
 						(dotPos[0], dotPos[1] - 1), (dotPos[0], dotPos[1] + 1))
-				if self.debugging:
-					if isinstance(floater, Strafebat):
-						if floater.target:
-							p2 = (int(center[0] + limit(-radius, 
-								(floater.target.x - thisShip.x) / scale, radius)), 
-								int(center[1] + limit(-radius, 
-								(floater.target.y - thisShip.y) / scale, radius)))
-						else:
-							p2 = (int(center[0] + limit(-radius, 
-								(floater.planet.x - thisShip.x) / scale, radius)), 
-								int(center[1] + limit(-radius, 
-								(floater.planet.y - thisShip.y) / scale, radius)))	
-						pygame.draw.line(self.image, color, dotPos, p2)			
+				if self.debugging:	
 					if isinstance(floater, Ship):#direction arrow
 						p2 = (dotPos[0] + 3 * cos(floater.dir), 
 								dotPos[1] + 3 * sin(floater.dir))
 						pygame.draw.line(self.image, (200,200,0), dotPos, p2)
+						if hasattr(floater, 'goal'):
+							p2 = (int(center[0] + limit(-radius, 
+								(floater.goal[0] - thisShip.x) / scale, radius)), 
+								int(center[1] + limit(-radius, 
+								(floater.goal[1] - thisShip.y) / scale, radius)))
+							pygame.draw.line(self.image, color, dotPos, p2)	
 			elif isinstance(floater, Sun):		#sun
 				r = int(floater.radius / scale)
 				pygame.draw.circle(self.image, (255,255,50), dotPos, r)
@@ -132,6 +131,8 @@ class HUD:
 			else:								#Other floater
 				color = floater.color
 				pygame.draw.circle(self.image, color, (dotPos[0],dotPos[1]), 0)
+				pygame.draw.ellipse(scratch, color, (0,0,floater.SMa, floater.SMa * floater.e))
+				self.image.blit(pygame.transform.rotate(scratch, -floater.LPe)
 
 
 numStars = 300
