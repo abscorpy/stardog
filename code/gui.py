@@ -16,8 +16,6 @@ radarScaleBig = 100.0 # 1 radar pixel = radarScale space pixels
 edgeWarning = loadImage('res/edgeofsystem.bmp')
 class HUD:
 	debugging = False
-	scratch = pygame.Surface((radarRadius,radarRadius))
-	bigScratch = pygame.Surface((radarRadiusBig,radarRadiusBig))
 	
 	def __init__(self, game):
 		self.game = game
@@ -80,14 +78,12 @@ class HUD:
 			scale = radarScaleBig
 			self.image.blit(self.radarImageBig, \
 				(center[0] - radius, center[1] - radius))
-			scratch = self.scratch
 		else:
 			radius = radarRadius
 			center = self.center
 			scale = radarScale
 			self.image.blit(self.radarImage, \
 				(center[0] - radius, center[1] - radius))
-			scratch = self.bigScratch
 		#draw floating part dots:
 		for floater in self.game.curSystem.floaters:
 			dotPos = int(center[0] + limit(-radius, \
@@ -131,8 +127,6 @@ class HUD:
 			else:								#Other floater
 				color = floater.color
 				pygame.draw.circle(self.image, color, (dotPos[0],dotPos[1]), 0)
-				pygame.draw.ellipse(scratch, color, (0,0,floater.SMa, floater.SMa * floater.e))
-				self.image.blit(pygame.transform.rotate(scratch, -floater.LPe)
 
 
 numStars = 300
