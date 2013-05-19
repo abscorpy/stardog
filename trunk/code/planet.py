@@ -22,7 +22,7 @@ def planetGenerator(game, name, race, sun, distance, image=None):
 		image = None, name = name, Anomaly = randint(1,360), 
 		SemiMajor = distanceFromSun, LongPeriapsis = randint(1,360), 
 		eccentricity = ecc, bounce = randint(1,10) / 20., 
-		race = race, population = randint(500,5000),
+		race = race, population = randint(1000,20000),
 		life = randint(1,5) / 100. / 3600., resources = randint(5,20) / 10.)
 	d = distanceFromSun * (1 + ecc + grav)
 	return d, planet
