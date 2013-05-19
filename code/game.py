@@ -127,12 +127,13 @@ class Game:
 					last = self.timer
 			#end round loop (until gameover)
 			
-			self.screen.blit(BIG_FONT.render('Game Over', False, (220, 0, 0)), 
-							 (self.width / 2 - 60, self.height / 2 - 20))
-			pygame.display.flip()
-			#pause for 3 seconds (at 8 fps)
-			for x in range(8*3):
-				self.clock.tick(8)
+			if(self.running):
+				self.screen.blit(BIG_FONT.render('Game Over', False, (220, 0, 0)), 
+								 (self.width / 2 - 60, self.height / 2 - 20))
+				pygame.display.flip()
+				#pause for 3 seconds (at 8 fps)
+				for x in range(8*3):
+					self.clock.tick(8)
 		#end game loop
 
 	def keyPoll(self, handler = None):
