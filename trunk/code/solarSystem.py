@@ -11,7 +11,7 @@ from updater import Updater
 import stardog
 
 class SolarSystem:
-	"""A SolarSystem holds ships and other floaters, music, the background. 
+	"""A SolarSystem holds ships and other floaters, music, the background.
 	It calls update() and draw() on its members and handles collisions.."""
 	boundries = 150000
 	drawEdgeWarning = False
@@ -51,7 +51,7 @@ class SolarSystem:
 				self.game.player.y - self.game.height / 2),
 				(self.game.width, self.game.height))
 		self.floaters.update(dt, screen)
-		
+
 		#check collisions:
 		collisions = self.floaters.collisions()
 		for f1,f2 in collisions:
@@ -146,16 +146,16 @@ class SolarA1(SolarSystem):
 		self.tinyFighters = []
 		self.fighterTimer = 30
 		self.createPlanets(game)
-		
+
 	def createPlanets(self, game):
 		"""randomly generates some planets for this system."""
 		planetname = 'abcdefghijklmnopqrstuvwxyz'
-		distance = self.sun.radius * 1.1 + randint(0,1000)
+		distance = self.sun.radius * 1.1 + randint(0,2000)
 		p = 0
 		while distance < self.boundries - 3000:
 			distance, planet = planetGenerator(
 									game,
-									planetname[p], 
+									planetname[p],
 									choice((game.race1,game.race2)),
 									self.sun,
 									distance)
@@ -194,7 +194,7 @@ def collide(a, b):
 	#good object-orientation, but when a new subclass is added
 	#code only needs to be added here, instead of in every other
 	#class.
-	if (a.tangible and b.tangible 
+	if (a.tangible and b.tangible
 		and (a.x - b.x) ** 2 + (a.y - b.y) ** 2 < (a.radius + b.radius) ** 2):
 		#planet/?
 		if isinstance(b, Planet): a,b = b,a
@@ -281,7 +281,7 @@ def planet_ship_collision(planet, ship):
 		return
 	#get planet velocity to compare with ship's
 	orbvel = sqrt(planet.g * planet.game.curSystem.sun.mass * (2/planet.distance-1/planet.SMa))
-	smi = planet.SMa * planet.p
+	smi = planet.SMa * sqrt(planet.p)
 	vx = orbvel * -planet.SMa * math.sin(planet.EccAn) / sqrt((smi * math.cos(planet.EccAn)) ** 2 \
 	+ (planet.SMa * math.sin(planet.EccAn)) ** 2)
 	vy = orbvel * smi * math.cos(planet.EccAn) / sqrt((smi * math.cos(planet.EccAn)) ** 2 \

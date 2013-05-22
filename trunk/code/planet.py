@@ -12,21 +12,21 @@ def planetGenerator(game, name, race, sun, distance, image=None):
 	"""Generates a random planet from a few parameters.
 	name:string, race:Race, sun:Sun, distance:float-min distance from the sun.
 	Returns d,planet, where d is the minimum distance for the next planet."""
-	ecc = randint(0,100) / 500.
+	ecc = rand() / 5
 	rad = randint(100,1000)
 	mass = abs(randnorm(rad ** 2.1 / 25, rad ** 1.3))
 	grav = (1+ecc) * (sqrt(sun.mass*mass) - mass) / (sun.mass-mass)
 	distanceFromSun = int(distance / (1 - ecc - grav) + randint(0,2000))
 	color = randint(40,255),randint(40,255),randint(40,255)
-	planet = Planet(game, sun, radius = rad, mass = mass, color = color, 
-		image = None, name = name, Anomaly = randint(1,360), 
-		SemiMajor = distanceFromSun, LongPeriapsis = randint(1,360), 
-		eccentricity = ecc, bounce = randint(1,10) / 20., 
-		race = race, population = randint(1000,20000),
-		life = randint(1,5) / 100. / 3600., resources = randint(5,20) / 10.)
+	planet = Planet(game, sun, radius = rad, mass = mass, color = color,
+		image = None, name = name, Anomaly = randint(1,360),
+		SemiMajor = distanceFromSun, LongPeriapsis = randint(1,360),
+		eccentricity = ecc, bounce = rand() / 2, race = race,
+		population = randint(1000,20000), life = randint(1,5) / 100. / 3600.,
+		resources = randint(5,20) / 10.)
 	d = distanceFromSun * (1 + ecc + grav)
 	return d, planet
-	
+
 
 def Eanomaly(M,e):
 	"""obtains eccentric anomaly for a given mean anomaly (M) and eccentricity (e). Use radians"""
@@ -46,7 +46,7 @@ class Planet(Floater):
 	shipValue = 0
 	hp = 30000
 	gravitates = False
-	def __init__(self, game, sun, radius = 100, mass = 1000,
+	def __init__(self, game, parent, radius = 100, mass = 1000,
 					color = (100,200,50), image = None, name = 'planet',
 					Anomaly = 0, SemiMajor= 10000, LongPeriapsis = 0, eccentricity = 0,
                     period = 0, bounce = 0.5, race = None, population = 1, life = 1, resources = 1):
@@ -60,14 +60,15 @@ class Planet(Floater):
 		self.LPe = LongPeriapsis #the orientation of the ellipse
 		self.e = eccentricity #defines the shape of the orbit, must be 0<e<1; it can be 0
 		if period == 0: #by default, the period is the one of a classic keplerian orbit
-			self.period = 2 * pi * sqrt(self.SMa ** 3 / (self.g * sun.mass))
+			self.period = 2 * pi * sqrt(self.SMa ** 3 / (self.g * parent.mass))
 		else:
 			self.period = period
 		self.ano = math.radians(Anomaly)
 		self.n = 2*pi/self.period #mean motion
 		self.tAn = sqrt((1+self.e)/(1-self.e)) #used to calculate true anomaly
-		self.p = (1-self.e**2) #semi-latus rectum (?)
+		self.p = (1-self.e**2) #semi-latus rectum factor, SMa * p = Semi-latus rectum
 		self.mass = mass #determines gravity.
+		self.parent = parent #the parent body, a star for planets, a planet for moons
 		self.color = color
 		self.bounciness = bounce
 		self.damage = {}
