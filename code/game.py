@@ -72,17 +72,17 @@ class Game:
 			self.player = playerShip(self, 0,0, script = self.playerScript,
 							color = self.playerColor, type = self.playerType,
 							system = 'fake')
-							
+
 			self.race1 = Race(self, "onesies", (255,0,0))
 			self.race2 = Race(self, "Duo!!", (200,0,250))
 			self.races  = [self.race1, self.race2]
-			
+
 			self.curSystem = SolarA1(self, self.player)
 			self.player.system = self.curSystem #replace 'fake'
 			self.systems = [self.curSystem]
 			self.curSystem.add(self.player)
 
-			
+
 			self.menu = Menu(self, Rect((self.width - 800) / 2,
 										(self.height - 600) / 2,
 										800, 600), self.player)
@@ -126,9 +126,9 @@ class Game:
 					pygame.display.set_caption('Stardog FPS:'+str(self.fps))
 					last = self.timer
 			#end round loop (until gameover)
-			
+
 			if(self.running):
-				self.screen.blit(BIG_FONT.render('Game Over', False, (220, 0, 0)), 
+				self.screen.blit(BIG_FONT.render('Game Over', False, (220, 0, 0)),
 								 (self.width / 2 - 60, self.height / 2 - 20))
 				pygame.display.flip()
 				print "game over"
@@ -178,8 +178,9 @@ class Game:
 				grav = nearest.mass * nearest.g / distance
 				thrust = self.player.efficiency * self.player.thrustBonus *\
 				self.player.forwardThrust / self.player.mass
-				print "Debug:\nlanded:{0} gravity:{1} thrust:{2}".format(self.player.landed!=False,\
-                grav, thrust)
+				print "Debug:\nlanded:{0} gravity:{1} thrust:{2}".format(self.player.landed!=False,
+				grav, thrust)
+				print "x", self.player.x, "y", self.player.y
 			#ctrl+q or alt+F4 quit:
 			if self.keys[K_LALT % 322] and self.keys[K_F4 % 322] \
 			or self.keys[K_RALT % 322] and self.keys[K_F4 % 322] \

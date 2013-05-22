@@ -16,7 +16,7 @@ radarScaleBig = 100.0 # 1 radar pixel = radarScale space pixels
 edgeWarning = loadImage('res/edgeofsystem.bmp')
 class HUD:
 	debugging = False
-	
+
 	def __init__(self, game):
 		self.game = game
 		self.image = pygame.Surface((self.game.width, self.game.height), \
@@ -51,7 +51,7 @@ class HUD:
 		pygame.draw.rect(self.image, (0, 50, 230), (x, y \
 			+ h - h * thisShip.energy / thisShip.maxEnergy, 5, h \
 			* thisShip.energy / thisShip.maxEnergy)) # full bar
-			
+
 		#XP:
 		x += 15
 		pygame.draw.rect(self.image, (0, 180, 80), (x, y, \
@@ -63,13 +63,13 @@ class HUD:
 		if(fontModule) and thisShip.developmentPoints:
 			self.image.blit(FONT.render(str(thisShip.developmentPoints), \
 						False, (0, 180, 80)), (x, y - 20))
-						
+
 		#edge warning:
 		if thisShip.game.curSystem.drawEdgeWarning:
 			self.image.blit(edgeWarning, (20, self.game.height - 100))
 		#blit the HUD to the screen:
 		surface.blit(self.image, (0, 0))
-		
+
 	def drawRadar(self, surface, thisShip, big = False):
 		if big:
 			#these temp locals replace the globals:
@@ -92,23 +92,23 @@ class HUD:
 					(floater.y - thisShip.y) / scale, radius))
 			if isinstance(floater, Ship):	#ship
 				color = floater.color
-				pygame.draw.rect(self.image, (0,0,0), 
+				pygame.draw.rect(self.image, (0,0,0),
 						(dotPos[0] - 1, dotPos[1] - 1, 3,3))
-				pygame.draw.line(self.image, color, 
+				pygame.draw.line(self.image, color,
 						(dotPos[0] - 1, dotPos[1]), (dotPos[0] + 1, dotPos[1]))
-				pygame.draw.line(self.image, color, 
+				pygame.draw.line(self.image, color,
 						(dotPos[0], dotPos[1] - 1), (dotPos[0], dotPos[1] + 1))
-				if self.debugging:	
+				if self.debugging:
 					if isinstance(floater, Ship):#direction arrow
-						p2 = (dotPos[0] + 3 * cos(floater.dir), 
+						p2 = (dotPos[0] + 3 * cos(floater.dir),
 								dotPos[1] + 3 * sin(floater.dir))
 						pygame.draw.line(self.image, (200,200,0), dotPos, p2)
 						if hasattr(floater, 'goal'):
-							p2 = (int(center[0] + limit(-radius, 
-								(floater.goal[0] - thisShip.x) / scale, radius)), 
-								int(center[1] + limit(-radius, 
+							p2 = (int(center[0] + limit(-radius,
+								(floater.goal[0] - thisShip.x) / scale, radius)),
+								int(center[1] + limit(-radius,
 								(floater.goal[1] - thisShip.y) / scale, radius)))
-							pygame.draw.line(self.image, color, dotPos, p2)	
+							pygame.draw.line(self.image, color, dotPos, p2)
 			elif isinstance(floater, Sun):		#sun
 				r = int(floater.radius / scale)
 				pygame.draw.circle(self.image, (255,255,50), dotPos, r)
@@ -116,6 +116,39 @@ class HUD:
 				pygame.draw.circle(self.image, (255,150,0), dotPos, r / 2)
 				pygame.draw.circle(self.image, (255,100,0), dotPos, r / 4)
 			elif isinstance(floater, Planet):	#planet
+				if big:
+					#new width = h*sin(angle) + w*cos(angle) <=> w1 + w2
+					#new height = h*cos(angle) + w*sin(angle) <=> h1 + h2
+					#w1, w2, h1, h2 may or not be considered for correction
+					#of the "orbit" surface position depending on the angle
+					orbPos = rotate(-floater.SMa * (1 + floater.e), \
+					-floater.SMa * sqrt(floater.p), floater.LPe)
+					sunPos = (int(center[0] + (floater.parent.x - thisShip.x) / scale),
+					int(center[1] + (floater.parent.y - thisShip.y) / scale))
+					if floater.LPe < 90:
+						w1, w2 = 2*floater.SMa*sqrt(floater.p)*sin(floater.LPe), 0
+						h1, h2 = 0, 0
+					elif floater.LPe < 180:
+						w1 = 2*floater.SMa*sqrt(floater.p)*sin(floater.LPe)
+						w2 = -2*floater.SMa*cos(floater.LPe)
+						h1, h2 = -2*floater.SMa*sqrt(floater.p)*cos(floater.LPe), 0
+					elif floater.LPe < 270:
+						w1, w2 = 0, -2*floater.SMa*cos(floater.LPe)
+						h1 = -2*floater.SMa*sqrt(floater.p)*cos(floater.LPe)
+						h2 = -2*floater.SMa*sin(floater.LPe)
+					else:
+						w1, w2 = 0, 0
+						h1, h2 = 0, -2*floater.SMa*sin(floater.LPe)
+					correction = w1 + w2, h1 + h2
+					orbPos = (int(sunPos[0] + (orbPos[0] - correction[0]) / scale),
+					int(sunPos[1] + (orbPos[1] - correction[1]) / scale))
+					orbit = pygame.Surface((int(2 * floater.SMa / scale),
+					int(2 * floater.SMa * sqrt(floater.p) / scale)))
+					orbit.set_colorkey((0, 0, 0))
+					pygame.draw.ellipse(orbit, (150, 150, 150), (0, 0, int(2*\
+					floater.SMa/scale), int(2*floater.SMa*sqrt(floater.p)/scale)), 1)
+					orbit = pygame.transform.rotate(orbit, -floater.LPe)
+					self.image.blit(orbit, orbPos)
 				if floater.race:
 					color = floater.race.color
 				else:
@@ -142,10 +175,10 @@ class BG:
 				randint(0, self.game.width), 	#x
 				randint(0, self.game.height),	#y
 				randint(1,20), 					#depth
-				(randint(brightness * 3 / 4, brightness), 
-				 randint(brightness * 3 / 4, brightness), 
+				(randint(brightness * 3 / 4, brightness),
+				 randint(brightness * 3 / 4, brightness),
 				 randint(brightness * 3 / 4, brightness))))		#color
-		self.pic = pygame.transform.scale(loadImage('res/Tarantula Nebula.jpg', None), 
+		self.pic = pygame.transform.scale(loadImage('res/Tarantula Nebula.jpg', None),
 					(game.width,game.height)).convert()
 
 	def draw(self, surface, thisShip):
@@ -158,7 +191,7 @@ class BG:
 			pa[x+1][y] = star[3]
 			pa[x][y+1] = star[3]
 			pa[x+1][y+1] = star[3]
-			
+
 class BGNova:
 	def __init__(self, game):
 		self.game = game

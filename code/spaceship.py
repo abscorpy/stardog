@@ -364,7 +364,7 @@ class Ship(Floater):
 		if self.landed:
 			orbvel = sqrt(self.landed.g * self.game.curSystem.sun.mass * \
 			(2/self.landed.distance - 1/self.landed.SMa))
-			smi = self.landed.SMa * self.landed.p
+			smi = self.landed.SMa * sqrt(self.landed.p)
 			vx = orbvel * -self.landed.SMa * math.sin(self.landed.EccAn) / sqrt((smi * \
 			math.cos(self.landed.EccAn)) ** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
 			vy = orbvel * smi * math.cos(self.landed.EccAn) / sqrt((smi * math.cos(self.landed.EccAn))
