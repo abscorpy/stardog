@@ -268,7 +268,7 @@ class Ship(Floater):
 		self.hp = min(self.hp, self.maxhp)
 		for skill in self.skills:
 			skill.shipReset()
-			
+
 		if partNum > self.partLimit:
 			self.efficiency = (1 - self.penalty) ** (partNum - self.partLimit)
 		else:
@@ -362,16 +362,18 @@ class Ship(Floater):
 
 		#check if landed:
 		if self.landed:
+			#orbital velocity is calculated with vis-viva equation, i don't know why,
+			#but dividing by sqrt(2) fixes the problem with bullet speed discordance
 			orbvel = sqrt(self.landed.g * self.game.curSystem.sun.mass * \
-			(2/self.landed.distance - 1/self.landed.SMa))
+			(2/self.landed.distance - 1/self.landed.SMa)) / 1.4142135623730951
 			smi = self.landed.SMa * sqrt(self.landed.p)
+			#vx and vy are the components of the tangent vector to the elliptic trajectory
 			vx = orbvel * -self.landed.SMa * math.sin(self.landed.EccAn) / sqrt((smi * \
 			math.cos(self.landed.EccAn)) ** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
 			vy = orbvel * smi * math.cos(self.landed.EccAn) / sqrt((smi * math.cos(self.landed.EccAn))
 			** 2 + (self.landed.SMa * math.sin(self.landed.EccAn)) ** 2)
 			planetvel = rotate(vx, vy, self.landed.LPe)
-			velmod = sqrt(dist2(self, self.game.curSystem.sun)) / self.landed.distance
-			self.dx, self.dy = planetvel[0] * velmod, planetvel[1] * velmod
+			self.dx, self.dy = planetvel[0], planetvel[1]
 			if self.thrusting and abs(self.land - self.dir) < 90 and dist2(self,self.landed) > \
 			self.landed.radius ** 2:
 				self.landed = False

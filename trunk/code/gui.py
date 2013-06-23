@@ -37,6 +37,11 @@ class HUD:
 		if self.game.debug:
 			self.debugging = not self.debugging
 			print "gui debugging %s"%(self.debugging,)
+			if hasattr(thisShip, 'oldx'):
+				dx = (thisShip.x - thisShip.oldx) / self.game.dt
+				dy = (thisShip.y - thisShip.oldy) / self.game.dt
+				print 'dx:', dx, 'dy:', dy
+			thisShip.oldx, thisShip.oldy = thisShip.x, thisShip.y
 		self.image.fill((0, 0, 0, 0))
 		#TODO: don't hard-code this key:
 		self.drawRadar(surface, thisShip, self.game.keys[K_TAB])
