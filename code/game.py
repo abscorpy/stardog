@@ -181,6 +181,10 @@ class Game:
 				print "Debug:\nlanded:{0} gravity:{1} thrust:{2}".format(self.player.landed!=False,
 				grav, thrust)
 				print "x", self.player.x, "y", self.player.y
+				if self.player.landed:
+					p = self.player.landed #planetary body where the player is landed
+					Pinfo = "Planet information\nmass:{0} radius:{1} SMa:{2} ecc:{3} LPe:{4}"
+					print Pinfo.format(p.mass, p.radius, p.SMa, p.e, p.LPe)
 			#ctrl+q or alt+F4 quit:
 			if self.keys[K_LALT % 322] and self.keys[K_F4 % 322] \
 			or self.keys[K_RALT % 322] and self.keys[K_F4 % 322] \
