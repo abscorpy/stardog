@@ -300,14 +300,14 @@ def planet_ship_collision(planet, ship):
 				#damage shields
 				temp = ship.hp
 				ship.hp -= damage
-				damage -= ship.hp
+				damage -= temp
 				if damage <= 0:
-					r = ship.radius + planet.radius
+					angle = 2 * atan2((ship.y - planet.y), (ship.x - planet.x))
 					dx, dy = ship.dx - planetvel[0], ship.dy - planetvel[1]
-					ship.dx = planet.bounciness * (dx * -(ship.x - planet.x) / r
-							+ dy * -(ship.y - planet.y) / r) + planetvel[0]
-					ship.dy = planet.bounciness * (dx * (ship.y - planet.y) / r
-							+ dy * -(ship.x - planet.x) / r) + planetvel[1]
+					ship.dx = planetvel[0] + planet.bounciness * \
+					(dx * cos(angle) - dy * sin(angle))
+					ship.dy = planetvel[1] - planet.bounciness * \
+					(dy * cos(angle) + dx * sin(angle))
 					if planet.damage.has_key(ship):
 						del planet.damage[ship]
 					return
@@ -317,12 +317,12 @@ def planet_ship_collision(planet, ship):
 				part.takeDamage(damage, planet)
 				damage -= temp
 				if damage <= 0:
-					r = ship.radius + planet.radius
-					temp = (ship.dx * -(ship.x - planet.x) / r
-							+ ship.dy * -(ship.y - planet.y) / r)
-					ship.dy = (ship.dx * (ship.y - planet.y) / r
-							+ ship.dy * -(ship.x - planet.x) / r)
-					ship.dx = temp
+					angle = 2 * atan2((ship.y - planet.y), (ship.x - planet.x))
+					dx, dy = ship.dx - planetvel[0], ship.dy - planetvel[1]
+					ship.dx = planetvel[0] + planet.bounciness * \
+					(dx * cos(angle) - dy * sin(angle))
+					ship.dy = planetvel[1] - planet.bounciness * \
+					(dy * cos(angle) + dx * sin(angle))
 					if planet.damage.has_key(ship):
 						del planet.damage[ship]
 					return
