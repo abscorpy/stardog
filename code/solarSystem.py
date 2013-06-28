@@ -301,13 +301,13 @@ def planet_ship_collision(planet, ship):
 				temp = ship.hp
 				ship.hp -= damage
 				damage -= temp
-				if damage <= 0:
-					angle = 2 * atan2((ship.y - planet.y), (ship.x - planet.x))
+				if damage <= 0: #to calculate (relative) reflected speed, rotate the speed vector, reflect a component, and rotate the vector back; below i just simplified the equation
+					angle = 2 * relativeDir(planet,ship)
 					dx, dy = ship.dx - planetvel[0], ship.dy - planetvel[1]
-					ship.dx = planetvel[0] + planet.bounciness * \
-					(dx * cos(angle) - dy * sin(angle))
-					ship.dy = planetvel[1] - planet.bounciness * \
-					(dy * cos(angle) + dx * sin(angle))
+					ship.dx = planetvel[0] - planet.bounciness * \
+					(dx * cos(angle) + dy * sin(angle))
+					ship.dy = planetvel[1] + planet.bounciness * \
+					(dy * cos(angle) - dx * sin(angle))
 					if planet.damage.has_key(ship):
 						del planet.damage[ship]
 					return
@@ -317,12 +317,12 @@ def planet_ship_collision(planet, ship):
 				part.takeDamage(damage, planet)
 				damage -= temp
 				if damage <= 0:
-					angle = 2 * atan2((ship.y - planet.y), (ship.x - planet.x))
+					angle = 2 * relativeDir(planet,ship)
 					dx, dy = ship.dx - planetvel[0], ship.dy - planetvel[1]
-					ship.dx = planetvel[0] + planet.bounciness * \
-					(dx * cos(angle) - dy * sin(angle))
-					ship.dy = planetvel[1] - planet.bounciness * \
-					(dy * cos(angle) + dx * sin(angle))
+					ship.dx = planetvel[0] - planet.bounciness * \
+					(dx * cos(angle) + dy * sin(angle))
+					ship.dy = planetvel[1] + planet.bounciness * \
+					(dy * cos(angle) - dx * sin(angle))
 					if planet.damage.has_key(ship):
 						del planet.damage[ship]
 					return
@@ -333,7 +333,7 @@ def planet_ship_collision(planet, ship):
 		if not ship.landed:
 			ship.landed = planet
 			ship.game.menu.parts.reset()
-			ship.land = atan2(ship.y - planet.y, ship.x - planet.x)
+			ship.land = relativeDir(planet,ship)
 			if ship == ship.game.player and ship.thrusting == False:
 				ship.game.pause = True
 
