@@ -71,7 +71,7 @@ class Part(Floater):
 
 	def stats(self):
 		stats = (self.value, self.hp, self.maxhp, self.mass, len(self.ports))
-		statString = """Val$: %.1f\nHP: %i/%i \nMass: %i KG\nPorts: %i"""
+		statString = """Val$: %.1f\nHP: %i/%i \nMass: %i t\nPorts: %i"""
 		return statString % stats
 
 	def shortStats(self):
@@ -129,7 +129,7 @@ class Part(Floater):
 		#of the ship.
 		self.ship.mass += self.mass
 		self.ship.moment += self.mass \
-					* sqrt(self.offset[0] ** 2 + self.offset[1] ** 2)
+					* (self.offset[0] ** 2 + self.offset[1] ** 2)
 		#These two can be modified by adjectives:
 		self.ship.partEffects.extend(self.shipEffects)
 		for effect in self.attachEffects:
@@ -526,9 +526,10 @@ class Engine(Part):
 	baseImage = loadImage("res/parts/engine" + ext)
 	image = None
 	name = "Engine"
-	force = 12000
+	force = 3000
+	specImpulse = 10000 #specific impulse, measures efficiency
 	thrusting = False
-	energyCost = 1.
+	energyCost = 3.
 	def __init__(self, game):
 		if self.animatedBaseImage == None:
 			self.animatedBaseImage = loadImage(\
@@ -541,13 +542,13 @@ class Engine(Part):
 		self.functionDescriptions.append('thrust')
 
 	def stats(self):
-		stats = (self.force, self.energyCost)
-		statString = """\nThrust: %s N\nCost: %s /second thrusting"""
+		stats = (self.force, self.energyCost, self.specImpulse)
+		statString = """\nThrust: %s kN\nCost: %s /second thrusting\nExhaust velocity: %s m/s"""
 		return Part.stats(self) + statString % stats
 
 	def shortStats(self):
-		stats = (self.force,)
-		statString = """\n%s N"""
+		stats = (self.force, self.specImpulse)
+		statString = """\n%s kN\n%s m/s"""
 		return Part.shortStats(self) + statString % stats
 
 	def update(self, dt):
@@ -563,13 +564,19 @@ class Engine(Part):
 		"""thrust: pushes the ship from the direction this engine points."""
 		if self.acted: return
 		self.acted = True
-		if self.ship and self.ship.energy >= self.energyCost:
-			accel = (self.ship.efficiency * self.ship.thrustBonus
+		if self.ship and self.ship.energy > self.energyCost/10 and self.ship.propellant > 0:
+			deltaV = (self.ship.efficiency * self.ship.thrustBonus
 					* self.force / self.ship.mass * self.ship.dt)
+			exMass = 10 * deltaV * self.ship.mass / self.specImpulse
+			if exMass > self.ship.propellant:
+				deltaV *= self.ship.propellant / exMass
+				exMass = self.ship.propellant
 			dir = self.dir + self.ship.dir
-			self.ship.dx += cos(dir) * accel
-			self.ship.dy += sin(dir) * accel
+			self.ship.dx += cos(dir) * deltaV
+			self.ship.dy += sin(dir) * deltaV
 			self.ship.energy -= self.energyCost * self.ship.dt
+			self.ship.propellant -= exMass
+			self.ship.usingTank.propellant -= exMass
 			self.thrusting = True
 			self.ship.thrusting = True
 
@@ -578,8 +585,8 @@ class Gyro(Part):
 	baseImage = loadImage("res/parts/gyro" + ext)
 	image = None
 	name = "Gyro"
-	torque = 180000 #N m degrees== m m kg degrees /s /s
-	energyCost = .8
+	torque = 600000 #kN m degrees== km m kg degrees /s /s
+	energyCost = 2.
 	def __init__(self, game):
 		Part.__init__(self, game)
 		self.ports = [Port((0, self.height / 2 ), 270, self),
@@ -591,13 +598,13 @@ class Gyro(Part):
 
 	def stats(self):
 		stats = (self.torque, self.energyCost)
-		statString = ("\nTorque: %s N*m\nCost: %s " +
+		statString = ("\nTorque: %s kN*m\nCost: %s " +
 					"energy/second of turning")
 		return Part.stats(self) + statString % stats
 
 	def shortStats(self):
 		stats = (self.torque,)
-		statString = """\n%s N*m"""
+		statString = """\n%s kN*m"""
 		return Part.shortStats(self) + statString % stats
 
 	def turnLeft(self, angle = None):
@@ -711,13 +718,63 @@ class Shield(Part):
 				self.ship.energy -= self.energyCost * dt
 		Part.update(self, dt)
 
-class Cockpit(Battery, Generator, Gyro):
+class Tank(Part):
+	baseImage = loadImage("res/parts/tank" + ext)
+	image = None
+	name = "Tank"
+	propellant = 90.
+	maxPropellant = 90.
+	dryMass = 1
+
+	def stats(self):
+		stats = (self.propellant,)
+		statString = """\nStorage: %.2f propellant"""
+		return Part.stats(self) + statString % stats
+
+	def shortStats(self):
+		stats = (self.propellant,)
+		statString = """\n%.1f P"""
+		return Part.shortStats(self) + statString % stats
+
+	def attach(self):
+		self.ship.maxPropellant += self.maxPropellant
+		self.ship.propellant += self.propellant
+		Part.attach(self)
+
+	def update(self, dt):
+		if self.ship and self == self.ship.usingTank:
+			self.ship.mass -= self.mass
+			self.ship.moment -= self.mass \
+			* (self.offset[0] ** 2 + self.offset[1] ** 2)
+			if self.propellant < 0:
+				self.mass = self.dryMass
+				maxDist = -1
+				for tank in self.ship.tanks:
+					dist = tank.offset[0] ** 2 + tank.offset[1] ** 2
+					if maxDist < dist and tank.propellant > 0:
+						maxDist = dist
+						self.ship.usingTank = tank
+				self.ship.usingTank.propellant += self.propellant
+				self.ship.usingTank.mass += self.propellant / 10
+				self.ship.mass += self.propellant / 10
+				self.propellant = 0
+			else:
+				self.mass = self.dryMass + self.propellant / 10
+			self.ship.mass += self.mass
+			self.ship.moment += self.mass \
+			* (self.offset[0] ** 2 + self.offset[1] ** 2)
+		Part.update(self, dt)
+
+class Cockpit(Tank, Battery, Generator, Gyro):
 	baseImage = loadImage("res/parts/cockpit.gif")
 	image = None
-	energyCost = .2 #gyro
-	torque = 35000 #gyro
-	capacity = 5 #battery
-	rate = .5 #generator
+	energyCost = 5. #gyro
+	torque = 1400000 #gyro
+	capacity = 30 #battery
+	rate = 5. #generator
+	propellant = 70. #tank
+	maxPropellant = 70. #tank
+	dryMass = 3
 	name = "Cockpit"
 
 	def __init__(self, game):
@@ -728,15 +785,31 @@ class Cockpit(Battery, Generator, Gyro):
 					Port((0, -self.height / 2 + 2), 90, self)]
 
 	def stats(self):
-		stats = (self.torque, self.energyCost, self.capacity, self.rate)
-		statString = ("\nTorque: %s N*m\nCost: %s energy/second of turning" +
+		stats = (self.torque, self.energyCost, self.capacity, self.rate, self.propellant)
+		statString = ("\nTorque: %s kN*m\nCost: %s energy/second of turning" +
 					"\nCapacity: %s energy" +
-					"\nEnergy Produced: %s/second")
+					"\nEnergy Produced: %s energy/second\nStorage: %.2f propellant")
 		return Part.stats(self) + statString % stats
 
+	def attach(self):
+		self.ship.maxEnergy += self.capacity * self.ship.batteryBonus
+		self.ship.maxPropellant += self.maxPropellant
+		self.ship.propellant += self.propellant
+		Part.attach(self)
+
+	def update(self, dt):
+		if self.ship and self.ship.energy < self.ship.maxEnergy:
+			self.ship.energy = min(self.ship.maxEnergy,
+				self.ship.energy + self.rate * self.ship.efficiency
+					* self.ship.generatorBonus * dt)
+		Tank.update(self, dt)
+
 class Interceptor(Cockpit):#move to config
-	mass = 20
+	mass = 25
 	hp = 15
+ 	dryMass = 12
+	propellant = 130.
+	maxPropellant = 130.
 	baseImage = loadImage("res/parts/interceptor.bmp")
 	name = 'Interceptor Cockpit'
 	value = 2
@@ -752,10 +825,14 @@ class Interceptor(Cockpit):#move to config
 					Port((-6, -12), 0, self)]
 
 class Destroyer(Cockpit):#move to config
-	mass = 60
+	mass = 70
 	hp = 30
-	energyCost = .6
-	rate = 3
+	energyCost = 7.5
+	torque = 2100000
+	rate = 10.
+	dryMass = 35
+	propellant = 350.
+	maxPropellant = 350.
 	baseImage = loadImage("res/parts/destroyer.bmp")
 	name = 'Destroyer Cockpit'
 	value = 2
@@ -772,11 +849,15 @@ class Destroyer(Cockpit):#move to config
 					Port((-25, 8), 0, self)]
 
 class Fighter(Cockpit):#move to config
-	mass = 10
+	mass = 16
 	hp = 10
-	energyCost = .2
-	rate = 1.5
-	capacity = 5
+	energyCost = 2.
+	rate = 3.
+	torque = 560000
+	capacity = 15
+	dryMass = 8
+	propellant = 80.
+	maxPropellant = 80.
 	baseImage = loadImage("res/parts/fighter.bmp")
 	name = 'Fighter Cockpit'
 	value = 2
