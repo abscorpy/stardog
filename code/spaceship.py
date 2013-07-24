@@ -150,6 +150,8 @@ class Ship(Floater):
 	guns = []
 	missiles = []
 	gyros = []
+	tanks = []
+	usingTank = None
 	number = 0
 	numParts = 0
 	name = 'Ship'
@@ -187,6 +189,8 @@ class Ship(Floater):
 		self.ports = [Port((0,0), 0, self)]
 		self.energy = 0
 		self.maxEnergy = 0
+		self.propellant = 0
+		self.maxPropellant = 0
 		self.color = color
 		self.race = race
 		if self.race: self.race.ships.append(self)
@@ -231,6 +235,7 @@ class Ship(Floater):
 		self.guns = []
 		self.missiles = []
 		self.gyros = []
+		self.tanks = []
 		self.partLimit = Ship.partLimit
 		self.__dict__.update(Ship.baseBonuses)
 		#recalculate stats:
@@ -250,9 +255,11 @@ class Ship(Floater):
 		yCorrection = (maxY + minY) / 2
 		self.partEffects = []
 		self.mass = 1
-		self.moment = 1
-		self.maxEnergy = 1
+		self.moment = 1000
+		self.maxEnergy = 0
 		self.maxhp = 0
+		self.propellant = 0
+		self.maxPropellant = 0
 		partNum = 1
 		self.value = 0
 		for part in self.parts:
@@ -263,9 +270,17 @@ class Ship(Floater):
 							part.offset[1] - yCorrection
 			part.attach()
 		partNum -= 1
+		self.mass -= 1
 		self.numParts = partNum
 		self.energy = min(self.energy, self.maxEnergy)
 		self.hp = min(self.hp, self.maxhp)
+		self.propellant = min(self.propellant, self.maxPropellant)
+		maxDist = -1
+		for tank in self.tanks:
+			dist = tank.offset[0] ** 2 + tank.offset[1] ** 2
+			if maxDist < dist:
+				maxDist = dist
+				self.usingTank = tank
 		for skill in self.skills:
 			skill.shipReset()
 
@@ -306,6 +321,8 @@ class Ship(Floater):
 			if isinstance(part, Gyro):
 				self.gyros.append(part)
 				self.torque += part.torque
+			if isinstance(part, Tank):
+				self.tanks.append(part)
 			if isinstance(part, Gun):
 				if isinstance(part, MissileLauncher):
 					self.missiles.append(part)
