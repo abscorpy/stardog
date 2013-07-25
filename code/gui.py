@@ -40,7 +40,7 @@ class HUD:
 			if hasattr(thisShip, 'oldx'):
 				dx = (thisShip.x - thisShip.oldx) / self.game.dt
 				dy = (thisShip.y - thisShip.oldy) / self.game.dt
-				print 'dx:', dx, 'dy:', dy
+				print 'dx: %.1f dy: %.1f' % (dx, dy)
 			thisShip.oldx, thisShip.oldy = thisShip.x, thisShip.y
 		self.image.fill((0, 0, 0, 0))
 		#TODO: don't hard-code this key:
