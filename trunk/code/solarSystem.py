@@ -131,6 +131,9 @@ class SolarA1(SolarSystem):
 		distanceFromSun = randint(15000, 25000)
 		player.x = distanceFromSun * cos(angle)
 		player.y = distanceFromSun * sin(angle)
+		vel = sqrt(self.sun.mass * self.sun.g / relDist(player, self.sun))
+		player.dx = vel * cos(angle + 90)
+		player.dy = vel * sin(angle + 90)
 		#add asteroids:
 		for i in range(100):
 			x = randint(-30000, 30000)
