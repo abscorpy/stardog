@@ -478,6 +478,7 @@ class Player(Ship):
 	xp = 0
 	developmentPoints = 2
 	frameUpdating = True
+	money = 0
 
 	def __init__(self, game, x, y, dx = 0, dy = 0, dir = 270, script = None, \
 				color = (255, 255, 255), system = None):
