@@ -194,13 +194,13 @@ class ShipPanel(Selecter):
 					self.selectables[-1].port = port
 		#update ship stats display:
 			#tabs not displaying correctly, so using spaces.
-		text = ("Parts: %i/%i\nEfficiency: %.3f\nMass: %.1f T\n" +
+		text = ("Money: $%.2f\nParts: %i/%i\nEfficiency: %.3f\nMass: %.1f T\n" +
 			"Forward Thrust: %i MN\nMoment: %i MG m^2\nTorque: %i MN m\n" +
 			"Max DPS: %.2f\nEnergy: %.1f/%i\nPropellant: %.1f/%.f\nShields: %.1f/%.1f")
-		values = (s.numParts, s.partLimit, s.efficiency, s.mass,
+		values = (s.money, s.numParts, s.partLimit, s.efficiency, s.mass,
 				s.forwardThrust/1000, s.moment, s.torque/1000,
 				s.dps, s.energy, s.maxEnergy, s.propellant, s.maxPropellant, s.hp, s.maxhp)
-		self.text = (TextBlock(Rect(20,30,400,100), text%values,
+		self.text = (TextBlock(Rect(20,10,400,100), text%values,
 					color = (100,200,0), font = SMALL_FONT))
 		self.addPanel(self.text)
 		Panel.reset(self)
@@ -329,6 +329,8 @@ class ShipPartPanel(DragableSelectable):
 				return #dropped on self: do nothing.
 			if self.part and self.checkParent(self.part,dropped.part):
 				return #trying to drop a part on it's parent.  Do nothing.
+			if dropped.parent == self.parent.parent.tradePanel:
+				return #avoids to drop a part from trade panel without buying it
 			dropped.part.unequip(toInventory = False)
 			if not self.port.parent in self.ship.parts:
 				#unequiping dropped messed up this node!
@@ -433,6 +435,15 @@ class InventoryPanel(Selecter):
 				return
 			#add dropped part to partList:
 			if not dropped.part in self.partList:
+				#check if buying or selling
+				if self.parent.tradePanel == self:
+					self.parent.player.money += dropped.part.value
+				elif dropped.parent == self.parent.tradePanel:
+					if dropped.part.value > self.parent.player.money:
+						print "not enough money"
+						return
+					else:
+						self.parent.player.money -= dropped.part.value
 				self.partList.append(dropped.part)
 				self.parent.dirtyParts = True
 			#select it:
