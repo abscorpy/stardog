@@ -6,7 +6,7 @@ PARTS = [LeftCannon, Engine, Gyro, Generator, Battery, Shield,
 		LeftFlakCannon, Tank]
 
 def randItem(game, level = 1):
-	roll = randint(0, len(PARTS) -1)
+	roll = randint(0, len(PARTS) - 1)
 	if roll == rand() * level / 2 < .8:
 		return None
 	part = PARTS[roll](game)
@@ -22,6 +22,7 @@ def addAdjective(part, level = 1):
 				part.name = choice.__name__ + ' ' + part.name
 				part.adjectives.append(adj)
 				part.value *= 1 + (adj.level) / 4.
+				part.appraise()
 				return part
 	#TODO: make a better data structure for these.
 	#for now, if this adjective doesn't fit, pick another at random.
@@ -277,19 +278,19 @@ class Heavy(Adjective):
 	def effect(self, part):
 		part.mass *= 2.5
 
-class Damaged(Adjective):
-	"""Starting HP / 2"""
-	level = -1
-	def effect(self, part):
-		part.hp = part.hp / 2
+#class Damaged(Adjective):
+#	"""Starting HP / 2"""
+#	level = -1
+#	def effect(self, part):
+#		part.hp = part.hp / 2
 
 class High_Capacity(Adjective):
-	"""Propellant * 1.5, Reaction Mass * 1.5"""
+	"""Propellant * 1.5"""
 	types = [Tank]
 	def effect(self, part):
 		part.maxPropellant *= 1.5
 		part.propellant *= 1.5
-		part.mass = part.dryMass + part.propellant * 10
+		part.mass = part.dryMass + part.propellant / 10
 
 adjectives = (Sturdy, Durable, Solid, Fragile,
  Titanium, Carbonfiber, Nanosteel,
@@ -300,4 +301,4 @@ adjectives = (Sturdy, Durable, Solid, Fragile,
  Antimatter, Advanced_Chemical, Magnetic,
  Kinetic, Alpha_Decay, Nuclear, Stored_Antimatter,
  Delicate, Efficient, Miserly, Leaky, Inefficient,
- Obsolete, Damaged, Heavy, High_Capacity)
+ Obsolete, Heavy, High_Capacity)

@@ -5,7 +5,6 @@ from utils import *
 from scripts import *
 from pygame.locals import *
 from floaters import *
-import stardog
 
 PART_OVERLAP = 0
 DETACH_SPACE = 3
@@ -59,6 +58,7 @@ class Part(Floater):
 		radius = max(self.baseImage.get_height() / 2,
 					self.baseImage.get_width() / 2)
 		Floater.__init__(self, game, 0, 0, dir = 270, radius = radius)
+		self.price = self.value
 		self.image = colorShift(self.baseImage.copy(), self.color)
 		self.width = self.image.get_width() - 4
 		self.height = self.image.get_height() - 4
@@ -70,13 +70,13 @@ class Part(Floater):
 		self.attachEffects = []
 
 	def stats(self):
-		stats = (self.value, self.hp, self.maxhp, self.mass, len(self.ports))
-		statString = """Val$: %.1f\nHP: %i/%i \nMass: %i t\nPorts: %i"""
+		stats = (self.price, self.hp, self.maxhp, self.mass, len(self.ports))
+		statString = """Val$: %.2f\nHP: %i/%i \nMass: %.1f t\nPorts: %i"""
 		return statString % stats
 
 	def shortStats(self):
-		stats = (self.value, self.hp, self.maxhp)
-		statString = """$%.1f\n%i/%i"""
+		stats = (self.price, self.hp, self.maxhp)
+		statString = """$%.2f\n%i/%i"""
 		return statString % stats
 
 	def addPart(self, part, port):
@@ -280,6 +280,7 @@ class Part(Floater):
 		and rand() <  1. * damage / (self.hp + 1)):
 			self.detach()
 		self.hp -= damage
+		self.appraise()
 		if self.hp <= 0:
 			if hitByPlayer:
 				self.game.player.xpDestroy(self)
@@ -292,6 +293,9 @@ class Part(Floater):
 			self.game.curSystem.add(Explosion(self.game, self.x, self.y,
 						self.dx, self.dy, radius = self.radius * 4,
 						time = self.maxhp / 5.))
+
+	def appraise(self):
+		self.price = self.value * round(0.8 * self.hp / self.maxhp + 0.2, 2)
 
 class Dummy(Part):
 	"""A dummy part used by the parts menu."""
@@ -567,16 +571,16 @@ class Engine(Part):
 		if self.ship and self.ship.energy > self.energyCost/10 and self.ship.propellant > 0:
 			deltaV = (self.ship.efficiency * self.ship.thrustBonus
 					* self.force / self.ship.mass * self.ship.dt)
-			exMass = 10 * deltaV * self.ship.mass / self.specImpulse
-			if exMass > self.ship.propellant:
-				deltaV *= self.ship.propellant / exMass
-				exMass = self.ship.propellant
+			reMass = 10 * deltaV * self.ship.mass / self.specImpulse
+			if reMass > self.ship.propellant:
+				deltaV *= self.ship.propellant / reMass
+				reMass = self.ship.propellant
 			dir = self.dir + self.ship.dir
 			self.ship.dx += cos(dir) * deltaV
 			self.ship.dy += sin(dir) * deltaV
 			self.ship.energy -= self.energyCost * self.ship.dt
-			self.ship.propellant -= exMass
-			self.ship.usingTank.propellant -= exMass
+			self.ship.propellant -= reMass
+			self.ship.usingTank.propellant -= reMass
 			self.thrusting = True
 			self.ship.thrusting = True
 
@@ -725,6 +729,7 @@ class Tank(Part):
 	propellant = 90.
 	maxPropellant = 90.
 	dryMass = 1
+	value = 2
 
 	def stats(self):
 		stats = (self.propellant,)
@@ -763,7 +768,12 @@ class Tank(Part):
 			self.ship.mass += self.mass
 			self.ship.moment += self.mass \
 			* (self.offset[0] ** 2 + self.offset[1] ** 2)
+			self.appraise()
 		Part.update(self, dt)
+
+	def appraise(self):
+		self.price = self.value * round(0.5 * self.propellant / self.maxPropellant\
+		+ 0.4 * self.hp / self.maxhp + 0.1, 2)
 
 class Cockpit(Tank, Battery, Generator, Gyro):
 	baseImage = loadImage("res/parts/cockpit.gif")
