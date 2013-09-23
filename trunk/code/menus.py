@@ -1,7 +1,7 @@
 
 from utils import *
 from menuElements import *
-import stardog
+#import stardog
 from parts import Dummy, PART_OVERLAP, DEFAULT_IMAGE, FlippablePart
 from spaceship import Ship
 
@@ -384,27 +384,26 @@ class PartTile(DragableSelectable):
 		self.panels[-1].rect.width = self.rect.width
 		string = part.shortStats()
 		i = string.find('\n')
-		valueString = string[:i]
+		priceString = string[:i]
 		string = string[i+1:]
 		i = string.find('\n')
 		hpString = string[:i]
 		statString = string[i+1:]
 		rect = Rect(rect)
 		rect.x += 38; rect.y += 14
-		self.addPanel(Label(rect, valueString, color = (200,200,0),
+		self.addPanel(Label(rect, priceString, color = (200,200,0),
 					font = SMALL_FONT))
-		self.panels[-1].rect.width = 30
+		self.panels[-1].rect.width = 35
 		rect = Rect(rect)
-		rect.x += 50
+		rect.x += 45
 		self.addPanel(Label(rect, hpString, color = (200,0,0),
 					font = SMALL_FONT))
 		self.panels[-1].rect.width = self.rect.width - 88
 		rect = Rect(rect)
-		rect.x -= 50
+		rect.x -= 45
 		rect.y += 12
 		self.addPanel(TextBlock(rect, statString, color = (0, 150, 0),
 					font = SMALL_FONT))
-
 
 class InventoryPanel(Selecter):
 	#drawBorder = False
@@ -437,13 +436,13 @@ class InventoryPanel(Selecter):
 			if not dropped.part in self.partList:
 				#check if buying or selling
 				if self.parent.tradePanel == self:
-					self.parent.player.money += dropped.part.value
+					self.parent.player.money += dropped.part.price
 				elif dropped.parent == self.parent.tradePanel:
-					if dropped.part.value > self.parent.player.money:
+					if dropped.part.price > self.parent.player.money:
 						print "not enough money"
 						return
 					else:
-						self.parent.player.money -= dropped.part.value
+						self.parent.player.money -= dropped.part.price
 				self.partList.append(dropped.part)
 				self.parent.dirtyParts = True
 			#select it:
