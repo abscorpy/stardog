@@ -4,7 +4,6 @@ from utils import *
 from spaceship import *
 from parts import *
 from scripts import *
-import stardog
 from adjectives import *
 
 class Strafebat(Ship):
@@ -16,7 +15,7 @@ class Strafebat(Ship):
 		roll = rand()
 		self.target = game.player
 		self.circling = False
-		Ship.__init__(self, game, x, y, script = StrafebatScript(game), 
+		Ship.__init__(self, game, x, y, script = StrafebatScript(game),
 						color = color, race = race)
 		self.baseBonuses['damageBonus'] = .5
 		cockpit =StrafebatCockpit(game)
@@ -28,7 +27,7 @@ class Strafebat(Ship):
 		shield = Shield(game)
 		rCannon = RightCannon(game)
 		lCannon = LeftCannon(game)
-		for part in [cockpit, gyro, gun, engine, generator, battery, shield, 
+		for part in [cockpit, gyro, gun, engine, generator, battery, shield,
 						rCannon, lCannon]:
 			if rand() > .8:
 				addAdjective(part)
@@ -43,21 +42,21 @@ class Strafebat(Ship):
 		if .9 < roll:
 			generator.addPart(battery, 0)
 			gyro.addPart(shield, 2)
-		else: 
+		else:
 			gyro.addPart(battery, 2)
 		if .8 < roll < .9:
 			generator.addPart(rCannon, 0)
 		if .7 < roll < .8:
 			battery.addPart(lCannon, 0)
 		self.energy = self.maxEnergy
-		
+
 		self.strafeDir = choice((1,-1)) # whether self will strafe CW or CCW.
 
 
 class StrafebatScript(AIScript):
 	"""A scripts with basic physics calculation functions."""
 	shootingRange = 600
-		
+
 	def pursue(self, ship, enemy):
 		"""Makes a guess where self can intercept enemy, and flies there.
 		Strafebats aim at a point near the enemy so that they strafe by."""
@@ -65,26 +64,26 @@ class StrafebatScript(AIScript):
 		if not enemy.thrusting:
 			enemyAcceleration = 0
 		relDir = relativeDir(ship, enemy)
-			
-		# predicted time in seconds before self can reach enemy is the time it 
+
+		# predicted time in seconds before self can reach enemy is the time it
 		# would take to accelerate to it:
 		t = sqrt(sqrt(dist2(ship, enemy)) / not0(ship.forwardThrust / ship.mass))
-				
-		# target position is the position the enemy will be at at t if it keeps 
+
+		# target position is the position the enemy will be at at t if it keeps
 		# doing what it's doing now:
-		targetX = (enemy.x + t * (enemy.dx - ship.dx) 
+		targetX = (enemy.x + t * (enemy.dx - ship.dx)
 					+ t * t * enemyAcceleration * cos(enemy.dir)
-					#strafebat special: don't run directly at them: 
+					#strafebat special: don't run directly at them:
 					+ cos(relDir + 90) * ship.strafeRadius * ship.strafeDir)
-		targetY = (enemy.y + t * (enemy.dy - ship.dy) 
+		targetY = (enemy.y + t * (enemy.dy - ship.dy)
 					+ t * t * enemyAcceleration * sin(enemy.dir)
-					#strafebat special: don't run directly at them: 
+					#strafebat special: don't run directly at them:
 					+ sin(relDir + 90) * ship.strafeRadius * ship.strafeDir)
 		target = int(targetX), int(targetY)
 		self.flyTowards(ship, (targetX, targetY))
 		ship.goal = target
 		return True
-		
+
 	def attack(self, ship, enemy):
 		"""Predicts the enemies position and shoots at where it will be."""
 		if ship.guns and dist2(ship, enemy) < self.shootingRange ** 2:

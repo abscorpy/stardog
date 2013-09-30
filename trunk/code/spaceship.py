@@ -5,7 +5,6 @@ from parts import *
 from partCatalog import *
 from floaters import *
 from pygame.locals import *
-import stardog
 from adjectives import addAdjective
 from skills import *
 

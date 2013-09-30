@@ -10,7 +10,7 @@ try:
 	psyco.full()
 except ImportError:
 	print 'this game may run faster if you install psyco.'
-	
+
 FULL = False; RESOLUTION = 1024, 800 #test
 #FULL = True; RESOLUTION = None #play
 
@@ -42,7 +42,7 @@ def run():
 	else:
 		screen = pygame.display.set_mode(RESOLUTION, \
 							hardwareFlag | pygame.SRCALPHA)
-	
+
 	#cursor:
 	thickarrow_strings = (            #sized 24x16
 	  "X               ",
@@ -69,7 +69,7 @@ def run():
 
 	game = code.game.Game(screen)
 	game.run()
-	
+
 if __name__ == '__main__':
 	run()
-	
+

@@ -8,7 +8,6 @@ from tinyFighter import *
 from planet import *
 from gui import *
 from updater import Updater
-import stardog
 
 class SolarSystem:
 	"""A SolarSystem holds ships and other floaters, music, the background.

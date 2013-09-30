@@ -5,7 +5,6 @@ from utils import *
 from spaceship import *
 from parts import *
 from scripts import *
-import stardog
 from adjectives import *
 
 class TinyFighter(Ship):
@@ -17,7 +16,7 @@ class TinyFighter(Ship):
 	def __init__(self, game, x, y, dx = 0, dy = 0, color = (120, 180, 120)):
 		self.target = game.player
 		self.circling = False
-		Ship.__init__(self, game, x, y, dx, dy, 
+		Ship.__init__(self, game, x, y, dx, dy,
 						script = TinyFighterScript(game), color = color)
 		self.baseBonuses['damageBonus'] = .5
 		self.addPart(Drone(game))
@@ -32,12 +31,12 @@ class TinyFighterScript(AIScript):
 	interceptSpeed = 300
 
 	def update(self, ship, dt):
-		"""tiny fighter retreats if it gets too close and 
+		"""tiny fighter retreats if it gets too close and
 		has a max pursue speed."""
 		# find closest ship:
 		enemy = self.game.player
 		planet = self.findClosestPlanet(ship, ship.system.planets)
-		
+
 		if planet and self.avoidPlanet(ship, planet):
 			return
 		elif enemy and self.retreat(ship, enemy):
@@ -48,15 +47,15 @@ class TinyFighterScript(AIScript):
 			return
 		elif self.idle(ship):
 			return
-			
+
 		assert("ship failed to idle?")
-		
+
 	def idle(self, ship):
 		pass	#no home planet to return to.
-		
+
 	def retreat(self, ship, enemy):
 		"""if within shooting range, turn at enemy and shoot it."""
-		if (dist2(ship, enemy) < self.retreatRadius ** 2 
+		if (dist2(ship, enemy) < self.retreatRadius ** 2
 			or self.speedTowards(ship, enemy) > self.interceptSpeed):
 				self.flyAtDir(ship, relativeDir(ship, enemy) + 180)
 				return True
