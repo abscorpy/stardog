@@ -13,7 +13,7 @@ def planetGenerator(game, name, race, sun, distance, image=None):
 	name:string, race:Race, sun:Sun, distance:float-min distance from the sun.
 	Returns d,planet, where d is the minimum distance for the next planet."""
 	ecc = rand() / 5
-	rad = randint(100,1000)
+	rad = randint(200,1000)
 	mass = abs(randnorm(rad ** 2.1 / 25, rad ** 1.3))
 	grav = (1+ecc) * (sqrt(sun.mass*mass) - mass) / (sun.mass-mass)
 	distanceFromSun = int(distance / (1 - ecc - grav) + randint(0,2000))
@@ -29,7 +29,7 @@ def planetGenerator(game, name, race, sun, distance, image=None):
 
 
 def Eanomaly(M,e):
-	"""obtains eccentric anomaly for a given mean anomaly (M) and eccentricity (e). Use radians"""
+	"""Obtains eccentric anomaly for a given mean anomaly (M) and eccentricity (e). Use radians"""
 	E0=0    #solve the Kepler equation (M=E-e*sin(E)) for E (eccentric anomaly)
 	E1=M    #the function works with radians to improve computing speed
 	while abs(E1-E0)>.000001: #number of iterations depends strongly on e, and on M in less grade
@@ -38,8 +38,7 @@ def Eanomaly(M,e):
 	return E1
 
 class Planet(Floater):
-	maxRadius = 1000000 # no gravity felt past this (approximation).
-	PLANET_DAMAGE = .0004
+	PLANET_DAMAGE = .001
 	LANDING_SPEED = 200 #pixels per second. Under this, no damage.
 	g = 3000 # the gravitational constant.
 	shipInProgress = None
@@ -71,6 +70,7 @@ class Planet(Floater):
 		self.parent = parent #the parent body, a star for planets, a planet for moons
 		self.color = color
 		self.bounciness = bounce
+		self.maxRadius2 = 200*self.g*self.mass # no gravity felt past the square root of this
 		self.damage = {}
 		# damage[ship] is the amount of damage a ship has yet to take,
 		# see solarSystem.planet_ship_collision
@@ -94,8 +94,7 @@ class Planet(Floater):
 	def update(self, dt):
 		for other in self.game.curSystem.floaters:
 			if  (other.gravitates
-			and abs(self.x - other.x) < self.maxRadius
-			and abs(self.y - other.y) < self.maxRadius
+			and dist2(self, other) < self.maxRadius2
 			and not collisionTest(self, other) ):
 				#accelerate that floater towards this planet:
 				accel = self.g * (self.mass) / dist2(self, other)
@@ -152,8 +151,9 @@ class Sun(Planet):
 		self.ano = math.radians(Anomaly)
 		self.n = 2*pi/self.period #mean motion
 		self.tAn = sqrt((1+self.e)/(1-self.e)) #used to calculate true anomaly
-		self.p = (1-self.e**2) #semi-latus rectum (?)
+		self.p = (1-self.e**2) #semi-latus rectum factor, SMa * p = Semi-latus rectum
 		self.mass = mass #determines gravity.
+		self.maxRadius2 = 200*self.g*self.mass # no gravity felt past the square root of this
 		self.color = color
 		self.damage = {}
 		# damage[ship] is the amount of damage a ship has yet to take,
@@ -168,8 +168,7 @@ class Sun(Planet):
 	def update(self, dt):
 			for other in self.game.curSystem.floaters:
 				if  (other.gravitates
-				and abs(self.x - other.x) < self.maxRadius
-				and abs(self.y - other.y) < self.maxRadius
+				and dist2(self, other) < self.maxRadius2
 				and not collisionTest(self, other) ):
 					#accelerate that floater towards this planet:
 					accel = self.g * (self.mass) / dist2(self, other)
@@ -196,7 +195,7 @@ class Sun(Planet):
 			for x in range(21):
 				color = (255 , 55 + (200 - (20 - x) * abs(10 - self.t % 20)), 100 / 20 * x)
 				pygame.draw.circle(surface, color, pos, int(self.radius - 20 * x))
-		self.t -= 24. * self.game.dt #speed of throbbing color.
+		self.t -= 5. * self.game.dt #speed of throbbing color.
 
 """Hill sphere: r = d * (sqrt(M * m) - m) / (M - m)"""
 

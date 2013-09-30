@@ -1,7 +1,6 @@
 
 from utils import *
 from menuElements import *
-#import stardog
 from parts import Dummy, PART_OVERLAP, DEFAULT_IMAGE, FlippablePart
 from spaceship import Ship
 
@@ -62,6 +61,8 @@ class PartsPanel(Panel):
 		remove = Button(Rect(570, 572, 62, 14), self.remove, " REMOVE")
 		add = Button(Rect(100, 572, 62, 14), self.attach, " ATTACH")
 		paint = Button(Rect(164, 572, 62, 14), self.paint, " PAINT")
+		repair = Button(Rect(300, 572, 62, 14), self.repair, " REPAIR")
+		refill = Button(Rect(364, 572, 62, 14), self.refill, " REFILL")
 		self.inventoryPanel = InventoryPanel(
 				Rect(100, 30, 130, 540),
 				self, self.player.inventory)
@@ -79,6 +80,8 @@ class PartsPanel(Panel):
 		self.addPanel(remove)
 		self.addPanel(add)
 		self.addPanel(paint)
+		self.addPanel(repair)
+		self.addPanel(refill)
 
 	def update(self):
 		Panel.update(self)
@@ -150,6 +153,50 @@ class PartsPanel(Panel):
 						-part.dir), part.color).convert()
 			part.image.set_colorkey((255,255,255))
 			self.inventoryPanel.reset()
+
+	def repair(self):
+		"""repairs the selected part, if player is landed and has enough money"""
+		if (self.shipPanel.selected or self.inventoryPanel.selected) and self.player.landed:
+			if self.shipPanel.selected:
+				part = self.shipPanel.selected.part
+			else:
+				part = self.inventoryPanel.selected.part
+			if hasattr(part, "propellant"):
+				cost = round(part.value * (1 - part.hp / part.maxhp) * 0.4, 2)
+			else:
+				cost = round(part.value * (1 - part.hp / part.maxhp) * 0.8, 2)
+			if self.player.money < cost:
+				print "not enough money"
+			else:
+				self.player.money -= cost
+				part.hp = part.maxhp
+				part.appraise()
+				self.shipPanel.reset()
+				self.inventoryPanel.reset()
+				print part.name, "has been repaired"
+
+	def refill(self):
+		"""refills with propellant the selected tank, if player is landed and has enough money"""
+		if self.shipPanel.selected and self.player.landed \
+		and hasattr(self.shipPanel.selected.part, "propellant"):
+			tank = self.shipPanel.selected.part
+			cost = round((tank.maxPropellant - tank.propellant) / 90, 2)
+			if self.player.money < cost:
+				prop = self.player.money * 90
+				cost = self.player.money
+			else:
+				prop = tank.maxPropellant - tank.propellant
+			self.player.money -= cost
+			tank.propellant += prop
+			tank.appraise()
+			self.shipPanel.reset()
+			self.inventoryPanel.reset()
+			print tank.name, "has been refilled with %.1f propellant" % prop
+			if tank.ship:
+				temp = self.player.usingTank
+				self.player.usingTank = tank
+				tank.update(tank.ship.dt)
+				self.player.usingTank = temp
 
 class ShipPanel(Selecter):
 	selected = None

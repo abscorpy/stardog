@@ -2,7 +2,6 @@
 
 from utils import *
 from pygame.locals import *
-import stardog
 import os
 
 FPS = 200

@@ -3,7 +3,6 @@
 import pygame
 from pygame.locals import *
 from utils import *
-import stardog
 from spaceship import Ship
 from strafebat import Strafebat
 from floaters import Asteroid
@@ -116,10 +115,10 @@ class HUD:
 							pygame.draw.line(self.image, color, dotPos, p2)
 			elif isinstance(floater, Sun):		#sun
 				r = int(floater.radius / scale)
-				pygame.draw.circle(self.image, (255,255,50), dotPos, r)
-				pygame.draw.circle(self.image, (255,200,50), dotPos, 3 * r / 4)
-				pygame.draw.circle(self.image, (255,150,0), dotPos, r / 2)
-				pygame.draw.circle(self.image, (255,100,0), dotPos, r / 4)
+				pygame.draw.circle(self.image, (255,100,0), dotPos, r)
+				pygame.draw.circle(self.image, (255,150,0), dotPos, 9 * r / 10)
+				pygame.draw.circle(self.image, (255,200,50), dotPos, 4 * r / 5)
+				pygame.draw.circle(self.image, (255,255,50), dotPos, 7 * r / 10)
 			elif isinstance(floater, Planet):	#planet
 				if big:
 					#new width = h*sin(angle) + w*cos(angle) <=> w1 + w2
@@ -167,7 +166,7 @@ class HUD:
 				pygame.draw.circle(self.image, color, (dotPos[0],dotPos[1]), 0)
 
 
-numStars = 300
+numStars = 320
 class BG:
 	def __init__(self, game):
 		self.game = game
@@ -181,8 +180,8 @@ class BG:
 				randint(0, self.game.height),	#y
 				randint(1,20), 					#depth
 				(randint(brightness * 3 / 4, brightness),
-				 randint(brightness * 3 / 4, brightness),
-				 randint(brightness * 3 / 4, brightness))))		#color
+				randint(brightness * 3 / 4, brightness),
+				randint(brightness * 3 / 4, brightness))))		#color
 		self.pic = pygame.transform.scale(loadImage('res/Tarantula Nebula.jpg', None),
 					(game.width,game.height)).convert()
 
