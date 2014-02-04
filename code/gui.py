@@ -13,6 +13,7 @@ radarScale = 200.0 # 1 radar pixel = radarScale space pixels
 radarRadiusBig = 400
 radarScaleBig = 100.0 # 1 radar pixel = radarScale space pixels
 edgeWarning = loadImage('res/edgeofsystem.bmp')
+
 class HUD:
 	debugging = False
 
@@ -30,6 +31,47 @@ class HUD:
 		self.radarImageBig = pygame.image.load(
 					"res/radar large.png").convert()
 		self.radarImageBig.set_colorkey((0,0,0))
+
+	def scanSystem(self):
+		self.orbitImage = pygame.Surface((0,0))
+		self.orbitOffset = 0, 0
+		scale = radarScaleBig
+		for planet in self.game.curSystem.planets:
+			#new width = h*sin(angle) + w*cos(angle) <=> w1 + w2
+			#new height = h*cos(angle) + w*sin(angle) <=> h1 + h2
+			#w1, w2, h1, h2 may or not be considered for correction
+			#of the "orbit" surface position depending on the angle
+			if isinstance(planet, Sun):
+				continue
+			orbPos = rotate(-planet.SMa * (1 + planet.e), \
+			-planet.SMa * sqrt(planet.p), planet.LPe)
+			if planet.LPe < 90:
+				w1, w2 = 2*planet.SMa*sqrt(planet.p)*sin(planet.LPe), 0
+				h1, h2 = 0, 0
+			elif planet.LPe < 180:
+				w1 = 2*planet.SMa*sqrt(planet.p)*sin(planet.LPe)
+				w2 = -2*planet.SMa*cos(planet.LPe)
+				h1, h2 = -2*planet.SMa*sqrt(planet.p)*cos(planet.LPe), 0
+			elif planet.LPe < 270:
+				w1, w2 = 0, -2*planet.SMa*cos(planet.LPe)
+				h1 = -2*planet.SMa*sqrt(planet.p)*cos(planet.LPe)
+				h2 = -2*planet.SMa*sin(planet.LPe)
+			else:
+				w1, w2 = 0, 0
+				h1, h2 = 0, -2*planet.SMa*sin(planet.LPe)
+			correction = w1 + w2, h1 + h2
+			orbPos = int((orbPos[0] - correction[0]) / scale), \
+			int((orbPos[1] - correction[1]) / scale)
+			orbit = pygame.Surface((int(2 * planet.SMa / scale),
+			int(2 * planet.SMa * sqrt(planet.p) / scale)))
+			orbit.set_colorkey((0,0,0))
+			pygame.draw.ellipse(orbit, (150,150,150), (0, 0, int(2*\
+			planet.SMa/scale), int(2*planet.SMa*sqrt(planet.p)/scale)), 1)
+			orbit = pygame.transform.rotate(orbit, -planet.LPe)
+			orbit.blit(self.orbitImage, (self.orbitOffset[0] - orbPos[0],
+			self.orbitOffset[1] - orbPos[1]))
+			self.orbitImage = orbit
+			self.orbitOffset = orbPos
 
 	def draw(self, surface, thisShip):
 		"""updates the HUD and draws it."""
@@ -82,6 +124,10 @@ class HUD:
 			scale = radarScaleBig
 			self.image.blit(self.radarImageBig, \
 				(center[0] - radius, center[1] - radius))
+			sunPos = (int(center[0] + (self.game.curSystem.sun.x - thisShip.x) / scale),
+			int(center[1] + (self.game.curSystem.sun.y - thisShip.y) / scale))
+			offset = (sunPos[0] + self.orbitOffset[0], sunPos[1] + self.orbitOffset[1])
+			self.image.blit(self.orbitImage, offset)
 		else:
 			radius = radarRadius
 			center = self.center
@@ -120,39 +166,6 @@ class HUD:
 				pygame.draw.circle(self.image, (255,200,50), dotPos, 4 * r / 5)
 				pygame.draw.circle(self.image, (255,255,50), dotPos, 7 * r / 10)
 			elif isinstance(floater, Planet):	#planet
-				if big:
-					#new width = h*sin(angle) + w*cos(angle) <=> w1 + w2
-					#new height = h*cos(angle) + w*sin(angle) <=> h1 + h2
-					#w1, w2, h1, h2 may or not be considered for correction
-					#of the "orbit" surface position depending on the angle
-					orbPos = rotate(-floater.SMa * (1 + floater.e), \
-					-floater.SMa * sqrt(floater.p), floater.LPe)
-					sunPos = (int(center[0] + (floater.parent.x - thisShip.x) / scale),
-					int(center[1] + (floater.parent.y - thisShip.y) / scale))
-					if floater.LPe < 90:
-						w1, w2 = 2*floater.SMa*sqrt(floater.p)*sin(floater.LPe), 0
-						h1, h2 = 0, 0
-					elif floater.LPe < 180:
-						w1 = 2*floater.SMa*sqrt(floater.p)*sin(floater.LPe)
-						w2 = -2*floater.SMa*cos(floater.LPe)
-						h1, h2 = -2*floater.SMa*sqrt(floater.p)*cos(floater.LPe), 0
-					elif floater.LPe < 270:
-						w1, w2 = 0, -2*floater.SMa*cos(floater.LPe)
-						h1 = -2*floater.SMa*sqrt(floater.p)*cos(floater.LPe)
-						h2 = -2*floater.SMa*sin(floater.LPe)
-					else:
-						w1, w2 = 0, 0
-						h1, h2 = 0, -2*floater.SMa*sin(floater.LPe)
-					correction = w1 + w2, h1 + h2
-					orbPos = (int(sunPos[0] + (orbPos[0] - correction[0]) / scale),
-					int(sunPos[1] + (orbPos[1] - correction[1]) / scale))
-					orbit = pygame.Surface((int(2 * floater.SMa / scale),
-					int(2 * floater.SMa * sqrt(floater.p) / scale)))
-					orbit.set_colorkey((0, 0, 0))
-					pygame.draw.ellipse(orbit, (150, 150, 150), (0, 0, int(2*\
-					floater.SMa/scale), int(2*floater.SMa*sqrt(floater.p)/scale)), 1)
-					orbit = pygame.transform.rotate(orbit, -floater.LPe)
-					self.image.blit(orbit, orbPos)
 				if floater.race:
 					color = floater.race.color
 				else:
@@ -166,7 +179,7 @@ class HUD:
 				pygame.draw.circle(self.image, color, (dotPos[0],dotPos[1]), 0)
 
 
-numStars = 320
+numStars = 300
 class BG:
 	def __init__(self, game):
 		self.game = game
