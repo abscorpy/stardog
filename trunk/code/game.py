@@ -80,6 +80,7 @@ class Game:
 			self.curSystem = SolarA1(self, self.player)
 			self.player.system = self.curSystem #replace 'fake'
 			self.systems = [self.curSystem]
+			self.hud.scanSystem()
 			self.curSystem.add(self.player)
 
 
