@@ -12,7 +12,7 @@ from updater import Updater
 class SolarSystem:
 	"""A SolarSystem holds ships and other floaters, music, the background.
 	It calls update() and draw() on its members and handles collisions.."""
-	boundries = 150000
+	boundries = 1e8
 	drawEdgeWarning = False
 	calmMusic = "res/sound/music simple.ogg"
 	alertMusic = "res/sound/music alert.ogg"
@@ -121,48 +121,99 @@ class SolarA1(SolarSystem):
 	fightersPerMinute = 2
 	def __init__(self, game, player):
 		SolarSystem.__init__(self, game)
-		self.sun = (Sun( game, radius = 4000, mass = 600000.,
+		self.sun = (Sun( game, radius = 3e4, mass = 2e7,
 					color = (255, 255, 255), image = None)) # the star
 		rockyPlanetImage = loadImage('res/planets/Rocky 2.bmp')
 		gasPlanetImage = loadImage('res/planets/Gas Giant 1.bmp')
+		self.add(self.sun)
+		self.createPlanets(game)
 		#place player:
-		angle = randint(0,360)
-		distanceFromSun = randint(15000, 25000)
+		angle = randint(1,360)
+		distanceFromSun = randint(int(5e4), int(1e5))
 		player.x = distanceFromSun * cos(angle)
 		player.y = distanceFromSun * sin(angle)
 		vel = sqrt(self.sun.mass * self.sun.g / relDist(player, self.sun))
 		player.dx = vel * cos(angle + 90)
 		player.dy = vel * sin(angle + 90)
-		#add asteroids:
-		for i in range(100):
-			x = randint(-30000, 30000)
-			y = randint(-30000, 30000)
-			radius = randint(10, 60)
-			angle = atan2(y, x) + 90
-			vel = sqrt(self.sun.mass * self.sun.g / dist(x, y, self.sun.x, self.sun.y))
-			dx = vel * cos(angle) + randint(-20, 20)
-			dy = vel * sin(angle) + randint(-20, 20)
-			self.add(Asteroid(game, x, y, dx, dy, radius))
 
-		self.add(self.sun)
 		self.tinyFighters = []
 		self.fighterTimer = 30
-		self.createPlanets(game)
 
 	def createPlanets(self, game):
 		"""randomly generates some planets for this system."""
 		planetname = 'abcdefghijklmnopqrstuvwxyz'
-		distance = self.sun.radius * 1.1 + randint(0,2000)
-		p = 0
-		while distance < self.boundries - 3000:
-			distance, planet = planetGenerator(
-									game,
-									planetname[p],
-									choice((game.race1,game.race2)),
-									self.sun,
-									distance)
-			self.add(planet)
-			p += 1
+		sun = self.sun
+		dis = sun.mass / 100
+		metallicity = randnorm(-0.115, 0.289)
+		num_planets = int(round(sqrt(randnorm(0,5)**2 + randnorm(0,5)**2)))#this should depend on star mass and metallicity
+		scale = 1 + sqrt(randnorm(0, 0.618) ** 2 + randnorm(0, 0.618) ** 2)
+		n = 0
+		prevDis = sun.radius
+		prevMass = 0
+		sector = 'inner planets'
+		while num_planets > 0:
+			distance = dis * scale ** n
+			if sector == 'inner planets' and rand() < (1+math.erf(n-pi))/2*10**metallicity:
+				sector = 'inner belt'
+			elif sector == 'inner belt' and rand() < 0.01/10**(metallicity/2):
+				sector = 'outer planets'
+			if sector == 'inner planets':
+				mass = int(20000 * 2 ** randnorm(0,1))
+				radius = int(15 * mass ** 0.4 * 2 ** randnorm(0,0.3))
+				ecc = randnorm(0, 0.2) ** 2
+				dynSpacing = (distance - prevDis) / hillRadius(sun, mass+prevMass, (distance+prevDis)/2)
+				if n > 0 and dynSpacing < 3.5:
+					hillFactor = ((mass + prevMass) / (3 * sun.mass)) ** 0.333
+					desiredSpacing = 3.5 + sqrt(randnorm(0,2.5) ** 2 + randnorm(0,2.5) ** 2)
+					desiredDis = prevDis * (2 + hillFactor*desiredSpacing) / (2 - hillFactor*desiredSpacing)
+					dev = randnorm(desiredDis - distance, distance / 30)
+				else:
+					dev = randnorm(0, distance / 30)
+				color = randint(40,255),randint(40,255),randint(40,255)
+				race = choice((game.race1,game.race2))
+				planet = Planet(game, sun, radius, mass, color, None, planetname[0],
+				randint(1,360), distance + dev, randint(1,360), ecc, period=False, bounce=rand()/2,
+				race=race, population=randint(1000,20000), life=rand()/7.2e3, resources=2*rand())
+				prevDis = distance + dev
+				prevMass = mass
+				planetname = planetname.strip(planetname[0])
+				num_planets -= 1
+				n += 1
+				self.add(planet)
+			elif sector == 'inner belt':
+				radius = randint(10, 60)
+				angle = randint(1, 360)
+				dist = randnorm(distance, distance/20)
+				x, y = dist * cos(angle), dist * sin(angle)
+				vel = sqrt(self.sun.mass * self.sun.g / dist)
+				dx = vel * cos(angle+90) + randint(-20, 20)
+				dy = vel * sin(angle+90) + randint(-20, 20)
+				self.add(Asteroid(game, x, y, dx, dy, radius))
+				pass
+			elif sector == 'outer planets':
+				mass = int(160000 * 2 ** randnorm(0,0.5))
+				radius = int(6000 * mass ** -0.1 * 2 ** randnorm(0,0.3))
+				ecc = randnorm(0, 0.2) ** 2
+				dynSpacing = (distance - prevDis) / hillRadius(sun, mass+prevMass, (distance+prevDis)/2)
+				if n > 0 and dynSpacing < 3.5:
+					hillFactor = ((mass + prevMass) / (3 * sun.mass)) ** 0.333
+					desiredSpacing = 3.5 + sqrt(randnorm(0,2.5) ** 2 + randnorm(0,2.5) ** 2)
+					desiredDis = prevDis * (2 + hillFactor*desiredSpacing) / (2 - hillFactor*desiredSpacing)
+					dev = randnorm(desiredDis - distance, distance / 30)
+				else:
+					dev = randnorm(0, distance / 30)
+				color = randint(40,255),randint(40,255),randint(40,255)
+				race = choice((game.race1,game.race2))
+				planet = Planet(game, sun, radius, mass, color, None, planetname[0],
+				randint(1,360), distance + dev, randint(1,360), ecc, period=False, bounce=rand()/2,
+				race=race, population=randint(1000,20000), life=rand()/7.2e3, resources=2*rand())
+				prevDis = distance + dev
+				prevMass = mass
+				planetname = planetname.strip(planetname[0])
+				num_planets -= 1
+				n += 1
+				self.add(planet)
+			self.boundries = dis * scale ** n
 
 	def update(self, dt):
 		SolarSystem.update(self, dt)

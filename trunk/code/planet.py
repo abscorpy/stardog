@@ -27,14 +27,43 @@ def planetGenerator(game, name, race, sun, distance, image=None):
 	d = distanceFromSun * (1 + ecc + grav)
 	return d, planet
 
+def planetVel(planet):
+	"""Gets the actual velocity of a planet"""
+	orbvel = sqrt(planet.g * planet.parent.mass * (2/planet.distance-1/planet.SMa))
+	smi = planet.SMa * sqrt(planet.p)
+	vx = orbvel * -planet.SMa * math.sin(planet.EccAn) / sqrt((smi * math.cos(planet.EccAn)) ** 2 \
+	+ (planet.SMa * math.sin(planet.EccAn)) ** 2)
+	vy = orbvel * smi * math.cos(planet.EccAn) / sqrt((smi * math.cos(planet.EccAn)) ** 2 \
+	+ (planet.SMa * math.sin(planet.EccAn)) ** 2)
+	planetvel = rotate(vx, vy, planet.LPe)
+	return planetvel
+
+def hillRadius(primary,secondary,dis):
+	"""Calculates the Hill radius of a secondary body orbiting the primary at a given distance.
+	It assumes a circular orbit"""
+	if isinstance(primary, Planet):
+		M1 = primary.mass
+	else:
+		M1 = primary
+	if isinstance(secondary, Planet):
+		m2 = secondary.mass
+	else:
+		m2 = secondary
+	h0 = 0
+	h1 = dis * (m2/(3*M1)) ** 0.333
+	while abs(h1-h0) > 1:
+		h0 = h1 #Using Newton's method to solve the quintic equation. L1 distance calculated
+		h1 -= (M1/dis**3*h0**5 - 3*M1/dis**2*h0**4 + 3*M1/dis*h0**3 - m2*h0**2 + 2*m2*dis*h0 - m2*dis**2)\
+		/ (5*M1/dis**3*h0**4 - 12*M1/dis**2*h0**3 + 9*M1/dis*h0**2 - 2*m2*h0 + 2*m2*dis)
+	return h1
 
 def Eanomaly(M,e):
 	"""Obtains eccentric anomaly for a given mean anomaly (M) and eccentricity (e). Use radians"""
-	E0=0    #solve the Kepler equation (M=E-e*sin(E)) for E (eccentric anomaly)
-	E1=M    #the function works with radians to improve computing speed
-	while abs(E1-E0)>.000001: #number of iterations depends strongly on e, and on M in less grade
-		E0=E1               #with e<0.2 it varies between 1 and 10; typically there are 7 iterations
-		E1=M+e*math.sin(E0)
+	E0 = 0    #solve the Kepler equation (M=E-e*sin(E)) for E (eccentric anomaly)
+	E1 = M    #the function works with radians to improve computing speed
+	while abs(E1-E0) > 1e-6: #number of iterations depends strongly on e, and on M in less grade
+		E0 = E1                 #with e<0.2 it varies between 1 and 10; typically there are 7 iterations
+		E1 = M + e*math.sin(E0)
 	return E1
 
 class Planet(Floater):
@@ -196,8 +225,6 @@ class Sun(Planet):
 				color = (255 , 55 + (200 - (20 - x) * abs(10 - self.t % 20)), 100 / 20 * x)
 				pygame.draw.circle(surface, color, pos, int(self.radius - 20 * x))
 		self.t -= 5. * self.game.dt #speed of throbbing color.
-
-"""Hill sphere: r = d * (sqrt(M * m) - m) / (M - m)"""
 
 
 
