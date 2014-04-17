@@ -9,9 +9,9 @@ from floaters import Asteroid
 from planet import Planet, Sun
 
 radarRadius = 100
-radarScale = 200.0 # 1 radar pixel = radarScale space pixels
+radarScale = 20000.0 # 1 radar pixel = radarScale space pixels
 radarRadiusBig = 400
-radarScaleBig = 100.0 # 1 radar pixel = radarScale space pixels
+radarScaleBig = 10000.0 # 1 radar pixel = radarScale space pixels
 edgeWarning = loadImage('res/edgeofsystem.bmp')
 
 class HUD:
@@ -62,8 +62,13 @@ class HUD:
 			correction = w1 + w2, h1 + h2
 			orbPos = int((orbPos[0] - correction[0]) / scale), \
 			int((orbPos[1] - correction[1]) / scale)
-			orbit = pygame.Surface((int(2 * planet.SMa / scale),
-			int(2 * planet.SMa * sqrt(planet.p) / scale)))
+			while(True):
+				try:
+					orbit = pygame.Surface((int(2 * planet.SMa / scale),
+					int(2 * planet.SMa * sqrt(planet.p) / scale)))
+					break
+				except:
+					scale += radarScaleBig
 			orbit.set_colorkey((0,0,0))
 			pygame.draw.ellipse(orbit, (150,150,150), (0, 0, int(2*\
 			planet.SMa/scale), int(2*planet.SMa*sqrt(planet.p)/scale)), 1)
